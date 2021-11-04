@@ -48,7 +48,6 @@ async def download_id(idi: int, my_href: str, my_title: str, dest_base: str,
             if q:
                 qstr = q.group(1)
                 qualities.append(qstr)
-                # Log('%d - found %s' % (idi, qstr))
         if not (req_quality in qualities):
             q_idx = 0 if best_quality else -1
             if best_quality is False and req_quality != 'unknown':
@@ -77,6 +76,7 @@ def get_minmax_ids(arefs: list) -> (list, int, int):
 
 async def main() -> None:
     try:
+        # path is not validated
         dest_base = argv[1]
         start_id = int(argv[2])
     except Exception:

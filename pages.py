@@ -33,10 +33,12 @@ class VideoEntryPrev:
 
 async def main() -> None:
     try:
+        # path is not validated
         dest_base = argv[1]
         start_page = int(argv[2])
     except Exception:
-        print('Syntax: Destination StartPage NumPages [Full] [StopId]')
+        print('Syntax: Destination StartPage [NumPages] [Full] [StopId]'
+              '\n destination: str\n startpage: int\n numpages(1): int\n full(0): int[0(preview), 1(full), 2(full lowq)]\n stopid(1): int')
         return
 
     try:

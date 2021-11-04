@@ -13,6 +13,7 @@ from defs import CONNECT_RETRIES_PAGE, Log
 
 
 async def fetch_html(url: str, tries=None) -> (BeautifulSoup, None):
+    # very basic, minimum validation
     tries = tries or CONNECT_RETRIES_PAGE
 
     r = None

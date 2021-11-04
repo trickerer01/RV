@@ -41,15 +41,12 @@ async def download_file(filename: str, dest_base: str, link: str, s: ClientSessi
         try:
             expected_size = r.content_length
             async with s.request('GET', link, timeout=7200) as r:
-                # Log('%s: reading %d bytes' % (filename, r.content_length or -1))
                 Log('Saving %d bytes to %s' % (r.content_length or -1, filename))
-                # content = await r.read()
 
                 async with async_open(dest, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**20):
                         await outf.write(chunk)
-                # with open(dest, 'wb') as outf:
-                #     outf.write(content)
+
                 file_size = stat(dest).st_size
                 if expected_size and file_size != expected_size:
                     Log('Error: file size mismatch for %s: %d / %d' % (filename, file_size, expected_size))
