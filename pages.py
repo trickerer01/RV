@@ -36,7 +36,7 @@ async def main() -> None:
         dest_base = argv[1]
         start_page = int(argv[2])
     except Exception:
-        print('ivalid syntax')
+        print('Syntax: Destination StartPage NumPages [Full] [StopId]')
         return
 
     try:

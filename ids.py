@@ -10,7 +10,6 @@ from re import search
 from sys import argv
 from typing import Any
 
-from asyncio import run as run_async
 from aiohttp import ClientSession
 
 from defs import Log, SITE
@@ -68,41 +67,6 @@ async def download_id(idi: int, my_href: str, my_title: str, dest_base: str,
             async with ClientSession() as s:
                 await download_file(filename, dest_base, link, s)
 
-"""
-def download_id(idi: int, my_href: str, my_title: str, dest_base: str, req_quality: str = 'unknown', best_quality: bool = True) -> None:
-
-    i_html = fetch_html(my_href)
-    if i_html:
-        ddiv = i_html.find('div', text='Download:')
-        if not ddiv or not ddiv.parent:
-            Log('cannot find download section for %d, skipping...' % idi)
-            return
-        links = ddiv.parent.find_all('a', class_='tag_item')
-        qualities = []
-        for lin in links:
-            q = search(r'(\\d+0p)', lin.text)
-            if q:
-                qstr = q.group(1)
-                qualities.append(qstr)
-                # Log('%d - found %s' % (idi, qstr))
-        if not (req_quality in qualities):
-            q_idx = 0 if best_quality else -1
-            if best_quality is False and req_quality != 'unknown':
-                Log('cannot find proper quality for %d, using %s' % (idi, qualities[q_idx]))
-            req_quality = qualities[q_idx]
-            link_id = q_idx
-        else:
-            link_id = qualities.index(req_quality)
-
-        link = links[link_id].get('href')
-        filename = 'rv_' + str(idi) + '_' + my_title + '_FULL_' + req_quality + '_pydw' + extract_ext(link)
-
-        with Session() as s:
-            s.keep_alive = True
-            if download_file(filename, dest_base, link, s):
-                sleep(0.25)
-"""
-
 
 def get_minmax_ids(arefs: list) -> (list, int, int):
     ids = []
@@ -116,7 +80,7 @@ async def main() -> None:
         dest_base = argv[1]
         start_id = int(argv[2])
     except Exception:
-        print('ivalid syntax')
+        print('Syntax: Destination StartId [EndId] [Quality]\n  qualities:%s' % ''.join(' ' + q for q in QUALITIES))
         return
 
     try:
@@ -200,7 +164,9 @@ async def main() -> None:
 
 
 if __name__ == '__main__':
-    run_async(main())
+    # from asyncio import run as run_async
+    # run_async(main())
+    Log('Searching by ID is disabled, reason: Buggy, videos are not properly sorted by id, meking binary search mostly useless')
     exit(0)
 
 #

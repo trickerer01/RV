@@ -69,42 +69,6 @@ async def download_file(filename: str, dest_base: str, link: str, s: ClientSessi
 
     return retries < CONNECT_RETRIES_ITEM
 
-
-"""
-def download_file(filename: str, dest_base: str, link: str, s: Session) -> bool:
-    dest = normalize_filename(filename, dest_base)
-    file_size = 0
-    retries = 0
-
-    if path.exists(dest):
-        file_size = stat(dest).st_size
-        if file_size > 0:
-            Log('%s already exists. Skipped.' % filename)
-            return False
-
-    Log('Retrieving %s...' % filename)
-    while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
-        try:
-            r = s.request('GET', link, timeout=CONNECT_DELAY_PAGE, stream=False, allow_redirects=True)
-            r.raise_for_status()
-            content = r.content
-
-            Log('Saving to %s' % dest)
-            with open(dest, 'wb') as outf:
-                outf.write(content)
-            file_size = stat(dest).st_size
-            break
-        except (KeyboardInterrupt,):
-            assert False
-        except (Exception, HTTPError,):
-            retries += 1
-            Log('error #%d...' % retries)
-            sleep(1)
-            continue
-
-    return retries < CONNECT_RETRIES_ITEM
-"""
-
 #
 #
 #########################################
