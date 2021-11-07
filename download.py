@@ -39,8 +39,9 @@ async def download_file(filename: str, dest_base: str, link: str, s: ClientSessi
     Log('Retrieving %s...' % filename)
     while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
-            expected_size = r.content_length
+            r = None
             async with s.request('GET', link, timeout=7200) as r:
+                expected_size = r.content_length
                 Log('Saving %d bytes to %s' % (r.content_length or -1, filename))
 
                 async with async_open(dest, 'wb') as outf:
@@ -59,7 +60,8 @@ async def download_file(filename: str, dest_base: str, link: str, s: ClientSessi
             print(sys.exc_info()[0], sys.exc_info()[1])
             retries += 1
             Log('%s: error #%d...' % (filename, retries))
-            r.close()
+            if r:
+                r.close()
             remove(dest)
             sleep(1)
             continue

@@ -6,10 +6,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from asyncio import run as run_async, as_completed, sleep
 from re import search
 from sys import argv
+from typing import List
 
-from asyncio import run as run_async, as_completed, sleep
 from aiohttp import ClientSession, TCPConnector
 
 from defs import Log, SITE
@@ -18,17 +19,37 @@ from fetch_html import fetch_html
 from ids import download_id, extract_id
 
 
-class VideoEntryFull:
-    def __init__(self, m_id: int, m_href: str, m_title: str):
+class VideoEntryBase:
+    def __init__(self, m_id: int):
         self.my_id = m_id or 0
+
+
+class VideoEntryFull(VideoEntryBase):
+    def __init__(self, m_id: int, m_href: str, m_title: str):
+        super().__init__(m_id)
         self.my_href = m_href or ''
         self.my_title = m_title or ''
 
 
-class VideoEntryPrev:
-    def __init__(self, m_filename: str, m_link: str):
+class VideoEntryPrev(VideoEntryBase):
+    def __init__(self, m_id: int, m_filename: str, m_link: str):
+        super().__init__(m_id)
         self.my_filename = m_filename or ''
         self.my_link = m_link or ''
+
+
+def get_minmax_ids(entry_list: List[VideoEntryBase]) -> (int, int):
+    minid = 0
+    maxid = 0
+    for entry in entry_list:
+        if entry.my_id == 0:
+            continue
+        if entry.my_id > maxid:
+            maxid = entry.my_id
+        if entry.my_id < minid or minid == 0:
+            minid = entry.my_id
+
+    return minid, maxid
 
 
 async def main() -> None:
@@ -76,7 +97,12 @@ async def main() -> None:
                 my_title = aref.get('title')
                 vid_entries.append(VideoEntryFull(cur_id, my_href, my_title))
 
-        async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
+        if len(vid_entries) == 0:
+            Log('\nNo videos found. Aborted.')
+            return
+        minid, maxid = get_minmax_ids(vid_entries)
+        Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
+        async with ClientSession(connector=TCPConnector(limit=6), read_bufsize=2**20) as s:
             for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, best_quality=(do_full == 1), session=s)
                                     for v in list(reversed(vid_entries))]):
                 await cv
@@ -89,8 +115,10 @@ async def main() -> None:
                 Log('cannot get html for page %d', pi)
                 continue
 
-            prev_all = a_html.find_all('div', class_='img wrap_image')
-            titl_all = a_html.find_all('div', class_='thumb_title')
+            content_div = a_html.find('div', class_='thumbs clearfix')
+
+            prev_all = content_div.find_all('div', class_='img wrap_image')
+            titl_all = content_div.find_all('div', class_='thumb_title')
             cur_num = 1
             for i, p in enumerate(prev_all):
                 cur_num += 1
@@ -105,10 +133,15 @@ async def main() -> None:
                     Log('skipping %d < %d' % (cur_id, stop_id))
                     continue
                 filename = 'rv_' + (v_id.group(1) + '_' + name + '_pypv' + v_id.group(2) if v_id else name + '_pypv.mp4')
-                vid_entries.append(VideoEntryPrev(filename, link))
+                vid_entries.append(VideoEntryPrev(cur_id, filename, link))
 
-        async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
-            for cv in as_completed([download_file(v.my_filename, dest_base, v.my_link, s)] for v in list(reversed(vid_entries))):
+        if len(vid_entries) == 0:
+            Log('\nNo videos found. Aborted.')
+            return
+        minid, maxid = get_minmax_ids(vid_entries)
+        Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
+        async with ClientSession(connector=TCPConnector(limit=6), read_bufsize=2**20) as s:
+            for cv in as_completed([download_file(v.my_filename, dest_base, v.my_link, s) for v in list(reversed(vid_entries))]):
                 await cv
 
 
