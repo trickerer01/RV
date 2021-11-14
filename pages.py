@@ -102,7 +102,7 @@ async def main() -> None:
             return
         minid, maxid = get_minmax_ids(vid_entries)
         Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
-        async with ClientSession(connector=TCPConnector(limit=6), read_bufsize=2**20) as s:
+        async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
             for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, best_quality=(do_full == 1), session=s)
                                     for v in list(reversed(vid_entries))]):
                 await cv
@@ -140,7 +140,7 @@ async def main() -> None:
             return
         minid, maxid = get_minmax_ids(vid_entries)
         Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
-        async with ClientSession(connector=TCPConnector(limit=6), read_bufsize=2**20) as s:
+        async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
             for cv in as_completed([download_file(v.my_filename, dest_base, v.my_link, s) for v in list(reversed(vid_entries))]):
                 await cv
 
