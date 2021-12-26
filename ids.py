@@ -12,7 +12,7 @@ from typing import Any
 
 from aiohttp import ClientSession
 
-from defs import Log, SITE
+from defs import Log, SITE, DEFAULT_HEADERS
 from download import download_file
 from fetch_html import fetch_html
 
@@ -64,6 +64,7 @@ async def download_id(idi: int, my_href: str, my_title: str, dest_base: str,
             await download_file(filename, dest_base, link, session)
         else:
             async with ClientSession() as s:
+                s.headers.update(DEFAULT_HEADERS)
                 await download_file(filename, dest_base, link, s)
 
 

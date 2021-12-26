@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from bs4 import BeautifulSoup
 from aiohttp import ClientSession
 
-from defs import CONNECT_RETRIES_PAGE, Log
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS
 
 
 async def fetch_html(url: str, tries=None) -> (BeautifulSoup, None):
@@ -19,6 +19,7 @@ async def fetch_html(url: str, tries=None) -> (BeautifulSoup, None):
     r = None
     retries = 0
     async with ClientSession() as s:
+        s.headers.update(DEFAULT_HEADERS)
         while retries < tries:
             try:
                 async with s.request('GET', url, timeout=7200) as r:

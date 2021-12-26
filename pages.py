@@ -13,7 +13,7 @@ from typing import List
 
 from aiohttp import ClientSession, TCPConnector
 
-from defs import Log, SITE
+from defs import Log, SITE, DEFAULT_HEADERS
 from download import download_file
 from fetch_html import fetch_html
 from ids import download_id, extract_id
@@ -103,6 +103,7 @@ async def main() -> None:
         minid, maxid = get_minmax_ids(vid_entries)
         Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
         async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
+            s.headers.update(DEFAULT_HEADERS)
             for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, best_quality=(do_full == 1), session=s)
                                     for v in list(reversed(vid_entries))]):
                 await cv
@@ -141,6 +142,7 @@ async def main() -> None:
         minid, maxid = get_minmax_ids(vid_entries)
         Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
         async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
+            s.headers.update(DEFAULT_HEADERS)
             for cv in as_completed([download_file(v.my_filename, dest_base, v.my_link, s) for v in list(reversed(vid_entries))]):
                 await cv
 
