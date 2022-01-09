@@ -19,6 +19,9 @@ from fetch_html import fetch_html
 from ids import download_id, extract_id
 
 
+MAX_VIDEOS_QUEUE_SIZE = 250
+
+
 class VideoEntryBase:
     def __init__(self, m_id: int):
         self.my_id = m_id or 0
@@ -102,11 +105,16 @@ async def main() -> None:
             return
         minid, maxid = get_minmax_ids(vid_entries)
         Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
-        async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
-            s.headers.update(DEFAULT_HEADERS)
-            for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, best_quality=(do_full == 1), session=s)
-                                    for v in list(reversed(vid_entries))]):
-                await cv
+        vid_entries = list(reversed(vid_entries))
+        while len(vid_entries) > 0:
+            index = min(MAX_VIDEOS_QUEUE_SIZE, len(vid_entries))
+            vids_cur = vid_entries[:index]
+            vid_entries = vid_entries[index:]
+            async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
+                s.headers.update(DEFAULT_HEADERS)
+                for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, best_quality=(do_full == 1), session=s)
+                                        for v in vids_cur]):
+                    await cv
     else:
         # not async here
         for pi in range(start_page, start_page + pages_count):
@@ -141,10 +149,15 @@ async def main() -> None:
             return
         minid, maxid = get_minmax_ids(vid_entries)
         Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
-        async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
-            s.headers.update(DEFAULT_HEADERS)
-            for cv in as_completed([download_file(v.my_filename, dest_base, v.my_link, s) for v in list(reversed(vid_entries))]):
-                await cv
+        vid_entries = list(reversed(vid_entries))
+        while len(vid_entries) > 0:
+            index = min(MAX_VIDEOS_QUEUE_SIZE, len(vid_entries))
+            vids_cur = vid_entries[:index]
+            vid_entries = vid_entries[index:]
+            async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
+                s.headers.update(DEFAULT_HEADERS)
+                for cv in as_completed([download_file(v.my_filename, dest_base, v.my_link, s) for v in vids_cur]):
+                    await cv
 
 
 async def run_main():

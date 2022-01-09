@@ -117,13 +117,14 @@ async def main() -> None:
         my_href = None
         my_title = None
 
-        # binary search to find a page with that id
-        cur_page = 1
-        increment = maxpage
-        direction = 1
-        while True:
-            increment = max(increment // 2, 1)
-            cur_page += increment * direction
+        # since entries are not exactly sorted by id, we have to use linear search :sadface:
+        # TODO: implement a mixed search: binary until reaching minimum range - then linear in 3-5 surrounding pages
+        cur_page = 0
+        arefs = None
+        while cur_page <= maxpage:
+            cur_page += 1
+            if cur_page > maxpage:
+                break
             Log('page %d/%d...' % (cur_page, maxpage))
             a_html = await fetch_html(SITE + 'latest-updates/' + str(cur_page) + '/')
             if not a_html:
@@ -138,18 +139,11 @@ async def main() -> None:
                 return
 
             if idi in ids:
-                # current page is what we want
-                maxpage = cur_page
                 break
-            elif id_min < idi < id_max:
-                # failing
-                break
-            elif idi < id_min:
-                direction = 1
-                continue
-            elif idi > id_max:
-                direction = -1
-                continue
+
+        if cur_page > maxpage or arefs is None:
+            Log('id %d is not found! Skipped.' % idi)
+            continue
 
         for aref in arefs:
             c_id = extract_id(aref)
@@ -157,17 +151,59 @@ async def main() -> None:
                 my_href = aref.get('href')
                 my_title = aref.get('title')
                 break
-        if not my_href or not my_title:
-            Log('id %d is not found! Skipped.' % idi)
-            continue
+
+        # binary search to find a page with that id
+        # cur_page = 1
+        # increment = maxpage
+        # direction = 1
+
+        # while True:
+        #     increment = max(increment // 2, 1)
+        #     cur_page += increment * direction
+        #     Log('page %d/%d...' % (cur_page, maxpage))
+        #     a_html = await fetch_html(SITE + 'latest-updates/' + str(cur_page) + '/')
+        #     if not a_html:
+        #         Log('cannot connect')
+        #         return
+        #
+        #     arefs = a_html.find_all('a', class_='th js-open-popup')
+        #     try:
+        #         ids, id_min, id_max = get_minmax_ids(arefs)
+        #     except Exception:
+        #         Log('cannot find min/max elements on page %d! Aborting' % cur_page)
+        #         return
+        #
+        #     if idi in ids:
+        #         # current page is what we want
+        #         maxpage = cur_page
+        #         break
+        #     elif id_min < idi < id_max:
+        #         # failing
+        #         break
+        #     elif idi < id_min:
+        #         direction = 1
+        #         continue
+        #     elif idi > id_max:
+        #         direction = -1
+        #         continue
+        #
+        # for aref in arefs:
+        #     c_id = extract_id(aref)
+        #     if c_id == idi:
+        #         my_href = aref.get('href')
+        #         my_title = aref.get('title')
+        #         break
+        # if not my_href or not my_title:
+        #     Log('id %d is not found! Skipped.' % idi)
+        #     continue
 
         await download_id(idi, my_href, my_title, dest_base, req_quality)
 
 
 if __name__ == '__main__':
-    # from asyncio import run as run_async
-    # run_async(main())
-    Log('Searching by ID is disabled, reason: Buggy, videos are not properly sorted by id, meking binary search mostly useless')
+    from asyncio import run as run_async
+    run_async(main())
+    # Log('Searching by ID is disabled, reason: Buggy, videos are not properly sorted by id, meking binary search mostly useless')
     exit(0)
 
 #
