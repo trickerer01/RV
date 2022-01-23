@@ -14,7 +14,7 @@ SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20v').decode()
 USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:68.9) Gecko/20100101 Goanna/4.8 Firefox/68.9'
 DEFAULT_HEADERS = {'user-agent': USER_AGENT}
 
-REPLACE_SYMBOLS = r'[^\dA-z._\-\[\] ]'
+REPLACE_SYMBOLS = r'[^\da-zA-Z._\-\[\] ]'
 
 CONNECT_RETRIES_PAGE = 10000
 CONNECT_RETRIES_ITEM = 10000
