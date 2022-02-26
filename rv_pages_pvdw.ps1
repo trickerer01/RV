@@ -2,16 +2,16 @@
 #
 # 1) rv
 
-. "config.ps1"
-
+$RUN_PYTHON3 = "python.exe"  # has to be in PATH
 $SYNTAX_ = "Syntax: #start_page #num_pages [#do_full=0,1,2] [#stop_id] [#search_string]"
+$TimeFormat = "HH:mm:ss"
 
-$MYWORKDIR = $MYWORKDIR_DWNLD
-$MYWORKDIR = $MYWORKDIR -replace "\\", '/'
+$MYWORKDIR = "./"
+$SCRIPT_PATH = "pages.py"
 
 $par1 = New-Object System.Collections.ArrayList
 
-$par1.Add("E:\PythonProjects\3rv\pages.py") > $null
+$par1.Add($SCRIPT_PATH) > $null
 $par1.Add($MYWORKDIR) > $null
 
 $startTime = Get-Date -Format $TimeFormat
