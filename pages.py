@@ -13,7 +13,7 @@ from typing import List
 
 from aiohttp import ClientSession, TCPConnector
 
-from defs import Log, SITE, DEFAULT_HEADERS
+from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS
 from download import download_file
 from fetch_html import fetch_html
 from ids import download_id, extract_id
@@ -61,8 +61,9 @@ async def main() -> None:
         dest_base = argv[1]
         start_page = int(argv[2])
     except Exception:
-        print('Syntax: Destination StartPage [NumPages] [Full] [StopId]'
-              '\n destination: str\n startpage: int\n numpages(1): int\n full(0): int[0(preview), 1(full), 2(full lowq)]\n stopid(1): int')
+        print('Syntax: Destination StartPage [NumPages] [Full] [StopId] [Search_string]'
+              '\n destination: str\n startpage: int\n numpages(1): int\n full(0): int[0(preview), 1(full), 2(full lowq)]\n stopid(1): int'
+              '\n search_string: str')
         return
 
     try:
@@ -81,12 +82,17 @@ async def main() -> None:
     except Exception:
         stop_id = 1
 
+    try:
+        search_str = str(argv[6])
+    except Exception:
+        search_str = ''
+
     vid_entries = list()
     if do_full in [1, 2]:
         # not async here
         for pi in range(start_page, start_page + pages_count):
             Log('page %d...' % pi)
-            a_html = await fetch_html(SITE + 'latest-updates/' + str(pi) + '/')
+            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
             if not a_html:
                 Log('cannot get html for page %d', pi)
                 continue
@@ -119,12 +125,16 @@ async def main() -> None:
         # not async here
         for pi in range(start_page, start_page + pages_count):
             Log('page %d...' % pi)
-            a_html = await fetch_html(SITE + 'latest-updates/' + str(pi) + '/')
+            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
             if not a_html:
-                Log('cannot get html for page %d', pi)
+                Log(('cannot get html for page %d' % pi))
                 continue
 
             content_div = a_html.find('div', class_='thumbs clearfix')
+
+            if content_div is None:
+                Log(('cannot get content div for page %d' % pi))
+                continue
 
             prev_all = content_div.find_all('div', class_='img wrap_image')
             titl_all = content_div.find_all('div', class_='thumb_title')

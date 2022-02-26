@@ -12,7 +12,7 @@ from typing import Any
 
 from aiohttp import ClientSession
 
-from defs import Log, SITE, DEFAULT_HEADERS
+from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS
 from download import download_file
 from fetch_html import fetch_html
 
@@ -75,7 +75,7 @@ def get_minmax_ids(arefs: list) -> (list, int, int):
     return (ids, min(ids), max(ids))
 
 
-async def main() -> None:
+async def main():
     try:
         # path is not validated
         dest_base = argv[1]
@@ -97,16 +97,16 @@ async def main() -> None:
         req_quality = QUALITIES[0]
 
     # pages
-    a_html = await fetch_html(SITE + 'latest-updates/1/')
+    a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % ('', 1))
     if not a_html:
         Log('cannot connect')
         return
 
     maxpage = 1
-    for page in a_html.find_all('a', attrs={'data-action': 'ajax'}):
+    for page_ajax in a_html.find_all('a', attrs={'data-action': 'ajax'}):
         try:
-            page_href = str(page.get('href'))
-            maxpage = max(maxpage, int(search(r'latest-updates/(\d+)/', page_href).group(1)))
+            data_params = str(page_ajax.get('data-parameters'))
+            maxpage = max(maxpage, int(search(r'from_albums:(\d+)', data_params).group(1)))
         except Exception:
             pass
 
@@ -117,16 +117,16 @@ async def main() -> None:
         my_href = None
         my_title = None
 
-        # since entries are not exactly sorted by id, we have to use linear search :sadface:
-        # TODO: implement a mixed search: binary until reaching minimum range - then linear in 3-5 surrounding pages
-        cur_page = 0
-        arefs = None
-        while cur_page <= maxpage:
-            cur_page += 1
-            if cur_page > maxpage:
-                break
+        # binary search to find a page with that id
+        cur_page = 1
+        increment = maxpage
+        direction = 1
+
+        while True:
+            increment = max(increment // 2, 1)
+            cur_page += increment * direction
             Log('page %d/%d...' % (cur_page, maxpage))
-            a_html = await fetch_html(SITE + 'latest-updates/' + str(cur_page) + '/')
+            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % ('', cur_page))
             if not a_html:
                 Log('cannot connect')
                 return
@@ -139,11 +139,18 @@ async def main() -> None:
                 return
 
             if idi in ids:
+                # current page is what we want
+                maxpage = cur_page
                 break
-
-        if cur_page > maxpage or arefs is None:
-            Log('id %d is not found! Skipped.' % idi)
-            continue
+            elif id_min < idi < id_max:
+                # failing
+                break
+            elif idi < id_min:
+                direction = 1
+                continue
+            elif idi > id_max:
+                direction = -1
+                continue
 
         for aref in arefs:
             c_id = extract_id(aref)
@@ -151,53 +158,11 @@ async def main() -> None:
                 my_href = aref.get('href')
                 my_title = aref.get('title')
                 break
+        if not my_href or not my_title:
+            Log('id %d is not found! Skipped.' % idi)
+            continue
 
-        # binary search to find a page with that id
-        # cur_page = 1
-        # increment = maxpage
-        # direction = 1
-
-        # while True:
-        #     increment = max(increment // 2, 1)
-        #     cur_page += increment * direction
-        #     Log('page %d/%d...' % (cur_page, maxpage))
-        #     a_html = await fetch_html(SITE + 'latest-updates/' + str(cur_page) + '/')
-        #     if not a_html:
-        #         Log('cannot connect')
-        #         return
-        #
-        #     arefs = a_html.find_all('a', class_='th js-open-popup')
-        #     try:
-        #         ids, id_min, id_max = get_minmax_ids(arefs)
-        #     except Exception:
-        #         Log('cannot find min/max elements on page %d! Aborting' % cur_page)
-        #         return
-        #
-        #     if idi in ids:
-        #         # current page is what we want
-        #         maxpage = cur_page
-        #         break
-        #     elif id_min < idi < id_max:
-        #         # failing
-        #         break
-        #     elif idi < id_min:
-        #         direction = 1
-        #         continue
-        #     elif idi > id_max:
-        #         direction = -1
-        #         continue
-        #
-        # for aref in arefs:
-        #     c_id = extract_id(aref)
-        #     if c_id == idi:
-        #         my_href = aref.get('href')
-        #         my_title = aref.get('title')
-        #         break
-        # if not my_href or not my_title:
-        #     Log('id %d is not found! Skipped.' % idi)
-        #     continue
-
-        await download_id(idi, my_href, my_title, dest_base, req_quality)
+        return await download_id(idi, my_href, my_title, dest_base, req_quality)
 
 
 if __name__ == '__main__':
