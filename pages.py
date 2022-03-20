@@ -13,13 +13,10 @@ from typing import List
 
 from aiohttp import ClientSession, TCPConnector
 
-from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS
-from download import download_file
+from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE
+from download import download_file, download_id, is_queue_empty
 from fetch_html import fetch_html
-from ids import download_id, extract_id
-
-
-MAX_VIDEOS_QUEUE_SIZE = 250
+from ids import extract_id
 
 
 class VideoEntryBase:
@@ -112,15 +109,11 @@ async def main() -> None:
         minid, maxid = get_minmax_ids(vid_entries)
         Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
         vid_entries = list(reversed(vid_entries))
-        while len(vid_entries) > 0:
-            index = min(MAX_VIDEOS_QUEUE_SIZE, len(vid_entries))
-            vids_cur = vid_entries[:index]
-            vid_entries = vid_entries[index:]
-            async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
-                s.headers.update(DEFAULT_HEADERS)
-                for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, best_quality=(do_full == 1), session=s)
-                                        for v in vids_cur]):
-                    await cv
+        async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
+            s.headers.update(DEFAULT_HEADERS)
+            for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, best_quality=(do_full == 1), session=s)
+                                    for v in vid_entries]):
+                await cv
     else:
         # not async here
         for pi in range(start_page, start_page + pages_count):
@@ -160,14 +153,13 @@ async def main() -> None:
         minid, maxid = get_minmax_ids(vid_entries)
         Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
         vid_entries = list(reversed(vid_entries))
-        while len(vid_entries) > 0:
-            index = min(MAX_VIDEOS_QUEUE_SIZE, len(vid_entries))
-            vids_cur = vid_entries[:index]
-            vid_entries = vid_entries[index:]
-            async with ClientSession(connector=TCPConnector(limit=8), read_bufsize=2**20) as s:
-                s.headers.update(DEFAULT_HEADERS)
-                for cv in as_completed([download_file(v.my_filename, dest_base, v.my_link, s) for v in vids_cur]):
-                    await cv
+        async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
+            s.headers.update(DEFAULT_HEADERS)
+            for cv in as_completed([download_file(v.my_id, v.my_filename, dest_base, v.my_link, s) for v in vid_entries]):
+                await cv
+
+        if not is_queue_empty():
+            Log('pages: queue is not empty at exit!')
 
 
 async def run_main():

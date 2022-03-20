@@ -10,10 +10,8 @@ from re import search
 from sys import argv
 from typing import Any
 
-from aiohttp import ClientSession
-
-from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS
-from download import download_file
+from defs import Log, SITE_AJAX_REQUEST_BASE
+from download import download_id
 from fetch_html import fetch_html
 
 
@@ -22,50 +20,6 @@ QUALITIES = ['1080p', '720p', '480p', '360p']
 
 def extract_id(aref: Any) -> int:
     return int(search(r'videos/(\d+)/', str(aref.get('href'))).group(1))
-
-
-def extract_ext(href: str) -> str:
-    try:
-        return search(r'(\.[^&]{3,5})&', href).group(1)
-    except Exception:
-        return '.mp4'
-
-
-async def download_id(idi: int, my_href: str, my_title: str, dest_base: str,
-                      req_quality: str = 'unknown', best_quality: bool = True,
-                      session: ClientSession = None) -> None:
-
-    i_html = await fetch_html(my_href)
-    if i_html:
-        ddiv = i_html.find('div', text='Download:')
-        if not ddiv or not ddiv.parent:
-            Log('cannot find download section for %d, skipping...' % idi)
-            return
-        links = ddiv.parent.find_all('a', class_='tag_item')
-        qualities = []
-        for lin in links:
-            q = search(r'(\d+0p)', lin.text)
-            if q:
-                qstr = q.group(1)
-                qualities.append(qstr)
-        if not (req_quality in qualities):
-            q_idx = 0 if best_quality else -1
-            if best_quality is False and req_quality != 'unknown':
-                Log('cannot find proper quality for %d, using %s' % (idi, qualities[q_idx]))
-            req_quality = qualities[q_idx]
-            link_id = q_idx
-        else:
-            link_id = qualities.index(req_quality)
-
-        link = links[link_id].get('href')
-        filename = 'rv_' + str(idi) + '_' + my_title + '_FULL_' + req_quality + '_pydw' + extract_ext(link)
-
-        if session:
-            await download_file(filename, dest_base, link, session)
-        else:
-            async with ClientSession() as s:
-                s.headers.update(DEFAULT_HEADERS)
-                await download_file(filename, dest_base, link, s)
 
 
 def get_minmax_ids(arefs: list) -> (list, int, int):
