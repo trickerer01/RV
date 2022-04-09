@@ -6,12 +6,13 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from asyncio import run as run_async, sleep
 from re import search
 from sys import argv
 from typing import Any
 
 from defs import Log, SITE_AJAX_REQUEST_BASE
-from download import download_id
+from download import download_id, failed_items
 from fetch_html import fetch_html
 
 
@@ -76,10 +77,17 @@ async def main():
         increment = maxpage
         direction = 1
 
+        arefs = []
         while True:
             increment = max(increment // 2, 1)
             cur_page += increment * direction
             Log('page %d/%d...' % (cur_page, maxpage))
+
+            if cur_page < 1 or cur_page > maxpage:
+                Log('Page is out of bounds! Cannot find %d' % idi)
+                failed_items.append(idi)
+                break
+
             a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % ('', cur_page))
             if not a_html:
                 Log('cannot connect')
@@ -112,16 +120,26 @@ async def main():
                 my_href = aref.get('href')
                 my_title = aref.get('title')
                 break
+
         if not my_href or not my_title:
             Log('id %d is not found! Skipped.' % idi)
             continue
 
-        return await download_id(idi, my_href, my_title, dest_base, req_quality)
+        await download_id(idi, my_href, my_title, dest_base, req_quality)
+
+    if len(failed_items) > 0:
+        Log('Failed items:')
+        for fi in failed_items:
+            Log(' ', str(fi))
+
+
+async def run_main():
+    await main()
+    await sleep(0.25)
 
 
 if __name__ == '__main__':
-    from asyncio import run as run_async
-    run_async(main())
+    run_async(run_main())
     # Log('Searching by ID is disabled, reason: Buggy, videos are not properly sorted by id, meking binary search mostly useless')
     exit(0)
 

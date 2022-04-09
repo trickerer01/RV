@@ -14,7 +14,7 @@ from typing import List
 from aiohttp import ClientSession, TCPConnector
 
 from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE
-from download import download_file, download_id, is_queue_empty
+from download import download_file, download_id, is_queue_empty, failed_items
 from fetch_html import fetch_html
 from ids import extract_id
 
@@ -85,14 +85,29 @@ async def main() -> None:
         search_str = ''
 
     vid_entries = list()
-    if do_full in [1, 2]:
-        # not async here
-        for pi in range(start_page, start_page + pages_count):
-            Log('page %d...' % pi)
-            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
-            if not a_html:
-                Log('cannot get html for page %d', pi)
-                continue
+    maxpage = 0
+
+    full_download = do_full in [1, 2]
+    for pi in range(start_page, start_page + pages_count):
+        if maxpage and pi > maxpage:
+            Log('reached parsed max page, page scan completed')
+            break
+        Log(('page %d...%s' % (pi, ' (this is the last page!)' if maxpage and pi == maxpage else '')))
+
+        a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
+        if not a_html:
+            Log('cannot get html for page %d', pi)
+            continue
+
+        if maxpage == 0:
+            for page_ajax in a_html.find_all('a', attrs={'data-action': 'ajax'}):
+                try:
+                    data_params = str(page_ajax.get('data-parameters'))
+                    maxpage = max(maxpage, int(search(r'from_albums:(\d+)', data_params).group(1)))
+                except Exception:
+                    pass
+
+        if full_download:
             arefs = a_html.find_all('a', class_='th js-open-popup')
             for aref in arefs:
                 cur_id = extract_id(aref)
@@ -102,27 +117,7 @@ async def main() -> None:
                 my_href = aref.get('href')
                 my_title = aref.get('title')
                 vid_entries.append(VideoEntryFull(cur_id, my_href, my_title))
-
-        if len(vid_entries) == 0:
-            Log('\nNo videos found. Aborted.')
-            return
-        minid, maxid = get_minmax_ids(vid_entries)
-        Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
-        vid_entries = list(reversed(vid_entries))
-        async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
-            s.headers.update(DEFAULT_HEADERS)
-            for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, best_quality=(do_full == 1), session=s)
-                                    for v in vid_entries]):
-                await cv
-    else:
-        # not async here
-        for pi in range(start_page, start_page + pages_count):
-            Log('page %d...' % pi)
-            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
-            if not a_html:
-                Log(('cannot get html for page %d' % pi))
-                continue
-
+        else:
             content_div = a_html.find('div', class_='thumbs clearfix')
 
             if content_div is None:
@@ -147,19 +142,30 @@ async def main() -> None:
                 filename = 'rv_' + (v_id.group(1) + '_' + name + '_pypv' + v_id.group(2) if v_id else name + '_pypv.mp4')
                 vid_entries.append(VideoEntryPrev(cur_id, filename, link))
 
-        if len(vid_entries) == 0:
-            Log('\nNo videos found. Aborted.')
-            return
-        minid, maxid = get_minmax_ids(vid_entries)
-        Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
-        vid_entries = list(reversed(vid_entries))
-        async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
-            s.headers.update(DEFAULT_HEADERS)
+    if len(vid_entries) == 0:
+        Log('\nNo videos found. Aborted.')
+        return
+
+    minid, maxid = get_minmax_ids(vid_entries)
+    Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
+    vid_entries = list(reversed(vid_entries))
+    async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
+        s.headers.update(DEFAULT_HEADERS)
+        if full_download:
+            best = (do_full == 1)
+            for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, 'unknown', best, s) for v in vid_entries]):
+                await cv
+        else:
             for cv in as_completed([download_file(v.my_id, v.my_filename, dest_base, v.my_link, s) for v in vid_entries]):
                 await cv
 
-        if not is_queue_empty():
-            Log('pages: queue is not empty at exit!')
+    if not is_queue_empty():
+        Log('pages: queue is not empty at exit!')
+
+    if len(failed_items) > 0:
+        Log('Failed items:')
+        for fi in failed_items:
+            Log(' ', str(fi))
 
 
 async def run_main():
