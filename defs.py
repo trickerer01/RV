@@ -22,6 +22,29 @@ USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:68.9) Gecko/20100101 Goanna/4.8 F
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
 REPLACE_SYMBOLS = r'[^\da-zA-Z._\-\[\] ]'
+NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._\-\[\]]'
+SLASH_CHAR = '/'
+
+QUALITIES = ['1080p', '720p', '480p', '360p']
+
+ACTION_STORE_TRUE = 'store_true'
+ACTION_STORE_FALSE = 'store_false'
+
+# pages
+HELP_MODE = 'Video size and quality. You can download just previews, full videos with highest quality, or ' \
+            'full videos with lowest quality (360p typically). Default is \'best\''
+HELP_PAGES = 'Pages count to process. Required'
+HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
+HELP_PATH = 'Download destination. Default is current folder'
+HELP_SEARCH = 'If you want to only traverse pages matching some search query'
+
+# ids
+HELP_QUALITY = 'Prefered video quality. Default is \'' + QUALITIES[0] + '\'. If not found, falls back to best quality'
+
+MODE_PREVIEW = 'preview'
+MODE_BEST = 'best'
+MODE_LOWQ = 'lowq'
+
 
 CONNECT_RETRIES_PAGE = 10000
 CONNECT_RETRIES_ITEM = 10000

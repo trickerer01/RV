@@ -11,12 +11,10 @@ from re import search
 from sys import argv
 from typing import Any
 
+from cmdargs import prepare_arglist_ids
 from defs import Log, SITE_AJAX_REQUEST_BASE
 from download import download_id, failed_items
 from fetch_html import fetch_html
-
-
-QUALITIES = ['1080p', '720p', '480p', '360p']
 
 
 def extract_id(aref: Any) -> int:
@@ -30,26 +28,25 @@ def get_minmax_ids(arefs: list) -> (list, int, int):
     return (ids, min(ids), max(ids))
 
 
-async def main():
+async def main() -> None:
     try:
-        # path is not validated
-        dest_base = argv[1]
-        start_id = int(argv[2])
+        arglist = prepare_arglist_ids(argv[1:])
     except Exception:
-        print('Syntax: Destination StartId [EndId] [Quality]\n  qualities:%s' % ''.join(' ' + q for q in QUALITIES))
+        Log('\nUnable to parse cmdline. Exiting...')
         return
 
     try:
-        end_id = int(argv[3])
-    except Exception:
-        end_id = start_id
+        dest_base = arglist.path
+        start_id = arglist.start
+        end_id = arglist.end
+        req_quality = arglist.quality
 
-    try:
-        req_quality = argv[4]
-        if not (req_quality in QUALITIES):
-            req_quality = QUALITIES[0]
+        if start_id > end_id:
+            Log(('\nError: start (%d) > end (%d)' % (start_id, end_id)))
+            raise ValueError
     except Exception:
-        req_quality = QUALITIES[0]
+        Log('\nError reading parsed arglist!')
+        return
 
     # pages
     a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % ('', 1))

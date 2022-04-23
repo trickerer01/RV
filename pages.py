@@ -13,7 +13,8 @@ from typing import List
 
 from aiohttp import ClientSession, TCPConnector
 
-from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE
+from cmdargs import prepare_arglist_pages
+from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ
 from download import download_file, download_id, is_queue_empty, failed_items
 from fetch_html import fetch_html
 from ids import extract_id
@@ -54,40 +55,26 @@ def get_minmax_ids(entry_list: List[VideoEntryBase]) -> (int, int):
 
 async def main() -> None:
     try:
-        # path is not validated
-        dest_base = argv[1]
-        start_page = int(argv[2])
+        arglist = prepare_arglist_pages(argv[1:])
     except Exception:
-        print('Syntax: Destination StartPage [NumPages] [Full] [StopId] [Search_string]'
-              '\n destination: str\n startpage: int\n numpages(1): int\n full(0): int[0(preview), 1(full), 2(full lowq)]\n stopid(1): int'
-              '\n search_string: str')
+        Log('\nUnable to parse cmdline. Exiting...')
         return
 
     try:
-        pages_count = int(argv[3])
+        dest_base = arglist.path
+        start_page = arglist.start
+        pages_count = arglist.pages
+        do_full = arglist.mode
+        stop_id = arglist.stop_id
+        search_str = arglist.search
     except Exception:
-        pages_count = 1
-
-    try:
-        do_full = int(argv[4])
-        assert 0 <= do_full <= 2
-    except Exception:
-        do_full = 0
-
-    try:
-        stop_id = int(argv[5])
-    except Exception:
-        stop_id = 1
-
-    try:
-        search_str = str(argv[6])
-    except Exception:
-        search_str = ''
+        Log('\nError reading parsed arglist!')
+        return
 
     vid_entries = list()
     maxpage = 0
 
-    full_download = do_full in [1, 2]
+    full_download = do_full in [MODE_BEST, MODE_LOWQ]
     for pi in range(start_page, start_page + pages_count):
         if maxpage and pi > maxpage:
             Log('reached parsed max page, page scan completed')
@@ -152,7 +139,7 @@ async def main() -> None:
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         s.headers.update(DEFAULT_HEADERS)
         if full_download:
-            best = (do_full == 1)
+            best = (do_full == MODE_BEST)
             for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, 'unknown', best, s) for v in vid_entries]):
                 await cv
         else:
