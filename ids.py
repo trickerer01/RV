@@ -11,8 +11,10 @@ from re import search
 from sys import argv
 from typing import Any
 
+from aiohttp import ClientSession, TCPConnector
+
 from cmdargs import prepare_arglist_ids
-from defs import Log, SITE_AJAX_REQUEST_BASE
+from defs import Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE
 from download import download_id, failed_items
 from fetch_html import fetch_html
 
@@ -122,7 +124,8 @@ async def main() -> None:
             Log('id %d is not found! Skipped.' % idi)
             continue
 
-        await download_id(idi, my_href, my_title, dest_base, req_quality)
+        async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
+            await download_id(idi, my_href, my_title, dest_base, req_quality, True, s)
 
     if len(failed_items) > 0:
         Log('Failed items:')

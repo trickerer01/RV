@@ -14,7 +14,7 @@ from typing import List
 from aiohttp import ClientSession
 from aiofile import async_open
 
-from defs import Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__
+from defs import Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH_CHAR
 from fetch_html import fetch_html
 
 
@@ -36,9 +36,9 @@ def is_in_queue(idi: int) -> bool:
 
 def normalize_filename(filename: str, dest_base: str) -> str:
     filename = sub(REPLACE_SYMBOLS, '_', filename)
-    dest = dest_base.replace('\\', '/')
-    if dest[-1] != '/':
-        dest += '/'
+    dest = dest_base.replace('\\', SLASH_CHAR)
+    if dest[-1] != SLASH_CHAR:
+        dest += SLASH_CHAR
     dest += filename
     return dest
 
@@ -73,9 +73,8 @@ async def try_unregister_from_queue(idi: int) -> None:
             Log('try_unregister_from_queue: ', idi, 'was not in queue')
 
 
-async def download_id(idi: int, my_href: str, my_title: str, dest_base: str,
-                      req_quality: str = 'unknown', best_quality: bool = True,
-                      session: ClientSession = None) -> None:
+async def download_id(idi: int, my_href: str, my_title: str, dest_base: str, req_quality: str, best_quality: bool,
+                      session: ClientSession) -> None:
 
     while not await try_register_in_queue(idi):
         await sleep(0.1)
@@ -105,14 +104,9 @@ async def download_id(idi: int, my_href: str, my_title: str, dest_base: str,
             link_idx = qualities.index(req_quality)
 
         link = links[link_idx].get('href')
-        filename = 'rv_' + str(idi) + '_' + my_title + '_FULL_' + req_quality + '_pydw' + extract_ext(link)
+        filename = 'rv_' + str(idi) + '_' + my_title + '_' + req_quality + '_pydw' + extract_ext(link)
 
-        if session:
-            await download_file(idi, filename, dest_base, link, session)
-        else:
-            async with ClientSession() as s:
-                s.headers.update(DEFAULT_HEADERS)
-                await download_file(idi, filename, dest_base, link, s)
+        await download_file(idi, filename, dest_base, link, session)
 
 
 async def download_file(idi: int, filename: str, dest_base: str, link: str, s: ClientSession) -> bool:

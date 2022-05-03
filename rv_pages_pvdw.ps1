@@ -12,6 +12,7 @@ $SCRIPT_PATH = "pages.py"
 $par1 = New-Object System.Collections.ArrayList
 
 $par1.Add($SCRIPT_PATH) > $null
+$par1.Add("-path") > $null
 $par1.Add($MYWORKDIR) > $null
 
 $startTime = Get-Date -Format $TimeFormat
