@@ -103,7 +103,14 @@ async def main() -> None:
                     continue
                 my_href = aref.get('href')
                 my_title = aref.get('title')
-                vid_entries.append(VideoEntryFull(cur_id, my_href, my_title))
+                already_queued = False
+                for v in vid_entries:
+                    if v.my_id == cur_id:
+                        Log(('Warning: id %i already queued, skipping' % (cur_id)))
+                        already_queued = True
+                        break
+                if not already_queued:
+                    vid_entries.append(VideoEntryFull(cur_id, my_href, my_title))
         else:
             content_div = a_html.find('div', class_='thumbs clearfix')
 
@@ -126,8 +133,15 @@ async def main() -> None:
                 if cur_id < stop_id:
                     Log('skipping %d < %d' % (cur_id, stop_id))
                     continue
-                filename = 'rv_' + (v_id.group(1) + '_' + name + '_pypv' + v_id.group(2) if v_id else name + '_pypv.mp4')
-                vid_entries.append(VideoEntryPrev(cur_id, filename, link))
+                already_queued = False
+                for v in vid_entries:
+                    if v.my_id == cur_id:
+                        Log(('Warning: id %i already queued, skipping' % (cur_id)))
+                        already_queued = True
+                        break
+                if not already_queued:
+                    filename = 'rv_' + (v_id.group(1) + '_' + name + '_pypv' + v_id.group(2) if v_id else name + '_pypv.mp4')
+                    vid_entries.append(VideoEntryPrev(cur_id, filename, link))
 
     if len(vid_entries) == 0:
         Log('\nNo videos found. Aborted.')
