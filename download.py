@@ -15,7 +15,7 @@ from aiohttp import ClientSession
 from aiofile import async_open
 
 from defs import Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH_CHAR
-from fetch_html import fetch_html
+from fetch_html import fetch_html, get_proxy
 
 
 downloads_queue = []  # type: List[int]
@@ -139,7 +139,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
     while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
             r = None
-            async with s.request('GET', link, timeout=7200) as r:
+            async with s.request('GET', link, timeout=7200, proxy=get_proxy()) as r:
                 if r.content_type and r.content_type.find('text') != -1:
                     Log(('File not found at %s!' % link))
                     if retries >= 10:

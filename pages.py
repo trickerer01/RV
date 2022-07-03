@@ -16,7 +16,7 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_pages
 from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ
 from download import download_file, download_id, is_queue_empty, failed_items
-from fetch_html import fetch_html
+from fetch_html import fetch_html, set_proxy
 from ids import extract_id
 
 
@@ -67,6 +67,7 @@ async def main() -> None:
         do_full = arglist.mode
         stop_id = arglist.stop_id
         search_str = arglist.search
+        set_proxy(arglist.proxy)
     except Exception:
         Log('\nError reading parsed arglist!')
         return

@@ -6,10 +6,24 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from typing import Optional
+
 from bs4 import BeautifulSoup
 from aiohttp import ClientSession
 
 from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS
+
+
+proxy = None  # type: Optional[str]
+
+
+def set_proxy(prox: str) -> None:
+    global proxy
+    proxy = prox
+
+
+def get_proxy() -> str:
+    return proxy
 
 
 async def fetch_html(url: str, tries=None) -> (BeautifulSoup, None):
@@ -22,7 +36,7 @@ async def fetch_html(url: str, tries=None) -> (BeautifulSoup, None):
         s.headers.update(DEFAULT_HEADERS)
         while retries < tries:
             try:
-                async with s.request('GET', url, timeout=7200) as r:
+                async with s.request('GET', url, timeout=7200, proxy=proxy) as r:
                     content = await r.read()
                     return BeautifulSoup(content, 'html.parser')
             except (KeyboardInterrupt,):

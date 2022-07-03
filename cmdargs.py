@@ -8,11 +8,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import os.path as path
 from argparse import ArgumentParser, Namespace, ArgumentError
-from re import match as re_match
+from re import match as re_match, sub as re_sub
 from typing import Optional, List
 
 from defs import SLASH_CHAR, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES, \
-    HELP_STOP_ID, HELP_MODE, HELP_SEARCH
+    HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY
 
 MODES = (MODE_PREVIEW, MODE_BEST, MODE_LOWQ)
 
@@ -85,6 +85,44 @@ def validate_parsed(args) -> Namespace:
     return parsed
 
 
+def valid_proxy(prox: str) -> str:
+    try:
+        # replace front trailing zeros: 01.0144.022.055:002022 -> 1.144.22.55:2022
+        newval = str(re_sub(r'([^\d]|^)0+([1-9](?:[0-9]+)?)', r'\1\2', prox))
+        # validate IP with port
+        adr_valid = (newval == '') or re_match(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})', newval) is not None
+        if adr_valid and len(newval) > 0:
+            #  port
+            ps = str(newval).split(':')
+            ips = ps[0].split('.') if (ps and len(ps) > 0) else []
+            if len(ps) != 2 or len(ips) != 4:
+                adr_valid = False
+            if adr_valid:
+                try:
+                    if ps[1][0] == '0':
+                        raise Exception
+                    port = int(ps[1])
+                    if port < 20 or port > 65535:
+                        raise Exception
+                except Exception:
+                    adr_valid = False
+            #  ip
+            if adr_valid:
+                try:
+                    for ip in ips:
+                        if len(ip) == 0 or (len(ip) > 1 and ip[0] == '0'):
+                            raise Exception
+                        iip = int(ip)
+                        if iip < 0 or iip > 255:
+                            raise Exception
+                except Exception as e:
+                    raise e
+    except Exception:
+        raise ArgumentError
+
+    return newval
+
+
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
 
@@ -124,6 +162,7 @@ def prepare_arglist_pages(args: List[str]) -> Namespace:
     parser.add_argument('-stop_id', metavar='#number', default=1, help=HELP_STOP_ID, type=valid_positive_nonzero_int)
     parser.add_argument('-mode', default=MODE_BEST, help=HELP_MODE, choices=MODES)
     parser.add_argument('-search', metavar='#string', default='', help=HELP_SEARCH, type=valid_search_string)
+    parser.add_argument('-proxy', metavar='type://#a.d.d.r:port', help=HELP_ARG_PROXY, type=valid_proxy)
     add_common_args(parser)
 
     try:

@@ -37,6 +37,7 @@ HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
 HELP_PATH = 'Download destination. Default is current folder'
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
+HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
 
 # ids
 HELP_QUALITY = 'Prefered video quality. Default is \'' + QUALITIES[0] + '\'. If not found, falls back to best quality'

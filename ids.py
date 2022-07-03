@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 from cmdargs import prepare_arglist_ids
 from defs import Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE
 from download import download_id, failed_items
-from fetch_html import fetch_html
+from fetch_html import fetch_html, set_proxy
 
 
 def extract_id(aref: Any) -> int:
@@ -43,6 +43,7 @@ async def main() -> None:
         start_id = arglist.start
         end_id = arglist.end
         req_quality = arglist.quality
+        set_proxy(arglist.proxy)
 
         if start_id > end_id:
             Log(('\nError: start (%d) > end (%d)' % (start_id, end_id)))
