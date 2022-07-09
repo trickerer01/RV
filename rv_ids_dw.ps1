@@ -18,6 +18,7 @@ $startTime = Get-Date -Format $TimeFormat
 $start_id = [Int32]($args[0])
 $count = [Int32]($args[1])
 $quality_str = $args[2]
+$proxy = [String]($args[3])
 
 if ($start_id -lt 1 -or $start_id -gt 4000000)
 { write("Invalid syntax!"); return }
@@ -27,6 +28,11 @@ if ($count -lt 1 -or $count -gt 4000000)
 { write("Invalid syntax!"); return }
 if ($quality_str -eq $null)
 { $quality_str = "'default'" }
+if ($proxy -ne "")
+{
+    $par1.Add("-proxy") > $null
+    $par1.Add($proxy) > $null
+}
 
 $par1.Add($start_id) > $null
 $par1.Add($start_id + $count - 1) > $null
