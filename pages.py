@@ -67,7 +67,7 @@ async def main() -> None:
         do_full = arglist.mode
         stop_id = arglist.stop_id
         search_str = arglist.search
-        set_proxy(arglist.proxy)
+        set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
     except Exception:
         Log('\nError reading parsed arglist!')
         return

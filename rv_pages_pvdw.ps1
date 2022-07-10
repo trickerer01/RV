@@ -3,7 +3,7 @@
 # 1) rv
 
 $RUN_PYTHON3 = "python.exe"  # has to be in PATH
-$SYNTAX_ = "Syntax: #start_page #num_pages [#do_full=0,1,2] [#stop_id] [#search_string]"
+$SYNTAX_ = "Syntax: #start_page #num_pages [#do_full=0,1,2] [#stop_id] [#search_string] [#proxy]"
 $TimeFormat = "HH:mm:ss"
 
 $MYWORKDIR = "./"
