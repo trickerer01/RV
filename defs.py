@@ -35,6 +35,7 @@ HELP_MODE = 'Video size and quality. You can download just previews, full videos
             'full videos with lowest quality (360p typically). Default is \'best\''
 HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
+HELP_BEGIN_ID = 'If you want to download only videos above or equal to this id'
 HELP_PATH = 'Download destination. Default is current folder'
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
@@ -47,8 +48,8 @@ MODE_BEST = 'best'
 MODE_LOWQ = 'lowq'
 
 
-CONNECT_RETRIES_PAGE = 10000
-CONNECT_RETRIES_ITEM = 10000
+CONNECT_RETRIES_PAGE = 5
+CONNECT_RETRIES_ITEM = 10
 
 MAX_VIDEOS_QUEUE_SIZE = 8
 

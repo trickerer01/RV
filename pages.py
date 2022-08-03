@@ -66,6 +66,7 @@ async def main() -> None:
         pages_count = arglist.pages
         do_full = arglist.mode
         stop_id = arglist.stop_id
+        begin_id = arglist.begin_id
         search_str = arglist.search
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
     except Exception:
@@ -76,16 +77,19 @@ async def main() -> None:
     maxpage = 0
 
     full_download = do_full in [MODE_BEST, MODE_LOWQ]
-    for pi in range(start_page, start_page + pages_count):
-        if maxpage and pi > maxpage:
+    pi = start_page
+    while pi < start_page + pages_count:
+        if pi > maxpage > 0:
             Log('reached parsed max page, page scan completed')
             break
         Log(('page %d...%s' % (pi, ' (this is the last page!)' if maxpage and pi == maxpage else '')))
 
         a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
         if not a_html:
-            Log('cannot get html for page %d', pi)
+            Log('cannot get html for page %d' % pi)
             continue
+
+        pi += 1
 
         if maxpage == 0:
             for page_ajax in a_html.find_all('a', attrs={'data-action': 'ajax'}):
@@ -101,6 +105,9 @@ async def main() -> None:
                 cur_id = extract_id(aref)
                 if cur_id < stop_id:
                     Log('skipping %d < %d' % (cur_id, stop_id))
+                    continue
+                if cur_id > begin_id:
+                    Log('skipping %d > %d' % (cur_id, begin_id))
                     continue
                 my_href = aref.get('href')
                 my_title = aref.get('title')
@@ -152,7 +159,7 @@ async def main() -> None:
     Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
     vid_entries = list(reversed(vid_entries))
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
-        s.headers.update(DEFAULT_HEADERS)
+        s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             best = (do_full == MODE_BEST)
             for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, 'unknown', best, s) for v in vid_entries]):

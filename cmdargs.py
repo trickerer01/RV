@@ -12,7 +12,7 @@ from re import match as re_match, sub as re_sub
 from typing import Optional, List
 
 from defs import SLASH_CHAR, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES, \
-    HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY
+    HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID
 
 MODES = (MODE_PREVIEW, MODE_BEST, MODE_LOWQ)
 
@@ -125,6 +125,7 @@ def valid_proxy(prox: str) -> str:
 
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
+    parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', help=HELP_ARG_PROXY, type=valid_proxy)
 
 
 def prepare_arglist_ids(args: List[str]) -> Namespace:
@@ -160,9 +161,9 @@ def prepare_arglist_pages(args: List[str]) -> Namespace:
     parser.add_argument('-start', metavar='#number', default=1, help='Start page number. Default is \'1\'', type=valid_positive_nonzero_int)
     parser.add_argument('-pages', metavar='#number', required=True, help=HELP_PAGES, type=valid_positive_nonzero_int)
     parser.add_argument('-stop_id', metavar='#number', default=1, help=HELP_STOP_ID, type=valid_positive_nonzero_int)
+    parser.add_argument('-begin_id', metavar='#number', default=1000000000, help=HELP_BEGIN_ID, type=valid_positive_nonzero_int)
     parser.add_argument('-mode', default=MODE_BEST, help=HELP_MODE, choices=MODES)
     parser.add_argument('-search', metavar='#string', default='', help=HELP_SEARCH, type=valid_search_string)
-    parser.add_argument('-proxy', metavar='type://#a.d.d.r:port', help=HELP_ARG_PROXY, type=valid_proxy)
     add_common_args(parser)
 
     try:

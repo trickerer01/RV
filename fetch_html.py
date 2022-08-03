@@ -33,10 +33,10 @@ async def fetch_html(url: str, tries=None) -> (BeautifulSoup, None):
     r = None
     retries = 0
     async with ClientSession() as s:
-        s.headers.update(DEFAULT_HEADERS)
+        s.headers.update(DEFAULT_HEADERS.copy())
         while retries < tries:
             try:
-                async with s.request('GET', url, timeout=7200, proxy=proxy) as r:
+                async with s.request('GET', url, timeout=5, proxy=proxy) as r:
                     content = await r.read()
                     return BeautifulSoup(content, 'html.parser')
             except (KeyboardInterrupt,):
