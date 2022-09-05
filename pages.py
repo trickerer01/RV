@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from asyncio import run as run_async, as_completed, sleep
 from re import search
 from sys import argv
-from typing import List
+from typing import List, Tuple
 
 from aiohttp import ClientSession, TCPConnector
 
@@ -21,25 +21,24 @@ from ids import extract_id
 
 
 class VideoEntryBase:
-    def __init__(self, m_id: int):
+    def __init__(self, m_id: int) -> None:
         self.my_id = m_id or 0
 
 
 class VideoEntryFull(VideoEntryBase):
-    def __init__(self, m_id: int, m_href: str, m_title: str):
+    def __init__(self, m_id: int, m_title: str) -> None:
         super().__init__(m_id)
-        self.my_href = m_href or ''
         self.my_title = m_title or ''
 
 
 class VideoEntryPrev(VideoEntryBase):
-    def __init__(self, m_id: int, m_filename: str, m_link: str):
+    def __init__(self, m_id: int, m_filename: str, m_link: str) -> None:
         super().__init__(m_id)
         self.my_filename = m_filename or ''
         self.my_link = m_link or ''
 
 
-def get_minmax_ids(entry_list: List[VideoEntryBase]) -> (int, int):
+def get_minmax_ids(entry_list: List[VideoEntryBase]) -> Tuple[int, int]:
     minid = 0
     maxid = 0
     for entry in entry_list:
@@ -82,11 +81,11 @@ async def main() -> None:
         if pi > maxpage > 0:
             Log('reached parsed max page, page scan completed')
             break
-        Log(('page %d...%s' % (pi, ' (this is the last page!)' if maxpage and pi == maxpage else '')))
+        Log(f'page {pi:d}...{" (this is the last page!)" if 0 < maxpage == pi else ""}')
 
         a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
         if not a_html:
-            Log('cannot get html for page %d' % pi)
+            Log(f'cannot get html for page {pi:d}')
             continue
 
         pi += 1
@@ -104,26 +103,25 @@ async def main() -> None:
             for aref in arefs:
                 cur_id = extract_id(aref)
                 if cur_id < stop_id:
-                    Log('skipping %d < %d' % (cur_id, stop_id))
+                    Log(f'skipping {cur_id:d} < {stop_id:d}')
                     continue
                 if cur_id > begin_id:
-                    Log('skipping %d > %d' % (cur_id, begin_id))
+                    Log(f'skipping {cur_id:d} > {begin_id:d}')
                     continue
-                my_href = aref.get('href')
                 my_title = aref.get('title')
                 already_queued = False
                 for v in vid_entries:
                     if v.my_id == cur_id:
-                        Log(('Warning: id %i already queued, skipping' % (cur_id)))
+                        Log(f'Warning: id {cur_id:d} already queued, skipping')
                         already_queued = True
                         break
                 if not already_queued:
-                    vid_entries.append(VideoEntryFull(cur_id, my_href, my_title))
+                    vid_entries.append(VideoEntryFull(cur_id, my_title))
         else:
             content_div = a_html.find('div', class_='thumbs clearfix')
 
             if content_div is None:
-                Log(('cannot get content div for page %d' % pi))
+                Log(f'cannot get content div for page {pi:d}')
                 continue
 
             prev_all = content_div.find_all('div', class_='img wrap_image')
@@ -139,16 +137,16 @@ async def main() -> None:
                 except Exception:
                     cur_id = 1000000000
                 if cur_id < stop_id:
-                    Log('skipping %d < %d' % (cur_id, stop_id))
+                    Log(f'skipping {cur_id:d} < {stop_id:d}')
                     continue
                 already_queued = False
                 for v in vid_entries:
                     if v.my_id == cur_id:
-                        Log(('Warning: id %i already queued, skipping' % (cur_id)))
+                        Log(f'Warning: id {cur_id:d} already queued, skipping')
                         already_queued = True
                         break
                 if not already_queued:
-                    filename = 'rv_' + (v_id.group(1) + '_' + name + '_pypv' + v_id.group(2) if v_id else name + '_pypv.mp4')
+                    filename = f'rv_{str(v_id.group(1))}_{name}{str(v_id.group(2))}_pypv.mp4'
                     vid_entries.append(VideoEntryPrev(cur_id, filename, link))
 
     if len(vid_entries) == 0:
@@ -156,13 +154,13 @@ async def main() -> None:
         return
 
     minid, maxid = get_minmax_ids(vid_entries)
-    Log('\nOk! %d videos found, bound %d to %d. Working...\n' % (len(vid_entries), minid, maxid))
+    Log(f'\nOk! {len(vid_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
     vid_entries = list(reversed(vid_entries))
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             best = (do_full == MODE_BEST)
-            for cv in as_completed([download_id(v.my_id, v.my_href, v.my_title, dest_base, 'unknown', best, s) for v in vid_entries]):
+            for cv in as_completed([download_id(v.my_id, v.my_title, dest_base, 'unknown', best, s) for v in vid_entries]):
                 await cv
         else:
             for cv in as_completed([download_file(v.my_id, v.my_filename, dest_base, v.my_link, s) for v in vid_entries]):
@@ -178,7 +176,7 @@ async def main() -> None:
             Log(' ', str(fi))
 
 
-async def run_main():
+async def run_main() -> None:
     await main()
     await sleep(0.5)
 

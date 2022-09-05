@@ -61,7 +61,7 @@ def valid_path(pathstr: str) -> str:
 
 def valid_search_string(search_str: str) -> str:
     try:
-        if len(search_str) > 0 and re_match(r'^.*' + NON_SEARCH_SYMBOLS + '.*$', search_str):
+        if len(search_str) > 0 and re_match(fr'^.*{NON_SEARCH_SYMBOLS}.*$', search_str):
             raise ValueError
     except Exception:
         raise ArgumentError
@@ -74,7 +74,7 @@ def validate_parsed(args) -> Namespace:
     try:
         parsed, unk = parser.parse_known_args(args)
         if len(unk) > 0:
-            Log('\ninvalid arguments found:', str(unk) + '\n')
+            Log(f'\ninvalid arguments found:{str(unk)}\n')
             raise ArgumentError
         # Log('parsed:', parsed)
     except (ArgumentError, TypeError, Exception):

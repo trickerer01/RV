@@ -17,15 +17,18 @@ __RV_DEBUG__ = False
 SITE_AJAX_REQUEST_BASE = b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vc2VhcmNoLz9tb2RlPWFzeW5jJmZ1bmN0aW9uPWdldF9ibG9jayZibG9ja19pZD1jdXN0b21fbGlzdF92aWRlb3NfdmlkZW9zX2xpc3'
     'Rfc2VhcmNoJnE9JXMmc29ydF9ieT1wb3N0X2RhdGUmZnJvbV92aWRlb3M9JWQ=').decode()
+# Params required: int. Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)
+SITE_AJAX_REQUEST_VIDEO = b64decode(
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vcG9wdXAtdmlkZW8vJWQv').decode()
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:68.9) Gecko/20100101 Goanna/4.8 Firefox/68.9'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
-REPLACE_SYMBOLS = r'[^\da-zA-Z._\-\[\] ]'
-NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._\-\[\]]'
+REPLACE_SYMBOLS = r'[^\da-zA-Z._+\(\)\-\[\] ]'
+NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
 SLASH_CHAR = '/'
 
-QUALITIES = ['1080p', '720p', '480p', '360p']
+QUALITIES = ['2160p', '1080p', '720p', '480p', '360p']
 
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
@@ -41,7 +44,7 @@ HELP_SEARCH = 'If you want to only traverse pages matching some search query'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
 
 # ids
-HELP_QUALITY = 'Prefered video quality. Default is \'' + QUALITIES[0] + '\'. If not found, falls back to best quality'
+HELP_QUALITY = f'Prefered video quality. Default is \'{QUALITIES[0]}\'. If not found, falls back to best quality'
 
 MODE_PREVIEW = 'preview'
 MODE_BEST = 'best'
