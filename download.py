@@ -14,7 +14,9 @@ from typing import List
 from aiohttp import ClientSession
 from aiofile import async_open
 
-from defs import Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH_CHAR, SITE_AJAX_REQUEST_VIDEO
+from defs import (
+    Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK
+)
 from fetch_html import fetch_html, get_proxy
 
 
@@ -36,9 +38,9 @@ def is_in_queue(idi: int) -> bool:
 
 def normalize_filename(filename: str, dest_base: str) -> str:
     filename = sub(REPLACE_SYMBOLS, '_', filename)
-    dest = dest_base.replace('\\', SLASH_CHAR)
-    if dest[-1] != SLASH_CHAR:
-        dest += SLASH_CHAR
+    dest = dest_base.replace('\\', SLASH)
+    if dest[-1] != SLASH:
+        dest += SLASH
     dest += filename
     return dest
 
@@ -80,8 +82,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
 
     i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
     if i_html:
-        if i_html.find('title', text='404 Not Found'):
-            Log(f'Got error 404 for id {idi:d}! skipping...')
+        if i_html.find('title', string='404 Not Found'):
+            Log(f'Got error 404 for id {idi:d}, skipping...')
             return await try_unregister_from_queue(idi)
 
         if my_title in [None, '']:
@@ -90,11 +92,13 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                 my_title = titleh1.text
             else:
                 my_title = 'unk'
-        likes = 'unk'
-        likespan = i_html.find('span', class_='voters count')
-        if likespan:
-            likes = str(search(r'^(\d+) likes$', likespan.text).group(1))
-        ddiv = i_html.find('div', text='Download:')
+        try:
+            likespan = i_html.find('span', class_='voters count')
+            likes = int(str(likespan.text[:max(likespan.text.find(' '), 0)]))
+            my_score = f'{"+" if likes > 0 else ""}{likes:d}'
+        except Exception:
+            my_score = 'unk'
+        ddiv = i_html.find('div', string='Download:')
         if not ddiv or not ddiv.parent:
             Log(f'cannot find download section for {idi:d}, skipping...')
             return await try_unregister_from_queue(idi)
@@ -102,14 +106,14 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
         links = ddiv.parent.find_all('a', class_='tag_item')
         qualities = []
         for lin in links:
-            q = search(r'(\d+p)', lin.text)
+            q = search(r'(\d+p)', str(lin.text))
             if q:
                 qstr = q.group(1)
                 qualities.append(qstr)
 
         if not (req_quality in qualities):
             q_idx = 0 if best_quality else -1
-            if best_quality is False and req_quality != 'unknown':
+            if best_quality is False and req_quality != QUALITY_UNK:
                 Log(f'cannot find proper quality for {idi:d}, using {qualities[q_idx]}')
             req_quality = qualities[q_idx]
             link_idx = q_idx
@@ -117,7 +121,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             link_idx = qualities.index(req_quality)
 
         link = links[link_idx].get('href')
-        filename = f'rv_{str(idi)}_likes({likes})_{my_title}_{req_quality}_pydw{extract_ext(link)}'
+        filename = f'rv_{idi:d}_score({my_score})_{my_title}_{req_quality}_pydw{extract_ext(link)}'
 
         await download_file(idi, filename, dest_base, link, session)
 
@@ -152,6 +156,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
     while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
             r = None
+            # timeout must be relatively long, this is a timeout for actual download, not just connection
             async with s.request('GET', link, timeout=7200, proxy=get_proxy()) as r:
                 if r.content_type and r.content_type.find('text') != -1:
                     Log(f'File not found at {link}!')

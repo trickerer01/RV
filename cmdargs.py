@@ -11,7 +11,7 @@ from argparse import ArgumentParser, Namespace, ArgumentError
 from re import match as re_match, sub as re_sub
 from typing import Optional, List
 
-from defs import SLASH_CHAR, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES, \
+from defs import SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES, \
     HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID
 
 MODES = (MODE_PREVIEW, MODE_BEST, MODE_LOWQ)
@@ -48,11 +48,11 @@ def valid_positive_nonzero_int(val: str) -> int:
 
 def valid_path(pathstr: str) -> str:
     try:
-        newpath = path.abspath(unquote(pathstr)).replace('\\', SLASH_CHAR)
-        if not path.exists(newpath[:(newpath.find(SLASH_CHAR) + 1)]):
+        newpath = path.abspath(unquote(pathstr)).replace('\\', SLASH)
+        if not path.exists(newpath[:(newpath.find(SLASH) + 1)]):
             raise ValueError
-        if newpath[-1] != SLASH_CHAR:
-            newpath += SLASH_CHAR
+        if newpath[-1] != SLASH:
+            newpath += SLASH
     except Exception:
         raise ArgumentError
 
