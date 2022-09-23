@@ -18,7 +18,7 @@ from defs import (
     Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK
 )
 from fetch_html import fetch_html, get_proxy
-
+from tagger import filtered_tags
 
 downloads_queue = []  # type: List[int]
 failed_items = []  # type: List[int]
@@ -108,8 +108,14 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
         for lin in links:
             q = search(r'(\d+p)', str(lin.text))
             if q:
-                qstr = q.group(1)
-                qualities.append(qstr)
+                qualities.append(q.group(1))
+
+        tdiv = i_html.find('div', string='Tags:')
+        if not tdiv or not tdiv.parent:
+            Log(f'cannot find tags section for {idi:d}, using title...')
+        else:
+            tags = tdiv.parent.find_all('a', class_='tag_item')
+            my_title = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
 
         if not (req_quality in qualities):
             q_idx = 0 if best_quality else -1
@@ -121,6 +127,10 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             link_idx = qualities.index(req_quality)
 
         link = links[link_idx].get('href')
+        part1 = f'rv_{idi:d}_score({my_score})_'
+        part2 = f'_{req_quality}_pydw{extract_ext(link)}'
+        while len(my_title) > max(0, 240 - (len(part1) + len(part2))):
+            my_title = my_title[:max(0, my_title.rfind('_'))]
         filename = f'rv_{idi:d}_score({my_score})_{my_title}_{req_quality}_pydw{extract_ext(link)}'
 
         await download_file(idi, filename, dest_base, link, session)

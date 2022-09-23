@@ -32,6 +32,9 @@ SLASH = '/'
 QUALITIES = ['2160p', '1080p', '720p', '480p', '360p']
 QUALITY_UNK = 'unknown'
 
+NAMING_CHOICES = ('title', 'tags')
+NAMING_CHOICE_DEFAULT = NAMING_CHOICES[1]
+
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
