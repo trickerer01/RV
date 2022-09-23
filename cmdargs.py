@@ -6,15 +6,17 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from argparse import ArgumentParser, Namespace, ArgumentError
+from argparse import ArgumentParser, Namespace, ArgumentError, ZERO_OR_MORE
 from os import path
 from re import match as re_match, sub as re_sub
 from typing import Optional, List
 
 from defs import (
     SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES,
-    HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID, NAMING_CHOICES, NAMING_CHOICE_DEFAULT, HELP_NAMING
+    HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID, NAMING_CHOICES, NAMING_CHOICE_DEFAULT, HELP_NAMING,
+    HELP_ARG_EXCLUDE_TAGS
 )
+from tagger import validate_tag
 
 MODES = (MODE_PREVIEW, MODE_BEST, MODE_LOWQ)
 
@@ -73,15 +75,25 @@ def valid_search_string(search_str: str) -> str:
 
 def validate_parsed(args) -> Namespace:
     global parser
+
+    error_to_print = ''
     try:
-        parsed, unk = parser.parse_known_args(args)
-        if len(unk) > 0:
-            Log(f'\ninvalid arguments found:{str(unk)}\n')
-            raise ArgumentError
+        parsed, unks = parser.parse_known_args(args)
+        if len(unks) > 0:
+            for tag in unks:
+                try:
+                    assert tag[0] == '-'
+                    validate_tag(tag[1:])
+                except Exception:
+                    error_to_print = f'\nInvalid tag: \'{tag}\'\n'
+                    raise
+            parsed.excluded_tags += [tag[1:] for tag in unks]
         # Log('parsed:', parsed)
     except (ArgumentError, TypeError, Exception):
         # Log('\n', e)
         parser.print_help()
+        if error_to_print != '':
+            Log(error_to_print)
         raise
 
     return parsed
@@ -125,10 +137,20 @@ def valid_proxy(prox: str) -> str:
     return newval
 
 
+def minus_tag(tag: str) -> str:
+    try:
+        assert tag[0] == '-'
+    except Exception:
+        raise ArgumentError
+
+    return tag
+
+
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
     parser_or_group.add_argument('-naming', default=NAMING_CHOICE_DEFAULT, help=HELP_NAMING, choices=NAMING_CHOICES)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', help=HELP_ARG_PROXY, type=valid_proxy)
+    parser_or_group.add_argument(dest='excluded_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXCLUDE_TAGS, type=minus_tag)
 
 
 def prepare_arglist_ids(args: List[str]) -> Namespace:

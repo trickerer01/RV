@@ -76,7 +76,7 @@ async def try_unregister_from_queue(idi: int) -> None:
 
 
 async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, use_tags: bool,
-                      session: ClientSession) -> None:
+                      excluded_tags: List[str], session: ClientSession) -> None:
 
     while not await try_register_in_queue(idi):
         await sleep(0.1)
@@ -101,8 +101,23 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             my_score = 'unk'
         ddiv = i_html.find('div', string='Download:')
         if not ddiv or not ddiv.parent:
-            Log(f'cannot find download section for {idi:d}, skipping...')
+            Log(f'Cannot find download section for {idi:d}, skipping...')
             return await try_unregister_from_queue(idi)
+
+        if use_tags is True or len(excluded_tags) > 0:
+            tdiv = i_html.find('div', string='Tags:')
+            if not tdiv or not tdiv.parent:
+                Log(f'Cannot find tags section for {idi:d}, using title...')
+            else:
+                tags = tdiv.parent.find_all('a', class_='tag_item')
+                if len(excluded_tags) > 0:
+                    tags_raw = [str(tag.string) for tag in tags]
+                    for exctag in excluded_tags:
+                        if exctag in tags_raw:
+                            Log(f'Video {idi:d} contains excluded tag \'{exctag}\'. Skipped!')
+                            return await try_unregister_from_queue(idi)
+                if use_tags:
+                    my_title = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
 
         links = ddiv.parent.find_all('a', class_='tag_item')
         qualities = []
@@ -110,14 +125,6 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             q = search(r'(\d+p)', str(lin.text))
             if q:
                 qualities.append(q.group(1))
-
-        if use_tags:
-            tdiv = i_html.find('div', string='Tags:')
-            if not tdiv or not tdiv.parent:
-                Log(f'cannot find tags section for {idi:d}, using title...')
-            else:
-                tags = tdiv.parent.find_all('a', class_='tag_item')
-                my_title = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
 
         if not (req_quality in qualities):
             q_idx = 0 if best_quality else -1

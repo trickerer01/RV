@@ -6,9 +6,15 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from base64 import b64decode
+from json import loads
 from re import compile as re_compile, match as re_match, sub as re_sub
 from typing import List, Dict
 
+from defs import TAG_NUMS_ENCODED
+
+
+TAG_NUMS_DECODED = loads(b64decode(TAG_NUMS_ENCODED))  # type: Dict[str, str]
 
 re_replace_symbols = re_compile(
     r'[^0-9a-zA-Z_+()\[\]]+'
@@ -73,6 +79,10 @@ re_tags_to_not_exclude = re_compile(
     r'\d{1,2}\+?_?(?:animal|boy|futa|girl)s?.+?'  # 0-9
     r')$'
 )
+
+
+def validate_tag(tag: str) -> None:
+    assert TAG_NUMS_DECODED.get(tag)
 
 
 def trim_undersores(base_str: str) -> str:

@@ -67,6 +67,7 @@ async def main() -> None:
         begin_id = arglist.begin_id
         search_str = arglist.search
         naming = arglist.naming
+        excluded_tags = arglist.excluded_tags
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
         use_tags = naming == NAMING_CHOICES[1]
     except Exception:
@@ -159,10 +160,12 @@ async def main() -> None:
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             best = do_full == MODE_BEST
-            for cv in as_completed([download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, s) for v in vid_entries]):
+            for cv in as_completed(
+                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, excluded_tags, s) for v in vid_entries]):
                 await cv
         else:
-            for cv in as_completed([download_file(v.my_id, v.my_filename, dest_base, v.my_link, s) for v in vid_entries]):
+            for cv in as_completed(
+                    [download_file(v.my_id, v.my_filename, dest_base, v.my_link, s) for v in vid_entries]):
                 await cv
 
     if not is_queue_empty():
