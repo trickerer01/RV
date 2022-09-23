@@ -114,7 +114,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                     tags_raw = [str(tag.string) for tag in tags]
                     for exctag in excluded_tags:
                         if exctag in tags_raw:
-                            Log(f'Video {idi:d} contains excluded tag \'{exctag}\'. Skipped!')
+                            Log(f'Video \'rv_{idi:d}_{my_title}.mp4\' contains excluded tag \'{exctag}\'. Skipped!')
                             return await try_unregister_from_queue(idi)
                 if use_tags:
                     my_title = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))

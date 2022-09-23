@@ -140,10 +140,11 @@ def valid_proxy(prox: str) -> str:
 def minus_tag(tag: str) -> str:
     try:
         assert tag[0] == '-'
+        validate_tag(tag[1:])
     except Exception:
         raise ArgumentError
 
-    return tag
+    return tag[1:]
 
 
 def add_common_args(parser_or_group: ArgumentParser) -> None:
