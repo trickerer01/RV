@@ -14,7 +14,7 @@ from typing import List, Tuple
 from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages
-from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ, QUALITY_UNK
+from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ, QUALITY_UNK, NAMING_CHOICES
 from download import download_file, download_id, is_queue_empty, failed_items
 from fetch_html import fetch_html, set_proxy
 from ids import extract_id
@@ -66,7 +66,9 @@ async def main() -> None:
         stop_id = arglist.stop_id
         begin_id = arglist.begin_id
         search_str = arglist.search
+        naming = arglist.naming
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
+        use_tags = naming == NAMING_CHOICES[1]
     except Exception:
         Log('\nError reading parsed arglist!')
         return
@@ -156,8 +158,8 @@ async def main() -> None:
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
-            best = (do_full == MODE_BEST)
-            for cv in as_completed([download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, s) for v in vid_entries]):
+            best = do_full == MODE_BEST
+            for cv in as_completed([download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, s) for v in vid_entries]):
                 await cv
         else:
             for cv in as_completed([download_file(v.my_id, v.my_filename, dest_base, v.my_link, s) for v in vid_entries]):

@@ -24,7 +24,7 @@ SITE_AJAX_REQUEST_VIDEO = b64decode(
 USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:68.9) Gecko/20100101 Goanna/4.8 Firefox/68.9'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
-REPLACE_SYMBOLS = r'[^\da-zA-Z._+%\-\(\)\[\] ]+?'
+REPLACE_SYMBOLS = r'[^\da-zA-Z._+%\-()\[\] ]+?'
 NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
 
 SLASH = '/'
@@ -45,6 +45,7 @@ HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
 HELP_BEGIN_ID = 'If you want to download only videos above or equal to this id'
 HELP_PATH = 'Download destination. Default is current folder'
+HELP_NAMING = f'File naming (only full downloads). Default is \'{NAMING_CHOICE_DEFAULT}\''
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
 

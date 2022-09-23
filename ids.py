@@ -14,7 +14,7 @@ from typing import Any, Tuple, List
 from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_ids
-from defs import Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE
+from defs import Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, NAMING_CHOICES
 from download import download_id, failed_items
 from fetch_html import fetch_html, set_proxy
 
@@ -42,7 +42,9 @@ async def main() -> None:
         start_id = arglist.start
         end_id = arglist.end
         req_quality = arglist.quality
+        naming = arglist.naming
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
+        use_tags = naming == NAMING_CHOICES[1]
 
         if start_id > end_id:
             Log(f'\nError: start ({start_id:d}) > end ({end_id:d})')
@@ -58,7 +60,7 @@ async def main() -> None:
         return
 
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
-        for cv in as_completed([download_id(idi, '', dest_base, req_quality, True, s) for idi in range(start_id, end_id + 1)]):
+        for cv in as_completed([download_id(idi, '', dest_base, req_quality, True, use_tags, s) for idi in range(start_id, end_id + 1)]):
             await cv
 
     if len(failed_items) > 0:

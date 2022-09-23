@@ -75,7 +75,8 @@ async def try_unregister_from_queue(idi: int) -> None:
             Log(f'try_unregister_from_queue: {idi:d} was not in queue')
 
 
-async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, session: ClientSession) -> None:
+async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, use_tags: bool,
+                      session: ClientSession) -> None:
 
     while not await try_register_in_queue(idi):
         await sleep(0.1)
@@ -110,12 +111,13 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             if q:
                 qualities.append(q.group(1))
 
-        tdiv = i_html.find('div', string='Tags:')
-        if not tdiv or not tdiv.parent:
-            Log(f'cannot find tags section for {idi:d}, using title...')
-        else:
-            tags = tdiv.parent.find_all('a', class_='tag_item')
-            my_title = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
+        if use_tags:
+            tdiv = i_html.find('div', string='Tags:')
+            if not tdiv or not tdiv.parent:
+                Log(f'cannot find tags section for {idi:d}, using title...')
+            else:
+                tags = tdiv.parent.find_all('a', class_='tag_item')
+                my_title = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
 
         if not (req_quality in qualities):
             q_idx = 0 if best_quality else -1

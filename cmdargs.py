@@ -6,13 +6,15 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-import os.path as path
 from argparse import ArgumentParser, Namespace, ArgumentError
+from os import path
 from re import match as re_match, sub as re_sub
 from typing import Optional, List
 
-from defs import SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES, \
-    HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID
+from defs import (
+    SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES,
+    HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID, NAMING_CHOICES, NAMING_CHOICE_DEFAULT, HELP_NAMING
+)
 
 MODES = (MODE_PREVIEW, MODE_BEST, MODE_LOWQ)
 
@@ -125,6 +127,7 @@ def valid_proxy(prox: str) -> str:
 
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
+    parser_or_group.add_argument('-naming', default=NAMING_CHOICE_DEFAULT, help=HELP_NAMING, choices=NAMING_CHOICES)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', help=HELP_ARG_PROXY, type=valid_proxy)
 
 
