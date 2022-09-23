@@ -121,8 +121,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
 
         if not (req_quality in qualities):
             q_idx = 0 if best_quality else -1
-            if best_quality is False and req_quality != QUALITY_UNK:
-                Log(f'cannot find proper quality for {idi:d}, using {qualities[q_idx]}')
+            if req_quality != QUALITY_UNK:
+                Log(f'cannot find quality \'{req_quality}\' for {idi:d}, using \'{qualities[q_idx]}\'')
             req_quality = qualities[q_idx]
             link_idx = q_idx
         else:
