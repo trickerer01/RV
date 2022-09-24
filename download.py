@@ -101,7 +101,11 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             my_score = 'unk'
         ddiv = i_html.find('div', string='Download:')
         if not ddiv or not ddiv.parent:
-            Log(f'Cannot find download section for {idi:d}, skipping...')
+            reason = 'probably an error'
+            del_span = i_html.find('span', class_='message')
+            if del_span:
+                reason = f'reason: \'{str(del_span.text)}\''
+            Log(f'Cannot find download section for {idi:d}, {reason}, skipping...')
             return await try_unregister_from_queue(idi)
 
         if use_tags is True or len(excluded_tags) > 0:
@@ -117,7 +121,9 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                             Log(f'Video \'rv_{idi:d}_{my_title}.mp4\' contains excluded tag \'{exctag}\'. Skipped!')
                             return await try_unregister_from_queue(idi)
                 if use_tags:
-                    my_title = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
+                    my_tags = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
+                    if my_tags != '':
+                        my_title = my_tags
 
         links = ddiv.parent.find_all('a', class_='tag_item')
         qualities = []
@@ -138,9 +144,10 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
         link = links[link_idx].get('href')
         part1 = f'rv_{idi:d}_score({my_score})_'
         part2 = f'_{req_quality}_pydw{extract_ext(link)}'
-        while len(my_title) > max(0, 240 - (len(part1) + len(part2))):
+        while len(my_title) > max(0, 240 - (len(dest_base) + len(part1) + len(part2))):
             my_title = my_title[:max(0, my_title.rfind('_'))]
-        filename = f'rv_{idi:d}_score({my_score})_{my_title}_{req_quality}_pydw{extract_ext(link)}'
+
+        filename = f'{part1}{my_title}{part2}'
 
         await download_file(idi, filename, dest_base, link, session)
 

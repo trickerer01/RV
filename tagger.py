@@ -29,7 +29,7 @@ re_numbered_or_counted_tag = re_compile(
 re_tags_to_process = re_compile(
     r'^(?:.+?_warc.+?|(?:[a-z]+?_)?elf|drae.{3}|tent[a-z]{3}es|(?:bell[a-z]|sto[a-z]{4})_bul[a-z]{2,3}|inf[a-z]{5}n|egg(?:_[a-z]{3,9}|s)?|'
     r'[a-z]{4}hral_i.+?|(?:\d{1,2}\+?)?(?:boys?|girls?|fu[a-z]{2}(?:[a-z]{4}|s)?|in[d-v]{2}cts?)|succ[a-z]{4}|'
-    r'bbw|dog|eel|f(?:acesitting|ur)|hmv|tar|c(?:\.c\.|um)|d\.va|na\'vi|kai\'sa|'
+    r'bbw|dog|eel|f(?:acesitting|ur)|hmv|pmv|tar|c(?:\.c\.|um)|d\.va|na\'vi|kai\'sa|'
     r'[^(]+\([^)]+\).*?|[a-z_\-]+\d+?|\d{2,4}[a-z_\-]+?|[a-z_]{2,15}sfm|[^_]+_pov|fu[a-z]{2}(?:/|_(?:on|with)_)[a-z]{4}|'
     r'[a-z][a-z_]{3,8}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$'
 )
@@ -38,11 +38,10 @@ re_tags_exclude_major1 = re_compile(
     r'^(?:[234][dk]|h(?:d|ero_outfit)|level_up|p(?:ainting|rotagonist)|tagme|'
     r'war(?:rior|lock)|paladin|hunt(?:er|ress)|rogue|priest(?:ess)?|d(?:e(?:ath_?knight|mon_?hunt(?:er|ress))|ruid(?:ess)?)|'  # wow
     r'shaman|m(?:age|onk)|alliance|horde|'  # wow
-    r'(?:human|orc|d(?:warf|raenei)|undead|forsaken|t(?:auren|roll)|g(?:nome|oblin)|worgen|pandaren)(?:_.+?)?|'  # wow
-    r'[a-z]pose|[\da-z_\-]{14,}).*?$'
+    r'[a-z]pose|[\da-z_\-]{16,}).*?$'
 )
 re_tags_exclude_major2 = re_compile(
-    r'^(?:a(?:r(?:mor|twork)|udio)|cosplay|m(?:ap|eme|odel)|object|rwby|software|vtuber)$'
+    r'^(?:a(?:r(?:mor|twork)|udio)|cosplay|m(?:ap|eme|odel)|object|rwby|software)$'
 )
 
 re_tags_to_not_exclude = re_compile(
@@ -54,7 +53,7 @@ re_tags_to_not_exclude = re_compile(
     r'e(?:ggs|lves|nema|quine|xtreme|zria)|'
     r'f(?:art(?:ing)?|e(?:m(?:boy|dom|shep)|ral)|isting|o(?:rtnite|x_girl)|rozen|u(?:rry|ta(?:holic|nari)))|'
     r'g(?:a(?:ngbang|p(?:e|ing))|i(?:ant(?:ess)?|fdoozer)|o(?:blins?|o_girl|re|th)|r(?:anny|eatb8)|u(?:il(?:mon|tyk)|robase))|'
-    r'h(?:a(?:iry|l(?:f_elf|o)|ndjob)|e(?:lena|tero)|i(?:gh_elf|nca_p|ve)|o(?:ovesart|r(?:ror|se(?:_sex|girl)?)|usewife)|'
+    r'h(?:a(?:iry|l(?:f_elf|o)|ndjob)|e(?:lena|tero)|i(?:gh_elf|nca_p|ve)|mv|o(?:ovesart|r(?:ror|se(?:_sex|girl)?)|usewife)|'
     r'rfidy|ulk|v54rdsl|ydrafxx)|'
     r'i(?:cedev|demi|n(?:c(?:est|ubus)|justice|sect(?:oid|s)?))|'
     r'j(?:a(?:ckerman|il)|uicyneko)|'
@@ -64,7 +63,8 @@ re_tags_to_not_exclude = re_compile(
     r'i(?:dget|driff|ku|lf|n(?:ecraft|otaur|us8)|ruko|s(?:syb|tress))|o(?:nsters?|rty|xxy))|'
     r'n(?:aga|oih(?:_2)|ualia)|'
     r'o(?:gre|ne_piece|p(?:helia|iumud)|r(?:al|cs|gy)|verwatch)|'
-    r'p(?:a(?:inful|ladins|ragon|uline)|ersona(?:_\d)?|i(?:kachu|ssing)|o(?:kemon|ny|wergirl)|pr(?:e(?:dator|gnant)|ison(?:er)?|olapse))|'
+    r'p(?:a(?:inful|ladins|ragon|uline)|ersona(?:_\d)?|i(?:kachu|ssing)|mv|o(?:kemon|ny|wergirl)|'
+    r'r(?:e(?:dator|gnant)|ison(?:er)?|olapse))|'
     r'r(?:a(?:d(?:eong3d|roach)|p(?:e|unzel)|tchet)|e(?:becca|dapple2|ey_art)|i(?:eklig|kolo)|u(?:bber|kia)|yona)|'
     r's(?:a(?:dako|itou|mira|ntalol|yuri)|ca(?:lie|t)|e(?:cazz?|lf_fuck)|hackles|i(?:lkymilk|ms(?:_\d)?|th_jedi)|k(?:arlet|yrim)|'
     r'l(?:ave|eepy_b|yxxx24)|mell|o(?:ft_vore|lo(?:_.+?)?|phi[ae]|r(?:aka|idormi))|p(?:i(?:der|troast|zzy)|l(?:atoon|ucky)|o(?:ks|nty))|'
@@ -73,12 +73,38 @@ re_tags_to_not_exclude = re_compile(
     r'y(?:viania))|'
     r'u(?:g(?:ly(?:_man)?|oira)|n(?:birth|de(?:ad|rtale))|r(?:ethral|iel))|'
     r'v(?:a(?:lorant|mpire)|i(?:cer34|olence|rgin)|o(?:mit|re))|'
-    r'w(?:ar(?:craft|frame|hammer)|hip)|'
+    r'w(?:ar(?:craft|frame|hammer)|hip|orld_of_warcraft)|'
     r'x(?:_(?:com(?:_\d)?|ray)|enomorph)|'
     r'z(?:o(?:mbies?|otopia))|'
     r'\d{1,2}\+?_?(?:animal|boy|futa|girl)s?.+?'  # 0-9
     r')$'
 )
+
+
+TAG_ALIASES = {
+    'aela_the_huntress_(world_of_warcraft)': 'world_of_warcraft',
+    'darnassus_(world_of_warcraft)': 'world_of_warcraft',
+    'deathwing_(world_of_warcraft)': 'world_of_warcraft',
+    'demon_hunter_(world_of_warcraft)': 'world_of_warcraft',
+    'eredar_(world_of_warcraft)': 'world_of_warcraft',
+    'felhunter_(world_of_warcraft)': 'world_of_warcraft',
+    'felina_(world_of_warcraft)': 'world_of_warcraft',
+    'felstalker_(world_of_warcraft)': 'world_of_warcraft',
+    'garrosh_hellscream__(world_of_warcraft)': 'world_of_warcraft',
+    'gnome_(world_of_warcraft)': 'world_of_warcraft',
+    'goblin_(world_of_warcraft)': 'world_of_warcraft',
+    'human_(world_of_warcraft)': 'world_of_warcraft',
+    'illidan_(world_of_warcraft)': 'world_of_warcraft',
+    'jaina_proudmoore_(world_of_warcraft)': 'world_of_warcraft',
+    'lylly_(world_of_warcraft)': 'world_of_warcraft',
+    'tess_(world_of_warcraft)': 'world_of_warcraft',
+    'thrall_(world_of_warcraft)': 'world_of_warcraft',
+    'vulpera_(world_of_warcraft)': 'world_of_warcraft',
+    'worgen_(world_of_warcraft)': 'world_of_warcraft',
+    'wrathion_(world_of_warcraft)': 'world_of_warcraft',
+    'pmv': 'PMV',
+    'hmv': 'HMV',
+}
 
 
 def validate_tag(tag: str) -> None:
@@ -106,8 +132,12 @@ def filtered_tags(tags_list: List[str]) -> str:
 
     for tag in tags_list:
         tag = re_sub(re_replace_symbols, '_', tag)
-        if re_match(re_tags_to_process, tag) is None:
+        if TAG_ALIASES.get(tag) is None and re_match(re_tags_to_process, tag) is None:
             continue
+
+        alias = TAG_ALIASES.get(tag)
+        if alias:
+            tag = alias
 
         # digital_media_(artwork)
         aser_match = re_match(r'^([^(]+)\(([^)]+)\).*$', tag)
@@ -118,7 +148,7 @@ def filtered_tags(tags_list: List[str]) -> str:
             if major_skip_match1 or major_skip_match2:
                 continue
             stag = trim_undersores(aser_match.group(1))
-            if len(stag) >= 14:
+            if len(stag) >= 17:
                 continue
             tag = stag
             aser_valid = True
@@ -153,7 +183,7 @@ def filtered_tags(tags_list: List[str]) -> str:
             tags_dict[tag_char].append(tag)
 
     tags_list_final = []
-    [tags_list_final.extend(tag_list) for tag_list in sorted(tags_dict.values()) if len(tag_list) != 0]
+    [tags_list_final.extend(tag_list) for tag_list in tags_dict.values() if len(tag_list) != 0]
 
     return trim_undersores("_".join(tags_list_final))
 
