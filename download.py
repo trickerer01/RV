@@ -7,8 +7,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from asyncio import sleep
-from os import path, stat, remove, makedirs
-from re import sub, search
+from os import path, stat, remove, makedirs, listdir
+from re import compile, sub, search, match
 from typing import List
 
 from aiohttp import ClientSession
@@ -22,6 +22,8 @@ from tagger import filtered_tags
 
 downloads_queue = []  # type: List[int]
 failed_items = []  # type: List[int]
+
+re_rvfile = compile(r'^rv_([^_]+)_.*?(\d{3,4}p)_py.+?$')
 
 
 def is_queue_empty() -> bool:
@@ -157,12 +159,22 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
     file_size = 0
     retries = 0
 
-    if path.exists(dest):
-        file_size = stat(dest).st_size
-        if file_size > 0:
-            Log(f'{filename} already exists. Skipped.')
-            await try_unregister_from_queue(idi)
-            return False
+    # to check if file already exists we only take into account id and quality
+    rv_match = match(re_rvfile, filename)
+    rv_id = rv_match.group(1)
+    rv_quality = rv_match.group(2)
+    curdirfiles = listdir(dest_base)
+    for fname in curdirfiles:
+        try:
+            f_match = match(re_rvfile, fname)
+            f_id = f_match.group(1)
+            f_quality = f_match.group(2)
+            if rv_id == f_id and rv_quality == f_quality:
+                Log(f'{filename} (or similar) already exists. Skipped.')
+                await try_unregister_from_queue(idi)
+                return False
+        except Exception:
+            continue
 
     if not path.exists(dest_base):
         try:
@@ -186,11 +198,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
             async with s.request('GET', link, timeout=7200, proxy=get_proxy()) as r:
                 if r.content_type and r.content_type.find('text') != -1:
                     Log(f'File not found at {link}!')
-                    if retries >= 10:
-                        failed_items.append(idi)
-                        break
-                    else:
-                        raise FileNotFoundError(link)
+                    raise FileNotFoundError(link)
 
                 expected_size = r.content_length
                 Log(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {filename}')
@@ -202,8 +210,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
                 file_size = stat(dest).st_size
                 if expected_size and file_size != expected_size:
                     Log(f'Error: file size mismatch for {filename}: {file_size:d} / {expected_size:d}')
-                    await try_unregister_from_queue(idi)
-                    raise IOError
+                    raise IOError(link)
                 break
         except (KeyboardInterrupt,):
             assert False
@@ -216,6 +223,9 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
                 r.close()
             if path.exists(dest):
                 remove(dest)
+            if retries >= CONNECT_RETRIES_ITEM:
+                failed_items.append(idi)
+                break
             await sleep(1)
             continue
 
