@@ -185,7 +185,7 @@ def filtered_tags(tags_list: List[str]) -> str:
     tags_list_final = []
     [tags_list_final.extend(tag_list) for tag_list in tags_dict.values() if len(tag_list) != 0]
 
-    return trim_undersores("_".join(tags_list_final))
+    return trim_undersores('_'.join(tags_list_final))
 
 #
 #

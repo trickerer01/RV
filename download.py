@@ -120,7 +120,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                     tags_raw = [str(tag.string) for tag in tags]
                     for exctag in excluded_tags:
                         if exctag in tags_raw:
-                            Log(f'Video \'rv_{idi:d}_{my_title}.mp4\' contains excluded tag \'{exctag}\'. Skipped!')
+                            Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{exctag}\'. Skipped!')
                             return await try_unregister_from_queue(idi)
                 if use_tags:
                     my_tags = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
@@ -159,28 +159,27 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
     file_size = 0
     retries = 0
 
-    # to check if file already exists we only take into account id and quality
-    rv_match = match(re_rvfile, filename)
-    rv_id = rv_match.group(1)
-    rv_quality = rv_match.group(2)
-    curdirfiles = listdir(dest_base)
-    for fname in curdirfiles:
-        try:
-            f_match = match(re_rvfile, fname)
-            f_id = f_match.group(1)
-            f_quality = f_match.group(2)
-            if rv_id == f_id and rv_quality == f_quality:
-                Log(f'{filename} (or similar) already exists. Skipped.')
-                await try_unregister_from_queue(idi)
-                return False
-        except Exception:
-            continue
-
     if not path.exists(dest_base):
         try:
             makedirs(dest_base)
         except Exception:
             raise IOError('ERROR: Unable to create subfolder!')
+    else:
+        # to check if file already exists we only take into account id and quality
+        rv_match = match(re_rvfile, filename)
+        rv_id = rv_match.group(1)
+        rv_quality = rv_match.group(2)
+        for fname in listdir(dest_base):
+            try:
+                f_match = match(re_rvfile, fname)
+                f_id = f_match.group(1)
+                f_quality = f_match.group(2)
+                if rv_id == f_id and rv_quality == f_quality:
+                    Log(f'{filename} (or similar) already exists. Skipped.')
+                    await try_unregister_from_queue(idi)
+                    return True
+            except Exception:
+                continue
 
     while not await try_register_in_queue(idi):
         await sleep(0.1)
