@@ -15,7 +15,8 @@ from aiohttp import ClientSession
 from aiofile import async_open
 
 from defs import (
-    Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK
+    Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK,
+    DownloadResult
 )
 from fetch_html import fetch_html, get_proxy
 from tagger import filtered_tags
@@ -154,10 +155,11 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
         await download_file(idi, filename, dest_base, link, session)
 
 
-async def download_file(idi: int, filename: str, dest_base: str, link: str, s: ClientSession) -> bool:
+async def download_file(idi: int, filename: str, dest_base: str, link: str, s: ClientSession) -> int:
     dest = normalize_filename(filename, dest_base)
     file_size = 0
     retries = 0
+    ret = DownloadResult.DOWNLOAD_SUCCESS
 
     if not path.exists(dest_base):
         try:
@@ -177,7 +179,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
                 if rv_id == f_id and rv_quality == f_quality:
                     Log(f'{filename} (or similar) already exists. Skipped.')
                     await try_unregister_from_queue(idi)
-                    return True
+                    return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
             except Exception:
                 continue
 
@@ -195,6 +197,10 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
             r = None
             # timeout must be relatively long, this is a timeout for actual download, not just connection
             async with s.request('GET', link, timeout=7200, proxy=get_proxy()) as r:
+                if r.status == 404:
+                    Log(f'Got 404 for {idi:d}...!')
+                    retries = CONNECT_RETRIES_ITEM - 1
+                    ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
                 if r.content_type and r.content_type.find('text') != -1:
                     Log(f'File not found at {link}!')
                     raise FileNotFoundError(link)
@@ -222,7 +228,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
                 r.close()
             if path.exists(dest):
                 remove(dest)
-            if retries >= CONNECT_RETRIES_ITEM:
+            if retries >= CONNECT_RETRIES_ITEM and ret != DownloadResult.DOWNLOAD_FAIL_NOT_FOUND:
                 failed_items.append(idi)
                 break
             await sleep(1)
@@ -233,7 +239,10 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
         await sleep(0.25)
 
     await try_unregister_from_queue(idi)
-    return retries < CONNECT_RETRIES_ITEM
+    ret = (ret if ret == DownloadResult.DOWNLOAD_FAIL_NOT_FOUND else
+           DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_ITEM else
+           DownloadResult.DOWNLOAD_FAIL_RETRIES)
+    return ret
 
 #
 #
