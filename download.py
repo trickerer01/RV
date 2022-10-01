@@ -24,7 +24,7 @@ from tagger import filtered_tags
 downloads_queue = []  # type: List[int]
 failed_items = []  # type: List[int]
 
-re_rvfile = compile(r'^rv_([^_]+)_.*?(\d{3,4}p)_py.+?$')
+re_rvfile = compile(r'^rv_([^_]+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
 
 
 def is_queue_empty() -> bool:

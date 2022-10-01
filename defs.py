@@ -11,15 +11,6 @@ from base64 import b64decode
 
 __RV_DEBUG__ = False
 
-"""
-NO `or` solution
-https://rule34video.com/latest-updates/?tag_ids=all,2014,79&mode=async&function=get_block&block_id=custom_list_videos_latest_videos_list&sort_by=post_date&from=02
-DOES NOT WORK
-https://rule34video.com/latest-updates/?tag_ids=all,2014,79,-1897
-NO `exclude solution`
-https://rule34video.com/tags/2014_79_1879/
-"""
-
 # SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20v').decode()
 # Params required: str, int. Ex. SITE_AJAX_REQUEST_BASE % ('sfw', 1)
 SITE_AJAX_REQUEST_BASE = b64decode(
