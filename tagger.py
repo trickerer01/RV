@@ -8,8 +8,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from base64 import b64decode
 from json import loads
-from re import compile as re_compile, match as re_match, sub as re_sub
-from typing import List, Dict
+from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
+from typing import List, Dict, Optional
 
 from defs import TAG_NUMS_ENCODED
 
@@ -107,8 +107,27 @@ TAG_ALIASES = {
 }
 
 
+def is_non_wtag(tag: str) -> bool:
+    return not re_fullmatch(r'^[^?*]*[?*].*?$', tag)
+
+
 def validate_tag(tag: str) -> None:
     assert TAG_NUMS_DECODED.get(tag)
+
+
+def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
+    if re_fullmatch(r'^[^?*]*[?*].*?$', wtag):
+        escaped_tag = (
+            wtag.replace('.', '\\.').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('-', '\\-')
+            .replace('*', '.*').replace('?', '.')
+        )
+        pat = re_compile(rf'^{escaped_tag}$')
+        for htag in mtags:
+            if re_fullmatch(pat, htag):
+                return htag
+        return None
+    else:
+        return wtag if wtag in mtags else None
 
 
 def trim_undersores(base_str: str) -> str:

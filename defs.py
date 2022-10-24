@@ -46,8 +46,9 @@ HELP_PATH = 'Download destination. Default is current folder'
 HELP_NAMING = f'File naming (only full downloads). Default is \'{NAMING_CHOICE_DEFAULT}\''
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
-HELP_ARG_EXCLUDE_TAGS = (
-    'All remaining \'-args\' count as tags to exclude. Videos containing any of those tags will be skipped. Only existing tags are allowed'
+HELP_ARG_EXTRA_TAGS = (
+    'All remaining \'-args\' and \'+args\' count as tags to exclude / require.'
+    ' Videos containing any of -tags, or not containing all of +tags will be skipped. Only existing tags are allowed'
 )
 HELP_QUALITY = f'Prefered video quality. Default is the best quality found (up to 4K)'
 

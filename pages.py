@@ -15,9 +15,8 @@ from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages
 from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ, QUALITY_UNK, NAMING_CHOICES
-from download import download_file, download_id, is_queue_empty, failed_items
+from download import download_file, download_id, after_download
 from fetch_html import fetch_html, set_proxy
-from ids import extract_id
 
 
 class VideoEntryBase:
@@ -67,7 +66,7 @@ async def main() -> None:
         begin_id = arglist.begin_id
         search_str = arglist.search
         naming = arglist.naming
-        excluded_tags = arglist.excluded_tags
+        extra_tags = arglist.extra_tags
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
         use_tags = naming == NAMING_CHOICES[1]
     except Exception:
@@ -102,7 +101,7 @@ async def main() -> None:
         if full_download:
             arefs = a_html.find_all('a', class_='th js-open-popup')
             for aref in arefs:
-                cur_id = extract_id(aref)
+                cur_id = int(search(r'videos/(\d+)/', str(aref.get('href'))).group(1))  # cur_id = extract_id(aref)
                 if cur_id < stop_id:
                     Log(f'skipping {cur_id:d} < {stop_id:d}')
                     continue
@@ -161,21 +160,14 @@ async def main() -> None:
         if full_download:
             best = do_full == MODE_BEST
             for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, excluded_tags, s) for v in vid_entries]):
+                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, extra_tags, s) for v in vid_entries]):
                 await cv
         else:
             for cv in as_completed(
                     [download_file(v.my_id, v.my_filename, dest_base, v.my_link, s) for v in vid_entries]):
                 await cv
 
-    if not is_queue_empty():
-        Log('pages: queue is not empty at exit!')
-
-    if len(failed_items) > 0:
-        failed_items.sort()
-        Log('Failed items:')
-        for fi in failed_items:
-            Log(' ', str(fi))
+    await after_download()
 
 
 async def run_main() -> None:

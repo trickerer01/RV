@@ -19,7 +19,9 @@ from defs import (
     DownloadResult
 )
 from fetch_html import fetch_html, get_proxy
-from tagger import filtered_tags
+from tagger import filtered_tags, get_matching_tag
+
+NEWLINE = '\n'
 
 downloads_queue = []  # type: List[int]
 failed_items = []  # type: List[int]
@@ -79,7 +81,7 @@ async def try_unregister_from_queue(idi: int) -> None:
 
 
 async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, use_tags: bool,
-                      excluded_tags: List[str], session: ClientSession) -> None:
+                      extra_tags: List[str], session: ClientSession) -> None:
 
     while not await try_register_in_queue(idi):
         await sleep(0.1)
@@ -102,26 +104,43 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             my_score = f'{"+" if likes > 0 else ""}{likes:d}'
         except Exception:
             my_score = 'unk'
-        ddiv = i_html.find('div', string='Download:')
-        if not ddiv or not ddiv.parent:
-            reason = 'probably an error'
-            del_span = i_html.find('span', class_='message')
-            if del_span:
-                reason = f'reason: \'{str(del_span.text)}\''
-            Log(f'Cannot find download section for {idi:d}, {reason}, skipping...')
-            return await try_unregister_from_queue(idi)
+        tries = 0
+        while True:
+            ddiv = i_html.find('div', string='Download:')
+            if not ddiv or not ddiv.parent:
+                reason = 'probably an error'
+                del_span = i_html.find('span', class_='message')
+                if del_span:
+                    reason = f'reason: \'{str(del_span.text)}\''
+                Log(f'Cannot find download section for {idi:d}, {reason}, skipping...')
+                tries += 1
+                if (
+                        tries >= 5 or
+                        reason.startswith('You are not allowed to watch this video', len('reason: \'')) or
+                        reason.startswith('DMCA', len('reason: \''))
+                ):
+                    if tries >= 5:
+                        failed_items.append(idi)
+                    return await try_unregister_from_queue(idi)
+                i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
+            else:
+                break
 
-        if use_tags is True or len(excluded_tags) > 0:
+        if use_tags is True or len(extra_tags) > 0:
             tdiv = i_html.find('div', string='Tags:')
             if not tdiv or not tdiv.parent:
                 Log(f'Cannot find tags section for {idi:d}, using title...')
             else:
                 tags = tdiv.parent.find_all('a', class_='tag_item')
-                if len(excluded_tags) > 0:
+                if len(extra_tags) > 0:
                     tags_raw = [str(tag.string) for tag in tags]
-                    for exctag in excluded_tags:
-                        if exctag in tags_raw:
-                            Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{exctag}\'. Skipped!')
+                    for extag in extra_tags:
+                        mtag = get_matching_tag(extag[1:], tags_raw)
+                        if mtag is not None and extag[0] == '-':
+                            Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
+                            return await try_unregister_from_queue(idi)
+                        elif mtag is None and extag[0] == '+':
+                            Log(f'Video \'rv_{idi:d}.mp4\' misses required tag \'{extag[1:]}\'. Skipped!')
                             return await try_unregister_from_queue(idi)
                 if use_tags:
                     my_tags = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
@@ -243,6 +262,14 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
            DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_ITEM else
            DownloadResult.DOWNLOAD_FAIL_RETRIES)
     return ret
+
+
+async def after_download() -> None:
+    if not is_queue_empty():
+        Log('pages: queue is not empty at exit!')
+
+    if len(failed_items) > 0:
+        Log(f'Failed items:{NEWLINE.join(str(fi) for fi in sorted(failed_items))}')
 
 #
 #
