@@ -66,6 +66,7 @@ async def main() -> None:
         begin_id = arglist.begin_id
         search_str = arglist.search
         naming = arglist.naming
+        dm = arglist.download_mode
         extra_tags = arglist.extra_tags
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
         use_tags = naming == NAMING_CHOICES[1]
@@ -160,11 +161,11 @@ async def main() -> None:
         if full_download:
             best = do_full == MODE_BEST
             for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, extra_tags, s) for v in vid_entries]):
+                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, extra_tags, dm, s) for v in vid_entries]):
                 await cv
         else:
             for cv in as_completed(
-                    [download_file(v.my_id, v.my_filename, dest_base, v.my_link, s) for v in vid_entries]):
+                    [download_file(v.my_id, v.my_filename, dest_base, v.my_link, dm, s) for v in vid_entries]):
                 await cv
 
     await after_download()

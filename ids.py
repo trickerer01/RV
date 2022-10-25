@@ -30,6 +30,7 @@ async def main() -> None:
         end_id = arglist.end
         req_quality = arglist.quality
         naming = arglist.naming
+        dm = arglist.download_mode
         extra_tags = arglist.extra_tags
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
         use_tags = naming == NAMING_CHOICES[1]
@@ -49,7 +50,7 @@ async def main() -> None:
 
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         for cv in as_completed(
-                [download_id(idi, '', dest_base, req_quality, True, use_tags, extra_tags, s) for idi in range(start_id, end_id + 1)]):
+                [download_id(idi, '', dest_base, req_quality, True, use_tags, extra_tags, dm, s) for idi in range(start_id, end_id + 1)]):
             await cv
 
     await after_download()

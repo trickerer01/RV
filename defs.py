@@ -34,6 +34,12 @@ QUALITY_UNK = 'unknown'
 NAMING_CHOICES = ('title', 'tags')
 NAMING_CHOICE_DEFAULT = NAMING_CHOICES[1]
 
+# download (file creation) mode
+DOWNLOAD_MODE_FULL = 'full'
+DOWNLOAD_MODE_TOUCH = 'touch'
+DOWNLOAD_MODES = [DOWNLOAD_MODE_FULL, DOWNLOAD_MODE_TOUCH]
+DOWNLOAD_MODE_DEFAULT = DOWNLOAD_MODE_FULL
+
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
@@ -46,6 +52,7 @@ HELP_PATH = 'Download destination. Default is current folder'
 HELP_NAMING = f'File naming (only full downloads). Default is \'{NAMING_CHOICE_DEFAULT}\''
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
+HELP_ARG_DMMODE = 'Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (
     'All remaining \'-args\' and \'+args\' count as tags to exclude / require.'
     ' Videos containing any of -tags, or not containing all of +tags will be skipped. Only existing tags are allowed'

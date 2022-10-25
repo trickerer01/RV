@@ -16,7 +16,7 @@ from aiofile import async_open
 
 from defs import (
     Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK,
-    DownloadResult
+    DownloadResult, DOWNLOAD_MODE_TOUCH
 )
 from fetch_html import fetch_html, get_proxy
 from tagger import filtered_tags, get_matching_tag, get_group_matching_tag
@@ -81,7 +81,7 @@ async def try_unregister_from_queue(idi: int) -> None:
 
 
 async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, use_tags: bool,
-                      extra_tags: List[str], session: ClientSession) -> None:
+                      extra_tags: List[str], download_mode: str, session: ClientSession) -> None:
 
     while not await try_register_in_queue(idi):
         await sleep(0.1)
@@ -179,10 +179,10 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
 
         filename = f'{part1}{my_title}{part2}'
 
-        await download_file(idi, filename, dest_base, link, session)
+        await download_file(idi, filename, dest_base, link, download_mode, session)
 
 
-async def download_file(idi: int, filename: str, dest_base: str, link: str, s: ClientSession) -> int:
+async def download_file(idi: int, filename: str, dest_base: str, link: str, download_mode: str, s: ClientSession) -> int:
     dest = normalize_filename(filename, dest_base)
     file_size = 0
     retries = 0
@@ -221,6 +221,12 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, s: C
     # Log('Retrieving %s...' % filename_short)
     while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
+            if download_mode == DOWNLOAD_MODE_TOUCH:
+                Log(f'Saving<touch> {0.0:.2f} Mb to {filename}')
+                with open(dest, 'wb'):
+                    pass
+                break
+
             r = None
             # timeout must be relatively long, this is a timeout for actual download, not just connection
             async with s.request('GET', link, timeout=7200, proxy=get_proxy()) as r:
