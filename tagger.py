@@ -115,6 +115,11 @@ def validate_tag(tag: str) -> None:
     assert TAG_NUMS_DECODED.get(tag)
 
 
+def validate_or_group(orgr: str) -> None:
+    assert len(orgr) >= len('(.~.)')
+    [validate_tag(tag) for tag in orgr[1:-1].split('~') if is_non_wtag(tag)]
+
+
 def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
     if re_fullmatch(r'^[^?*]*[?*].*?$', wtag):
         escaped_tag = (
@@ -128,6 +133,16 @@ def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
         return None
     else:
         return wtag if wtag in mtags else None
+
+
+def get_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
+    assert len(orgr) >= len('(.~.)')
+    assert orgr[0] == '('
+    for tag in orgr[1:-1].split('~'):
+        mtag = get_matching_tag(tag, mtags)
+        if mtag:
+            return mtag
+    return None
 
 
 def trim_undersores(base_str: str) -> str:

@@ -16,7 +16,7 @@ from defs import (
     HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID, NAMING_CHOICES, NAMING_CHOICE_DEFAULT, HELP_NAMING,
     HELP_ARG_EXTRA_TAGS
 )
-from tagger import validate_tag, is_non_wtag
+from tagger import validate_tag, is_non_wtag, validate_or_group
 
 MODES = (MODE_PREVIEW, MODE_BEST, MODE_LOWQ)
 
@@ -82,8 +82,10 @@ def validate_parsed(args) -> Namespace:
         if len(unks) > 0:
             for tag in unks:
                 try:
-                    assert tag[0] in ['-', '+']
-                    if is_non_wtag(tag[1:]):
+                    assert tag[0] in ['-', '+', '(']
+                    if tag[0] == '(':
+                        validate_or_group(tag)
+                    elif is_non_wtag(tag[1:]):
                         validate_tag(tag[1:])
                 except Exception:
                     error_to_print = f'\nInvalid tag: \'{tag}\'\n'
@@ -140,8 +142,10 @@ def valid_proxy(prox: str) -> str:
 
 def extra_tag(tag: str) -> str:
     try:
-        assert tag[0] in ['-', '+']
-        if is_non_wtag(tag[1:]):
+        assert tag[0] in ['-', '+', '(']
+        if tag[0] == '(':
+            validate_or_group(tag)
+        elif is_non_wtag(tag[1:]):
             validate_tag(tag[1:])
     except Exception:
         raise ArgumentError

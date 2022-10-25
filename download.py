@@ -19,7 +19,7 @@ from defs import (
     DownloadResult
 )
 from fetch_html import fetch_html, get_proxy
-from tagger import filtered_tags, get_matching_tag
+from tagger import filtered_tags, get_matching_tag, get_group_matching_tag
 
 NEWLINE = '\n'
 
@@ -135,12 +135,20 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                 if len(extra_tags) > 0:
                     tags_raw = [str(tag.string) for tag in tags]
                     for extag in extra_tags:
-                        mtag = get_matching_tag(extag[1:], tags_raw)
-                        if mtag is not None and extag[0] == '-':
-                            Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
-                            return await try_unregister_from_queue(idi)
-                        elif mtag is None and extag[0] == '+':
-                            Log(f'Video \'rv_{idi:d}.mp4\' misses required tag \'{extag[1:]}\'. Skipped!')
+                        suc = True
+                        if extag[0] == '(':
+                            if get_group_matching_tag(extag, tags_raw) is None:
+                                suc = False
+                                Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
+                        else:
+                            mtag = get_matching_tag(extag[1:], tags_raw)
+                            if mtag is not None and extag[0] == '-':
+                                suc = False
+                                Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
+                            elif mtag is None and extag[0] == '+':
+                                suc = False
+                                Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
+                        if suc is False:
                             return await try_unregister_from_queue(idi)
                 if use_tags:
                     my_tags = filtered_tags(list(sorted(str(tag.string).lower().replace(' ', '_') for tag in tags)))
