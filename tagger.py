@@ -118,13 +118,26 @@ def is_non_wtag(tag: str) -> bool:
     return not re_fullmatch(r'^[^?*]*[?*].*?$', tag)
 
 
-def validate_tag(tag: str) -> None:
-    assert TAG_NUMS_DECODED.get(tag)
+def is_non_idtag(tag: str) -> bool:
+    return not re_fullmatch(r'^id=\d+?$', tag)
 
 
-def validate_or_group(orgr: str) -> None:
-    assert len(orgr) >= len('(.~.)')
-    [validate_tag(tag) for tag in orgr[1:-1].split('~') if is_non_wtag(tag)]
+def is_valid_tag(tag: str) -> bool:
+    return not not TAG_NUMS_DECODED.get(tag)
+
+
+def assert_valid_tag(tag: str) -> None:
+    assert is_valid_tag(tag)
+
+
+def is_valid_or_group(orgr: str) -> bool:
+    if len(orgr) >= len('(.~.)') and orgr[0] == '(' and orgr[-1] == ')' and orgr.find('~') != -1 and len(orgr[1:-1].split('~', 1)) == 2:
+        return all(is_valid_tag(tag) for tag in orgr[1:-1].split('~') if is_non_wtag(tag) and is_non_idtag(tag))
+    return False
+
+
+def assert_valid_or_group(orgr: str) -> None:
+    assert is_valid_or_group(orgr)
 
 
 def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
@@ -149,6 +162,20 @@ def get_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
         mtag = get_matching_tag(tag, mtags)
         if mtag:
             return mtag
+    return None
+
+
+def is_valid_id_or_group(orgr: str) -> bool:
+    if is_valid_or_group(orgr):
+        return all(re_fullmatch(r'^id=\d+?$', tag) for tag in orgr[1:-1].split('~'))
+    return False
+
+
+def try_parse_id_or_group(ex_tags: List[str]) -> Optional[List[int]]:
+    if len(ex_tags) == 1:
+        orgr = ex_tags[0]
+        if is_valid_id_or_group(orgr):
+            return [int(tag.replace('id=', '')) for tag in orgr[1:-1].split('~')]
     return None
 
 

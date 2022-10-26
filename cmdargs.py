@@ -14,9 +14,9 @@ from typing import Optional, List
 from defs import (
     SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES,
     HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID, NAMING_CHOICES, NAMING_CHOICE_DEFAULT, HELP_NAMING,
-    HELP_ARG_EXTRA_TAGS,  DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT, HELP_ARG_DMMODE
+    HELP_ARG_EXTRA_TAGS, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT, HELP_ARG_DMMODE, ACTION_STORE_TRUE
 )
-from tagger import validate_tag, is_non_wtag, validate_or_group
+from tagger import assert_valid_tag, is_non_wtag, assert_valid_or_group
 
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
 
@@ -86,9 +86,9 @@ def validate_parsed(args) -> Namespace:
                 try:
                     assert tag[0] in ['-', '+', '(']
                     if tag[0] == '(':
-                        validate_or_group(tag)
+                        assert_valid_or_group(tag)
                     elif is_non_wtag(tag[1:]):
-                        validate_tag(tag[1:])
+                        assert_valid_tag(tag[1:])
                 except Exception:
                     error_to_print = f'\nInvalid tag: \'{tag}\'\n'
                     raise
@@ -146,9 +146,9 @@ def extra_tag(tag: str) -> str:
     try:
         assert tag[0] in ['-', '+', '(']
         if tag[0] == '(':
-            validate_or_group(tag)
+            assert_valid_or_group(tag)
         elif is_non_wtag(tag[1:]):
-            validate_tag(tag[1:])
+            assert_valid_tag(tag[1:])
     except Exception:
         raise ArgumentError
 
@@ -169,7 +169,9 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--help', action='help')
 
-    parser.add_argument('-start', metavar='#number', required=True, help='Start video id. Required', type=valid_positive_nonzero_int)
+    arggr_start_or_seq = parser.add_mutually_exclusive_group(required=True)
+    arggr_start_or_seq.add_argument('-start', metavar='#number', help='Start video id. Required', type=valid_positive_nonzero_int)
+    arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help='Use id sequence instead (in tags)')
     arggr_ids = parser.add_mutually_exclusive_group()
     arggr_ids.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=valid_positive_nonzero_int)
     arggr_ids.add_argument('-end', metavar='#number', default=1, help='End video id', type=valid_positive_nonzero_int)
@@ -177,7 +179,9 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
     add_common_args(parser)
 
     def finalize_ex_groups(parsed: Namespace) -> Namespace:
-        if parsed.end < parsed.start + parsed.count - 1:
+        if parsed.use_id_sequence:
+            parsed.start = parsed.end = None
+        elif parsed.end < parsed.start + parsed.count - 1:
             parsed.end = parsed.start + parsed.count - 1
         parsed.count = None
 

@@ -12,9 +12,10 @@ from sys import argv
 from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_ids
-from defs import Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, NAMING_CHOICES
+from defs import Log, MAX_VIDEOS_QUEUE_SIZE, NAMING_CHOICES, DEFAULT_HEADERS
 from download import download_id, after_download
-from fetch_html import fetch_html, set_proxy
+from fetch_html import set_proxy
+from tagger import try_parse_id_or_group
 
 
 async def main() -> None:
@@ -28,29 +29,35 @@ async def main() -> None:
         dest_base = arglist.path
         start_id = arglist.start
         end_id = arglist.end
-        req_quality = arglist.quality
+        quality = arglist.quality
         naming = arglist.naming
         dm = arglist.download_mode
-        extra_tags = arglist.extra_tags
+        ex_tags = arglist.extra_tags
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
         use_tags = naming == NAMING_CHOICES[1]
 
-        if start_id > end_id:
-            Log(f'\nError: start ({start_id:d}) > end ({end_id:d})')
-            raise ValueError
+        if arglist.use_id_sequence:
+            id_sequence = try_parse_id_or_group(ex_tags)
+            if id_sequence is None:
+                Log(f'\nInvalid ID \'or\' group \'{ex_tags[0] if len(ex_tags) > 0 else ""}\'!')
+                raise ValueError
+        else:
+            id_sequence = None
+            if start_id > end_id:
+                Log(f'\nError: start ({start_id:d}) > end ({end_id:d})')
+                raise ValueError
     except Exception:
         Log('\nError reading parsed arglist!')
         return
 
-    # pages
-    a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % ('', 1))
-    if not a_html:
-        Log('cannot connect')
-        return
+    if id_sequence is None:
+        id_sequence = list(range(start_id, end_id + 1))
+    else:
+        ex_tags = []
 
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
-        for cv in as_completed(
-                [download_id(idi, '', dest_base, req_quality, True, use_tags, extra_tags, dm, s) for idi in range(start_id, end_id + 1)]):
+        s.headers.update(DEFAULT_HEADERS.copy())
+        for cv in as_completed([download_id(idi, '', dest_base, quality, True, use_tags, ex_tags, dm, s) for idi in id_sequence]):
             await cv
 
     await after_download()
