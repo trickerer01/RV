@@ -133,7 +133,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             else:
                 tags = tdiv.parent.find_all('a', class_='tag_item')
                 if len(extra_tags) > 0:
-                    tags_raw = [str(tag.string) for tag in tags]
+                    tags_raw = [str(tag.string).lower() for tag in tags]
                     for extag in extra_tags:
                         suc = True
                         if extag[0] == '(':
