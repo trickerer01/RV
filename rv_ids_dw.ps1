@@ -6,7 +6,7 @@ $RUN_PYTHON3 = "python.exe"  # has to be in PATH
 $TimeFormat = "HH:mm:ss"
 
 $MYWORKDIR = "./"
-$SCRIPT_PATH = "ids.py"
+$SCRIPT_PATH = "src/ids.py"
 
 $par1 = New-Object System.Collections.ArrayList
 

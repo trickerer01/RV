@@ -141,7 +141,7 @@ def assert_valid_or_group(orgr: str) -> None:
 
 
 def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
-    if re_fullmatch(r'^[^?*]*[?*].*?$', wtag):
+    if not is_non_wtag(wtag):
         escaped_tag = (
             wtag.replace('.', '\\.').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('-', '\\-')
             .replace('*', '.*').replace('?', '.')

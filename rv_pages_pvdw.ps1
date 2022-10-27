@@ -7,7 +7,7 @@ $SYNTAX_ = "Syntax: #start_page #num_pages [#do_full=0,1,2] [#stop_id] [#search_
 $TimeFormat = "HH:mm:ss"
 
 $MYWORKDIR = "./"
-$SCRIPT_PATH = "pages.py"
+$SCRIPT_PATH = "src/pages.py"
 
 $par1 = New-Object System.Collections.ArrayList
 
