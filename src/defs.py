@@ -57,7 +57,7 @@ HELP_ARG_EXTRA_TAGS = (
     'All remaining \'-args\' and \'+args\' count as tags to exclude / require.'
     ' Videos containing any of -tags, or not containing all of +tags will be skipped. Only existing tags are allowed'
 )
-HELP_QUALITY = f'Prefered video quality. Default is the best quality found (up to 4K)'
+HELP_QUALITY = 'Prefered video quality. Default is the best quality found (up to 4K)'
 
 MODE_PREVIEW = 'preview'
 MODE_BEST = 'best'

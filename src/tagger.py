@@ -130,6 +130,15 @@ def assert_valid_tag(tag: str) -> None:
     assert is_valid_tag(tag)
 
 
+def is_valid_neg_and_group(andgr: str) -> bool:
+    return (len(andgr) >= len('-(.,.)') and andgr.startswith('-(') and andgr.endswith(')') and
+            andgr.find(',') != -1 and len(andgr[2:-1].split(',', 1)) == 2)
+
+
+def validate_neg_and_group(andgr: str) -> None:
+    assert is_valid_neg_and_group(andgr)
+
+
 def is_valid_or_group(orgr: str) -> bool:
     if len(orgr) >= len('(.~.)') and orgr[0] == '(' and orgr[-1] == ')' and orgr.find('~') != -1 and len(orgr[1:-1].split('~', 1)) == 2:
         return all(is_valid_tag(tag) for tag in orgr[1:-1].split('~') if is_non_wtag(tag) and is_non_idtag(tag))
@@ -155,7 +164,7 @@ def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
         return wtag if wtag in mtags else None
 
 
-def get_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
+def get_or_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
     assert len(orgr) >= len('(.~.)')
     assert orgr[0] == '('
     for tag in orgr[1:-1].split('~'):
@@ -163,6 +172,11 @@ def get_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
         if mtag:
             return mtag
     return None
+
+
+def is_neg_and_group_matches(andgr: str, mtags: List[str]) -> bool:
+    validate_neg_and_group(andgr)
+    return all(get_matching_tag(wtag, mtags) is not None for wtag in andgr[2:-1].split(','))
 
 
 def is_valid_id_or_group(orgr: str) -> bool:

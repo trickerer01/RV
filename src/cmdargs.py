@@ -16,7 +16,7 @@ from defs import (
     HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID, NAMING_CHOICES, NAMING_CHOICE_DEFAULT, HELP_NAMING,
     HELP_ARG_EXTRA_TAGS, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT, HELP_ARG_DMMODE, ACTION_STORE_TRUE
 )
-from tagger import assert_valid_tag, is_non_wtag, assert_valid_or_group
+from tagger import assert_valid_tag, is_non_wtag, assert_valid_or_group, validate_neg_and_group
 
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
 
@@ -87,6 +87,8 @@ def validate_parsed(args) -> Namespace:
                     assert tag[0] in ['-', '+', '(']
                     if tag[0] == '(':
                         assert_valid_or_group(tag)
+                    elif tag.startswith('-('):
+                        validate_neg_and_group(tag)
                     elif is_non_wtag(tag[1:]):
                         assert_valid_tag(tag[1:])
                 except Exception:
@@ -147,6 +149,8 @@ def extra_tag(tag: str) -> str:
         assert tag[0] in ['-', '+', '(']
         if tag[0] == '(':
             assert_valid_or_group(tag)
+        elif tag.startswith('-('):
+            validate_neg_and_group(tag)
         elif is_non_wtag(tag[1:]):
             assert_valid_tag(tag[1:])
     except Exception:
