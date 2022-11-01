@@ -14,10 +14,12 @@ from typing import Optional, List
 from defs import (
     SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES,
     HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID, NAMING_CHOICES, NAMING_CHOICE_DEFAULT, HELP_NAMING,
-    HELP_ARG_EXTRA_TAGS, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT, HELP_ARG_DMMODE, ACTION_STORE_TRUE
+    HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
+    HELP_ARG_DMMODE, ACTION_STORE_TRUE
 )
 from tagger import assert_valid_tag, is_non_wtag, assert_valid_or_group, validate_neg_and_group
 
+UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
 
 MODES = (MODE_PREVIEW, MODE_BEST, MODE_LOWQ)
@@ -163,6 +165,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
     parser_or_group.add_argument('-naming', default=NAMING_CHOICE_DEFAULT, help=HELP_NAMING, choices=NAMING_CHOICES)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', help=HELP_ARG_PROXY, type=valid_proxy)
+    parser_or_group.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
     parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=extra_tag)
 

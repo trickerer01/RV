@@ -34,6 +34,12 @@ QUALITY_UNK = 'unknown'
 NAMING_CHOICES = ('title', 'tags')
 NAMING_CHOICE_DEFAULT = NAMING_CHOICES[1]
 
+# untagged videos download policy
+DOWNLOAD_POLICY_NOFILTERS = 'nofilters'
+DOWNLOAD_POLICY_ALWAYS = 'always'
+UVIDEO_POLICIES = [DOWNLOAD_POLICY_NOFILTERS, DOWNLOAD_POLICY_ALWAYS]
+DOWNLOAD_POLICY_DEFAULT = DOWNLOAD_POLICY_NOFILTERS
+
 # download (file creation) mode
 DOWNLOAD_MODE_FULL = 'full'
 DOWNLOAD_MODE_TOUCH = 'touch'
@@ -52,6 +58,9 @@ HELP_PATH = 'Download destination. Default is current folder'
 HELP_NAMING = f'File naming (only full downloads). Default is \'{NAMING_CHOICE_DEFAULT}\''
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
+HELP_ARG_UVPOLICY = (
+    'Untagged videos download policy. By default these videos are ignored if you use extra +tags/-tags. Use \'always\' to override'
+)
 HELP_ARG_DMMODE = 'Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (
     'All remaining \'-args\' and \'+args\' count as tags to exclude / require.'

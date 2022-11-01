@@ -26,7 +26,7 @@ def get_proxy() -> str:
     return proxy
 
 
-async def fetch_html(url: str, tries=None) -> (BeautifulSoup, None):
+async def fetch_html(url: str, tries: Optional[int] = None) -> Optional[BeautifulSoup]:
     # very basic, minimum validation
     tries = tries or CONNECT_RETRIES_PAGE
 
