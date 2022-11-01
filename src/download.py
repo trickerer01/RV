@@ -115,12 +115,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                     reason = f'reason: \'{str(del_span.text)}\''
                 Log(f'Cannot find download section for {idi:d}, {reason}, skipping...')
                 tries += 1
-                if (
-                        tries >= 5 or
-                        reason.startswith('You are not allowed to watch this video', len('reason: \'')) or
-                        reason.startswith('DMCA', len('reason: \'')) or
-                        reason.startswith('Majority Vote', len('reason: \''))
-                ):
+                if tries >= 5 or reason != 'probably an error':
                     if tries >= 5:
                         failed_items.append(idi)
                     return await try_unregister_from_queue(idi)
