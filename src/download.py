@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from asyncio import sleep
 from os import path, stat, remove, makedirs, listdir
+from random import uniform
 from re import compile, sub, search, match
 from typing import List
 
@@ -84,7 +85,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                       extra_tags: List[str], untagged_policy: str, download_mode: str, session: ClientSession) -> None:
 
     while not await try_register_in_queue(idi):
-        await sleep(0.1)
+        await sleep(uniform(2.0, 4.0))
 
     i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
     if i_html:
@@ -219,7 +220,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
                 continue
 
     while not await try_register_in_queue(idi):
-        await sleep(0.1)
+        await sleep(1.0)
 
     # delay first batch just enough to not make anyone angry
     # we need this when downloading many small files (previews)
