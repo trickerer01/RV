@@ -23,11 +23,18 @@ from fetch_html import fetch_html, get_proxy
 from tagger import filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches
 
 NEWLINE = '\n'
+re_rvfile = compile(r'^rv_([^_]+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
 
 downloads_queue = []  # type: List[int]
 failed_items = []  # type: List[int]
+total_queue_size = 0
+total_queue_size_last = 0
+download_queue_size_last = 0
 
-re_rvfile = compile(r'^rv_([^_]+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
+
+def set_queue_size(size: int) -> None:
+    global total_queue_size
+    total_queue_size = size
 
 
 def is_queue_empty() -> bool:
@@ -72,13 +79,29 @@ async def try_register_in_queue(idi: int) -> bool:
 
 
 async def try_unregister_from_queue(idi: int) -> None:
+    global total_queue_size
     try:
         downloads_queue.remove(idi)
+        total_queue_size -= 1
         if __RV_DEBUG__:
             Log(f'try_unregister_from_queue: {idi:d} removed from queue')
     except (ValueError,):
         if __RV_DEBUG__:
             Log(f'try_unregister_from_queue: {idi:d} was not in queue')
+
+
+async def report_total_queue_size_callback() -> None:
+    global total_queue_size_last
+    global download_queue_size_last
+    while total_queue_size > 0:
+        wait_time = 10.0 if total_queue_size > 1 else 1.0
+        await sleep(wait_time)
+        downloading_count = len(downloads_queue)
+        queue_size = total_queue_size - downloading_count
+        if total_queue_size_last != queue_size or (queue_size == 0 and download_queue_size_last != downloading_count):
+            Log(f'[Queue] items left: {queue_size} (downloading: {downloading_count})')
+            total_queue_size_last = queue_size
+            download_queue_size_last = downloading_count
 
 
 async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, use_tags: bool,
@@ -183,10 +206,12 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
 
         filename = f'{part1}{my_title}{part2}'
 
-        await download_file(idi, filename, dest_base, link, download_mode, session)
+        await download_file(idi, filename, dest_base, link, download_mode, session, True)
+
+    return await try_unregister_from_queue(idi)
 
 
-async def download_file(idi: int, filename: str, dest_base: str, link: str, download_mode: str, s: ClientSession) -> int:
+async def download_file(idi: int, filename: str, dest_base: str, link: str, download_mode: str, s: ClientSession, from_ids=False) -> int:
     dest = normalize_filename(filename, dest_base)
     file_size = 0
     retries = 0
@@ -209,7 +234,8 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
                 f_quality = f_match.group(2)
                 if rv_id == f_id and rv_quality == f_quality:
                     Log(f'{filename} (or similar) already exists. Skipped.')
-                    await try_unregister_from_queue(idi)
+                    if from_ids is False:
+                        await try_unregister_from_queue(idi)
                     return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
             except Exception:
                 continue
@@ -275,16 +301,20 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
     if len(downloads_queue) == MAX_VIDEOS_QUEUE_SIZE:
         await sleep(0.25)
 
-    await try_unregister_from_queue(idi)
     ret = (ret if ret == DownloadResult.DOWNLOAD_FAIL_NOT_FOUND else
            DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_ITEM else
            DownloadResult.DOWNLOAD_FAIL_RETRIES)
+    if from_ids is False:
+        await try_unregister_from_queue(idi)
     return ret
 
 
 async def after_download() -> None:
     if not is_queue_empty():
-        Log('pages: queue is not empty at exit!')
+        Log('queue is not empty at exit!')
+
+    if total_queue_size != 0:
+        Log(f'total queue is still at {total_queue_size} != 0!')
 
     if len(failed_items) > 0:
         Log(f'Failed items:\n{NEWLINE.join(str(fi) for fi in sorted(failed_items))}')

@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import run as run_async, as_completed, sleep
+from asyncio import run as run_async, as_completed, sleep, get_running_loop
 from re import search
 from sys import argv
 from typing import List, Tuple
@@ -15,7 +15,7 @@ from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages
 from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ, QUALITY_UNK, NAMING_CHOICES
-from download import download_file, download_id, after_download
+from download import download_file, download_id, after_download, set_queue_size, report_total_queue_size_callback
 from fetch_html import fetch_html, set_proxy
 
 
@@ -75,7 +75,7 @@ async def main() -> None:
         Log('\nError reading parsed arglist!')
         return
 
-    vid_entries = list()
+    v_entries = list()
     maxpage = 0
 
     full_download = do_full in [MODE_BEST, MODE_LOWQ]
@@ -112,13 +112,13 @@ async def main() -> None:
                     continue
                 my_title = aref.get('title')
                 already_queued = False
-                for v in vid_entries:
+                for v in v_entries:
                     if v.my_id == cur_id:
                         Log(f'Warning: id {cur_id:d} already queued, skipping')
                         already_queued = True
                         break
                 if not already_queued:
-                    vid_entries.append(VideoEntryFull(cur_id, my_title))
+                    v_entries.append(VideoEntryFull(cur_id, my_title))
         else:
             content_div = a_html.find('div', class_='thumbs clearfix')
 
@@ -142,32 +142,35 @@ async def main() -> None:
                     Log(f'skipping {cur_id:d} < {stop_id:d}')
                     continue
                 already_queued = False
-                for v in vid_entries:
+                for v in v_entries:
                     if v.my_id == cur_id:
                         Log(f'Warning: id {cur_id:d} already queued, skipping')
                         already_queued = True
                         break
                 if not already_queued:
-                    vid_entries.append(VideoEntryPrev(cur_id, f'rv_{cur_id:d}_{name}_pypv.{cur_ext}', link))
+                    v_entries.append(VideoEntryPrev(cur_id, f'rv_{cur_id:d}_{name}_pypv.{cur_ext}', link))
 
-    if len(vid_entries) == 0:
+    if len(v_entries) == 0:
         Log('\nNo videos found. Aborted.')
         return
 
-    minid, maxid = get_minmax_ids(vid_entries)
-    Log(f'\nOk! {len(vid_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
-    vid_entries = list(reversed(vid_entries))
+    minid, maxid = get_minmax_ids(v_entries)
+    Log(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
+    v_entries = list(reversed(v_entries))
+    set_queue_size(len(v_entries))
+    reporter = get_running_loop().create_task(report_total_queue_size_callback())
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             best = do_full == MODE_BEST
             for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, extra_tags, up, dm, s) for v in vid_entries]):
+                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, extra_tags, up, dm, s) for v in v_entries]):
                 await cv
         else:
             for cv in as_completed(
-                    [download_file(v.my_id, v.my_filename, dest_base, v.my_link, dm, s) for v in vid_entries]):
+                    [download_file(v.my_id, v.my_filename, dest_base, v.my_link, dm, s) for v in v_entries]):
                 await cv
+    await reporter
 
     await after_download()
 
