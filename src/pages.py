@@ -14,9 +14,13 @@ from typing import List, Tuple
 from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages
-from defs import Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ, QUALITY_UNK, NAMING_CHOICES
+from defs import (
+    Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ, QUALITY_UNK, NAMING_CHOICES,
+    DOWNLOAD_MODE_FULL,
+)
 from download import download_file, download_id, after_download, set_queue_size, report_total_queue_size_callback
 from fetch_html import fetch_html, set_proxy
+from tagger import init_tags_file, dump_item_tags
 
 
 class VideoEntryBase:
@@ -68,7 +72,8 @@ async def main() -> None:
         naming = arglist.naming
         up = arglist.untag_video_policy
         dm = arglist.download_mode
-        extra_tags = arglist.extra_tags
+        st = arglist.dump_tags
+        ex_tags = arglist.extra_tags
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
         use_tags = naming == NAMING_CHOICES[1]
     except Exception:
@@ -157,20 +162,25 @@ async def main() -> None:
     minid, maxid = get_minmax_ids(v_entries)
     Log(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
     v_entries = list(reversed(v_entries))
+    if st and full_download:
+        init_tags_file(f'{dest_base}rv_!tags_{minid:d}-{maxid:d}.txt')
     set_queue_size(len(v_entries))
-    reporter = get_running_loop().create_task(report_total_queue_size_callback())
+    reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if dm == DOWNLOAD_MODE_FULL else 1.0))
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             best = do_full == MODE_BEST
             for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, extra_tags, up, dm, s) for v in v_entries]):
+                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, use_tags, ex_tags, up, dm, st, s) for v in v_entries]):
                 await cv
         else:
             for cv in as_completed(
                     [download_file(v.my_id, v.my_filename, dest_base, v.my_link, dm, s) for v in v_entries]):
                 await cv
     await reporter
+
+    if st and full_download:
+        dump_item_tags()
 
     await after_download()
 

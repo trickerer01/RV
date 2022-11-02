@@ -27,6 +27,7 @@ REPLACE_SYMBOLS = r'[^\da-zA-Z._+%\-()\[\] ]+?'
 NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
 
 SLASH = '/'
+UTF8 = 'utf-8'
 
 QUALITIES = ['2160p', '1080p', '720p', '480p', '360p']
 QUALITY_UNK = 'unknown'
