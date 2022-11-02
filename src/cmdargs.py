@@ -203,7 +203,8 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
 def prepare_arglist_pages(args: List[str]) -> Namespace:
     global parser
 
-    parser = ArgumentParser()
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument('--help', action='help')
 
     parser.add_argument('-start', metavar='#number', default=1, help='Start page number. Default is \'1\'', type=valid_positive_nonzero_int)
     parser.add_argument('-pages', metavar='#number', required=True, help=HELP_PAGES, type=valid_positive_nonzero_int)
