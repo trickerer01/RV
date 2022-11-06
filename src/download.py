@@ -140,6 +140,15 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             my_score = f'{"+" if likes > 0 else ""}{likes:d}'
         except Exception:
             my_score = 'unk'
+        try:
+            my_author = str(i_html.find('div', string='Artist:').parent.find('span').string).lower()
+        except Exception:
+            my_author = ''
+        try:
+            my_categories = [str(a.string).lower().replace(' ', '_')
+                             for a in i_html.find('div', string='Categories:').parent.find_all('span')]
+        except Exception:
+            my_categories = []
         if use_tags is True or save_tags is True or len(extra_tags) > 0:
             tdiv = i_html.find('div', string='Tags:')
             if not tdiv or not tdiv.parent:
@@ -161,6 +170,14 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                             if is_neg_and_group_matches(extag, tags_raw):
                                 suc = False
                                 Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
+                        elif extag.startswith('-a:'):
+                            if extag[3:].lower() == my_author:
+                                suc = False
+                                Log(f'Video \'rv_{idi:d}.mp4\' has excluded author \'{extag[3:]}\'. Skipped!')
+                        elif extag.startswith('-c:'):
+                            if extag[3:].lower() in my_categories:
+                                suc = False
+                                Log(f'Video \'rv_{idi:d}.mp4\' has excluded category \'{extag[3:]}\'. Skipped!')
                         else:
                             mtag = get_matching_tag(extag[1:], tags_raw)
                             if mtag is not None and extag[0] == '-':

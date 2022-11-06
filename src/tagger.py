@@ -193,6 +193,14 @@ def try_parse_id_or_group(ex_tags: List[str]) -> Optional[List[int]]:
     return None
 
 
+def validate_neg_author_tag(tag: str) -> None:
+    assert re_fullmatch(r'^-a:.+?$', tag)
+
+
+def validate_neg_cathegory_tag(tag: str) -> None:
+    assert re_fullmatch(r'^-c:.+?$', tag)
+
+
 def trim_undersores(base_str: str) -> str:
     ret_str = re_sub(r'_{2,}', '_', base_str)
     if len(ret_str) != 0:
