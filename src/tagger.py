@@ -286,8 +286,10 @@ def register_item_tags(item_id: int, tags_str: str) -> None:
 
 def dump_item_tags() -> None:
     assert saved_tags_file_fullpath != ''
+    if len(saved_tags_dict) == 0:
+        return
     with open(saved_tags_file_fullpath, 'at', encoding=UTF8) as saved_tags_file:
-        saved_tags_file.writelines(f'nm_{idi:d}: {tags.strip()}\n' for idi, tags in sorted(saved_tags_dict.items(), key=lambda t: t[0]))
+        saved_tags_file.writelines(f'rv_{idi:d}: {tags.strip()}\n' for idi, tags in sorted(saved_tags_dict.items(), key=lambda t: t[0]))
 
 #
 #

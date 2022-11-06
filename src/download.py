@@ -129,23 +129,6 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             my_score = f'{"+" if likes > 0 else ""}{likes:d}'
         except Exception:
             my_score = 'unk'
-        tries = 0
-        while True:
-            ddiv = i_html.find('div', string='Download:')
-            if not ddiv or not ddiv.parent:
-                reason = 'probably an error'
-                del_span = i_html.find('span', class_='message')
-                if del_span:
-                    reason = f'reason: \'{str(del_span.text)}\''
-                Log(f'Cannot find download section for {idi:d}, {reason}, skipping...')
-                tries += 1
-                if tries >= 5:
-                    failed_items.append(idi)
-                    return await try_unregister_from_queue(idi)
-                i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
-            else:
-                break
-
         if use_tags is True or save_tags is True or len(extra_tags) > 0:
             tdiv = i_html.find('div', string='Tags:')
             if not tdiv or not tdiv.parent:
@@ -156,8 +139,6 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             else:
                 tags = tdiv.parent.find_all('a', class_='tag_item')
                 tags_raw = [str(tag.string).lower() for tag in tags]
-                if save_tags:
-                    register_item_tags(idi, ' '.join(sorted(tag.replace(' ', '_') for tag in tags_raw)))
                 if len(extra_tags) > 0:
                     for extag in extra_tags:
                         suc = True
@@ -179,10 +160,30 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                                 Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
                         if suc is False:
                             return await try_unregister_from_queue(idi)
+                if save_tags:
+                    register_item_tags(idi, ' '.join(sorted(tag.replace(' ', '_') for tag in tags_raw)))
                 if use_tags:
                     my_tags = filtered_tags(list(sorted(tag.replace(' ', '_') for tag in tags_raw)))
                     if my_tags != '':
                         my_title = my_tags
+
+        tries = 0
+        while True:
+            ddiv = i_html.find('div', string='Download:')
+            if ddiv is not None and ddiv.parent is not None:
+                break
+            reason = 'probably an error'
+            del_span = i_html.find('span', class_='message')
+            if del_span:
+                reason = f'reason: \'{str(del_span.text)}\''
+            Log(f'Cannot find download section for {idi:d}, {reason}, skipping...')
+            tries += 1
+            if tries >= 5:
+                failed_items.append(idi)
+                return await try_unregister_from_queue(idi)
+            elif reason != 'probably an error':
+                return await try_unregister_from_queue(idi)
+            i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
 
         links = ddiv.parent.find_all('a', class_='tag_item')
         qualities = []
