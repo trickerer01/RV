@@ -32,11 +32,15 @@ failed_items = []  # type: List[int]
 total_queue_size = 0
 total_queue_size_last = 0
 download_queue_size_last = 0
+id_sequence = []  # type: List[int]
+current_ididx = 0
 
 
-def set_queue_size(size: int) -> None:
+def register_id_sequence(id_seq: List[int]) -> None:
+    global id_sequence
     global total_queue_size
-    total_queue_size = size
+    id_sequence = id_seq
+    total_queue_size = len(id_sequence)
 
 
 def is_queue_empty() -> bool:
@@ -108,8 +112,15 @@ async def report_total_queue_size_callback(base_sleep_time: float) -> None:
 
 async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, use_tags: bool,
                       extra_tags: List[str], untagged_policy: str, download_mode: str, save_tags: bool, session: ClientSession) -> None:
+    global current_ididx
+
+    while id_sequence[current_ididx] != idi:
+        await sleep(min(10.0, 0.2 * abs(id_sequence.index(idi) - current_ididx)))
+
     while not await try_register_in_queue(idi):
         await sleep(uniform(2.0, 4.0))
+
+    current_ididx += 1
 
     i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
     if i_html:
