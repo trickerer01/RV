@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from base64 import b64decode
 from json import loads
 from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Callable
 
 from defs import TAG_NUMS_ENCODED, UTF8
 
@@ -149,19 +149,22 @@ def assert_valid_or_group(orgr: str) -> None:
     assert is_valid_or_group(orgr)
 
 
-def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
-    if not is_non_wtag(wtag):
-        escaped_tag = (
-            wtag.replace('.', '\\.').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('-', '\\-')
+def normalize_wtag(wtag: str) -> str:
+    return (
+        wtag.replace('.', '\\.').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('-', '\\-')
             .replace('*', '.*').replace('?', '.')
-        )
-        pat = re_compile(rf'^{escaped_tag}$')
+    )
+
+
+def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
+    if is_non_wtag(wtag):
+        return wtag if wtag in mtags else None
+    else:
+        pat = re_compile(rf'^{normalize_wtag(wtag)}$')
         for htag in mtags:
             if re_fullmatch(pat, htag):
                 return htag
         return None
-    else:
-        return wtag if wtag in mtags else None
 
 
 def get_or_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
@@ -193,12 +196,37 @@ def try_parse_id_or_group(ex_tags: List[str]) -> Optional[List[int]]:
     return None
 
 
+def is_valid_neg_author_tag(tag: str) -> bool:
+    return not not re_fullmatch(r'^-a:.+?$', tag)
+
+
+def is_valid_neg_category_tag(tag: str) -> bool:
+    return not not re_fullmatch(r'^-c:.+?$', tag)
+
+
 def validate_neg_author_tag(tag: str) -> None:
-    assert re_fullmatch(r'^-a:.+?$', tag)
+    assert is_valid_neg_author_tag(tag)
 
 
 def validate_neg_cathegory_tag(tag: str) -> None:
-    assert re_fullmatch(r'^-c:.+?$', tag)
+    assert is_valid_neg_category_tag(tag)
+
+
+def is_neg_matching_any(neg_val: str, vals: List[str], validator: Callable[[str], None]) -> bool:
+    validator(neg_val)
+    if is_non_wtag(neg_val):
+        return neg_val[3:].lower() in vals
+    else:
+        re_neg = re_compile(rf'^{normalize_wtag(neg_val[3:].lower())}$')
+        return any(not not re_fullmatch(re_neg, c) for c in vals)
+
+
+def is_neg_author_matching(author: str, neg_author: str) -> bool:
+    return is_neg_matching_any(neg_author, [author], validate_neg_author_tag)
+
+
+def is_neg_categories_matching(categories: List[str], neg_category: str) -> bool:
+    return is_neg_matching_any(neg_category, categories, validate_neg_cathegory_tag)
 
 
 def trim_undersores(base_str: str) -> str:

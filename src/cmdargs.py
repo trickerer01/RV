@@ -15,10 +15,10 @@ from defs import (
     SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES,
     HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID, NAMING_CHOICES, NAMING_CHOICE_DEFAULT, HELP_NAMING,
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
-    HELP_ARG_DMMODE, ACTION_STORE_TRUE
+    HELP_ARG_DMMODE, ACTION_STORE_TRUE,
 )
 from tagger import (
-    assert_valid_tag, is_non_wtag, assert_valid_or_group, validate_neg_and_group, validate_neg_author_tag, validate_neg_cathegory_tag
+    assert_valid_tag, is_non_wtag, assert_valid_or_group, validate_neg_and_group, validate_neg_author_tag, validate_neg_cathegory_tag,
 )
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
