@@ -23,7 +23,7 @@ SITE_AJAX_REQUEST_VIDEO = b64decode(
 USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:68.9) Gecko/20100101 Goanna/4.8 Firefox/68.9'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
-REPLACE_SYMBOLS = r'[^\da-zA-Z._+%\-()\[\] ]+?'
+REPLACE_SYMBOLS = r'[^\da-zA-Z.,_+%\-()\[\] ]+?'
 NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
 
 SLASH = '/'
@@ -32,8 +32,7 @@ UTF8 = 'utf-8'
 QUALITIES = ['2160p', '1080p', '720p', '480p', '360p']
 QUALITY_UNK = 'unknown'
 
-NAMING_CHOICES = ('title', 'tags')
-NAMING_CHOICE_DEFAULT = NAMING_CHOICES[1]
+DEFAULT_QUALITY = QUALITIES[0]
 
 # untagged videos download policy
 DOWNLOAD_POLICY_NOFILTERS = 'nofilters'
@@ -56,8 +55,8 @@ HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
 HELP_BEGIN_ID = 'If you want to download only videos above or equal to this id'
 HELP_PATH = 'Download destination. Default is current folder'
-HELP_NAMING = f'File naming (only full downloads). Default is \'{NAMING_CHOICE_DEFAULT}\''
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
+HELP_QUALITY = 'Prefered video quality. Default is the best quality found (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
 HELP_ARG_UVPOLICY = (
     'Untagged videos download policy. By default these videos are ignored if you use extra +tags/-tags. Use \'always\' to override'
@@ -67,19 +66,19 @@ HELP_ARG_EXTRA_TAGS = (
     'All remaining \'-args\' and \'+args\' count as tags to exclude / require.'
     ' Videos containing any of -tags, or not containing all of +tags will be skipped. Only existing tags are allowed'
 )
-HELP_QUALITY = 'Prefered video quality. Default is the best quality found (up to 4K)'
 
 MODE_PREVIEW = 'preview'
 MODE_BEST = 'best'
 MODE_LOWQ = 'lowq'
 
-
 CONNECT_RETRIES_PAGE = 5
-CONNECT_RETRIES_ITEM = 20
+CONNECT_RETRIES_ITEM = 50
 
 MAX_VIDEOS_QUEUE_SIZE = 8
 
 Log = print
+
+TAGS_CONCAT_CHAR = ','
 
 
 class DownloadResult:

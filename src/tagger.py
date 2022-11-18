@@ -11,7 +11,7 @@ from json import loads
 from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
 from typing import List, Dict, Optional, Callable
 
-from defs import TAG_NUMS_ENCODED, UTF8
+from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8
 
 TAG_NUMS_DECODED = loads(b64decode(TAG_NUMS_ENCODED))  # type: Dict[str, str]
 
@@ -304,7 +304,7 @@ def filtered_tags(tags_list: List[str]) -> str:
     # tags_list_final = []
     # [tags_list_final.extend(tag_list) for tag_list in tags_dict.values() if len(tag_list) != 0]
 
-    return trim_undersores('_'.join(sorted(tags_list_final)))
+    return trim_undersores(TAGS_CONCAT_CHAR.join(sorted(tags_list_final)))
 
 
 saved_tags_file_fullpath = ''

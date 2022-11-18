@@ -17,7 +17,7 @@ from aiofile import async_open
 
 from defs import (
     Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK,
-    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH,
+    TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH,
 )
 from fetch_html import fetch_html, get_proxy
 from tagger import (
@@ -111,7 +111,7 @@ async def report_total_queue_size_callback(base_sleep_time: float) -> None:
             download_queue_size_last = downloading_count
 
 
-async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, use_tags: bool,
+async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool,
                       extra_tags: List[str], untagged_policy: str, download_mode: str, save_tags: bool, session: ClientSession) -> None:
     global current_ididx
 
@@ -123,6 +123,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
 
     current_ididx += 1
 
+    my_tags = 'no_tags'
+    likes = ''
     i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
     if i_html:
         if i_html.find('title', string='404 Not Found'):
@@ -134,13 +136,12 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             if titleh1:
                 my_title = titleh1.text
             else:
-                my_title = 'unk'
+                my_title = ''
         try:
             likespan = i_html.find('span', class_='voters count')
-            likes = int(str(likespan.text[:max(likespan.text.find(' '), 0)]))
-            my_score = f'{"+" if likes > 0 else ""}{likes:d}'
+            likes = str(likespan.text[:max(likespan.text.find(' '), 0)])
         except Exception:
-            my_score = 'unk'
+            pass
         try:
             my_author = str(i_html.find('div', string='Artist:').parent.find('span').string).lower()
         except Exception:
@@ -152,51 +153,47 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
         except Exception:
             Log(f'Warning: cannot extract categories for {idi:d}.')
             my_categories = []
-        if use_tags is True or save_tags is True or len(extra_tags) > 0:
+        try:
             tdiv = i_html.find('div', string='Tags:')
-            if not tdiv or not tdiv.parent:
-                if len(extra_tags) > 0 and untagged_policy != DOWNLOAD_POLICY_ALWAYS:
-                    Log(f'Cannot find tags section for {idi:d}. Skipped!')
-                    return await try_unregister_from_queue(idi)
-                Log(f'Cannot find tags section for {idi:d}, using title...')
-            else:
-                tags = tdiv.parent.find_all('a', class_='tag_item')
-                tags_raw = [str(tag.string).lower() for tag in tags]
-                if len(extra_tags) > 0:
-                    for extag in extra_tags:
-                        suc = True
-                        if extag[0] == '(':
-                            if get_or_group_matching_tag(extag, tags_raw) is None:
-                                suc = False
-                                Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
-                        elif extag.startswith('-('):
-                            if is_neg_and_group_matches(extag, tags_raw):
-                                suc = False
-                                Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
-                        elif extag.startswith('-a:'):
-                            if is_neg_author_matching(my_author, extag):
-                                suc = False
-                                Log(f'Video \'rv_{idi:d}.mp4\' has excluded author \'{extag[3:]}\'. Skipped!')
-                        elif extag.startswith('-c:'):
-                            if is_neg_categories_matching(my_categories, extag):
-                                suc = False
-                                Log(f'Video \'rv_{idi:d}.mp4\' has excluded category \'{extag[3:]}\'. Skipped!')
-                        else:
-                            mtag = get_matching_tag(extag[1:], tags_raw)
-                            if mtag is not None and extag[0] == '-':
-                                suc = False
-                                Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
-                            elif mtag is None and extag[0] == '+':
-                                suc = False
-                                Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
-                        if suc is False:
-                            return await try_unregister_from_queue(idi)
-                if save_tags:
-                    register_item_tags(idi, ' '.join(sorted(tag.replace(' ', '_') for tag in tags_raw)))
-                if use_tags:
-                    my_tags = filtered_tags(list(sorted(tag.replace(' ', '_') for tag in tags_raw)))
-                    if my_tags != '':
-                        my_title = my_tags
+            tags = tdiv.parent.find_all('a', class_='tag_item')
+            tags_raw = [str(tag.string).lower() for tag in tags]
+            if len(extra_tags) > 0:
+                for extag in extra_tags:
+                    suc = True
+                    if extag[0] == '(':
+                        if get_or_group_matching_tag(extag, tags_raw) is None:
+                            suc = False
+                            Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
+                    elif extag.startswith('-('):
+                        if is_neg_and_group_matches(extag, tags_raw):
+                            suc = False
+                            Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
+                    elif extag.startswith('-a:'):
+                        if is_neg_author_matching(my_author, extag):
+                            suc = False
+                            Log(f'Video \'rv_{idi:d}.mp4\' has excluded author \'{extag[3:]}\'. Skipped!')
+                    elif extag.startswith('-c:'):
+                        if is_neg_categories_matching(my_categories, extag):
+                            suc = False
+                            Log(f'Video \'rv_{idi:d}.mp4\' has excluded category \'{extag[3:]}\'. Skipped!')
+                    else:
+                        mtag = get_matching_tag(extag[1:], tags_raw)
+                        if mtag is not None and extag[0] == '-':
+                            suc = False
+                            Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
+                        elif mtag is None and extag[0] == '+':
+                            suc = False
+                            Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
+                    if suc is False:
+                        return await try_unregister_from_queue(idi)
+            if save_tags:
+                register_item_tags(idi, ' '.join(sorted(tag.replace(' ', '_') for tag in tags_raw)))
+            my_tags = filtered_tags(list(sorted(tag.replace(' ', '_') for tag in tags_raw)))
+        except Exception:
+            if len(extra_tags) > 0 and untagged_policy != DOWNLOAD_POLICY_ALWAYS:
+                Log(f'Warning: could not extract tags from id {idi:d}, skipping due to untagged videos download policy...')
+                return await try_unregister_from_queue(idi)
+            Log(f'Warning: could not extract tags from id {idi:d}...')
 
         tries = 0
         while True:
@@ -233,14 +230,21 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             link_idx = qualities.index(req_quality)
 
         link = links[link_idx].get('href')
-        part1 = f'rv_{idi:d}_score({my_score})_'
-        part2 = f'_{req_quality}_pydw{extract_ext(link)}'
-        while len(my_title) > max(0, 240 - (len(dest_base) + len(part1) + len(part2))):
-            my_title = my_title[:max(0, my_title.rfind('_'))]
+    else:
+        Log(f'Unable to retreive html for {idi:d}! Aborted!')
+        return await try_unregister_from_queue(idi)
 
-        filename = f'{part1}{my_title}{part2}'
+    my_score = f'+{likes}' if len(likes) > 0 else 'unk'
+    fname_part1 = f'rv_{idi:d}_score({my_score}){f"_{my_title}" if my_title != "" else ""}'
+    fname_part2 = f'{req_quality}_pydw{extract_ext(link)}'
+    extra_len = 5 + 2 + 2  # 2 underscores + 2 brackets + len('2160p') - max len of all qualities
+    while len(my_tags) > max(0, 240 - (len(dest_base) + len(fname_part1) + len(fname_part2) + extra_len)):
+        my_tags = my_tags[:max(0, my_tags.rfind(TAGS_CONCAT_CHAR))]
+    if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(dest_base) + len(fname_part2) + extra_len)):
+        fname_part1 = fname_part1[:max(0, 240 - (len(dest_base) + len(fname_part2) + extra_len))]
+    filename = f'{fname_part1}{f"_({my_tags})" if len(my_tags) > 0 else ""}_{fname_part2}'
 
-        await download_file(idi, filename, dest_base, link, download_mode, session, True)
+    await download_file(idi, filename, dest_base, link, download_mode, session, True)
 
     return await try_unregister_from_queue(idi)
 
