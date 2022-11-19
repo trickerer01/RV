@@ -198,8 +198,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
         try:
             tdiv = i_html.find('div', string='Tags:')
             tags = tdiv.parent.find_all('a', class_='tag_item')
-            tags_raw = [str(tag.string).lower() for tag in tags]
-            for add_tag in [ca for ca in my_categories + [my_author] if len(ca) > 0]:
+            tags_raw = [str(tag.string).replace(' ', '_').lower() for tag in tags]
+            for add_tag in [ca.replace(' ', '_') for ca in my_categories + [my_author] if len(ca) > 0]:
                 if add_tag not in tags_raw:
                     tags_raw.append(add_tag)
             if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags):
@@ -212,8 +212,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                 my_subfolder = scenario.queries[sub_idx].subfolder
                 my_quality = scenario.queries[sub_idx].quality
             if save_tags:
-                register_item_tags(idi, ' '.join(sorted(tag.replace(' ', '_') for tag in tags_raw)), my_subfolder)
-            my_tags = filtered_tags(list(sorted(tag.replace(' ', '_') for tag in tags_raw)))
+                register_item_tags(idi, ' '.join(sorted(tags_raw)), my_subfolder)
+            my_tags = filtered_tags(list(sorted(tags_raw)))
         except Exception:
             if scenario is not None:
                 uvp_idx = get_uvp_always_subquery_idx(scenario)

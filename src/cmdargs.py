@@ -91,7 +91,7 @@ def validate_parsed(args) -> Namespace:
                 except Exception:
                     error_to_print = f'\nInvalid tag: \'{tag}\'\n'
                     raise
-            parsed.extra_tags += [tag for tag in unks]
+            parsed.extra_tags += [tag.replace(' ', '_') for tag in unks]
         # Log('parsed:', parsed)
     except (ArgumentError, TypeError, Exception):
         # Log('\n', e)
@@ -153,7 +153,7 @@ def extra_tag(tag: str) -> str:
     except Exception:
         raise ArgumentError
 
-    return tag
+    return tag.replace(' ', '_')
 
 
 def download_scenario_format(fmt_str: str) -> DownloadScenario:

@@ -13,7 +13,7 @@ from typing import List, Dict, Optional
 
 from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8, normalize_path
 
-TAG_NUMS_DECODED = loads(b64decode(TAG_NUMS_ENCODED))  # type: Dict[str, str]
+TAG_NUMS_DECODED = {k.replace(' ', '_'): v for k, v in loads(b64decode(TAG_NUMS_ENCODED)).items()}  # type: Dict[str, str]
 
 re_replace_symbols = re_compile(
     r'[^0-9a-zA-Z_+()\[\]]+'
