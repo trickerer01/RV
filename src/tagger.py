@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from base64 import b64decode
 from json import loads
 from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
-from typing import List, Dict, Optional, Callable
+from typing import List, Dict, Optional
 
 from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8
 
@@ -30,7 +30,7 @@ re_tags_to_process = re_compile(
     r'[a-z]{4}hral_i.+?|(?:\d{1,2}\+?)?(?:boys?|girls?|fu[a-z]{2}(?:[a-z]{4}|s)?|in[d-v]{2}cts?|monsters?)|succ[a-z]{4}|'
     r'bbw|dog|f(?:acesitting|ur)|hmv|pmv|tar|c(?:\.c\.|um)|monster_girl|'
     r'[^(]+\([^)]+\).*?|[a-z_\-]+\d+?|\d{2,4}[a-z_\-]+?|[a-z_]{2,15}sfm|[^_]+_pov|fu[a-z]{2}(?:/|_(?:on|with)_)[a-z]{4}|'
-    r'[a-z][a-z_]{3,9}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$'
+    r'[a-z][a-z_]{3,11}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$'
 )
 
 re_tags_exclude_major1 = re_compile(
@@ -62,20 +62,20 @@ re_tags_to_not_exclude = re_compile(
     r'l(?:a(?:osduude|tex)|e(?:ather|eterr|s(?:bian|dias))|ikkezg|o(?:op|punny))|'  # l
     r'm(?:a(?:chine|g(?:ic|mallow)|id|jora|le(?:_(?:male|only)|sub)?)|ccree|e(?:klab|ltrib|ru|troid)|'  # m
     r'i(?:dget|driff|ku|lf|n(?:ecraft|otaur|us8)|ruko|s(?:syb|tress))|o(?:nster(?:_.+?|s)?|rty|xxy))|'  # m
-    r'n(?:a(?:g(?:a|oonimation)|vi)|o(?:ih(?:_2)|name.+?)|ualia|yl.+?)|'  # n
+    r'n(?:a(?:g(?:a|oonimation)|vi)|o(?:ih(?:_2)|name.+?)|ualia|yl.*?)|'  # n
     r'o(?:gre|ne_piece|p(?:helia|iumud)|r(?:al|cs|gy)|verwatch)|'  # o
     r'p(?:a(?:inful|ladins|ragon|uline)|ersona(?:_\d)?|i(?:kachu|ssing)|mv|o(?:kemon|ny|wergirl)|'  # p
     r'r(?:e(?:dator|gnant)|ison(?:er)?|olapse))|'  # p
     r'r(?:a(?:d(?:eong3d|roachhd)|p(?:e|unzel)|tchet)|e(?:becca|dapple2|ey.+?)|i(?:eklig|kolo)|opeboundart|u(?:bber|kia)|yona)|'  # r
     r's(?:a(?:dako|itou|mira|ntalol|yuri)|ca(?:lie|t)|e(?:cazz?|lf_fuck)|hackles|i(?:lkymilk|ms(?:_\d)?|th_jedi)|k(?:arlet|yrim)|'  # s
     r'l(?:ave|eepy_b|yxxx24)|mell|o(?:ft_vore|lo(?:_.+?)?|phi[ae]|r(?:aka|idormi))|'  # s
-    r'p(?:i(?:der|troast|zzy)|l(?:atoon|ucky.+?)|o(?:ks|nty))|t(?:a(?:lkek|r(?:_.+?|craft|fox))|ra(?:ight|pon)|udio34)|'
+    r'p(?:i(?:der|troast|zzy)|l(?:atoon|ucky.*?)|o(?:ks|nty))|t(?:a(?:lkek|r(?:_.+?|craft|fox))|ra(?:ight|pon)|udio34)|'
     r'uccubus|ylveon)|'  # s
     r't(?:a(?:ga|ker_pov)|e(?:k(?:ken|tah.+?)|ntacles?|xelnaut)|he(?:_sims|count|hoaxxx)|ied|o(?:gruta|rture|uhou)|'  # t
     r'r(?:a(?:ns|ps?)|inity)|soni|y(?:viania))|'  # t
     r'u(?:g(?:ly(?:_man)?|oira)|n(?:birth|de(?:ad|rtale))|r(?:ethral|iel))|'  # u
     r'v(?:a(?:lorant|mpire)|i(?:cer34|olence|rgin)|o(?:mit|re))|'  # v
-    r'w(?:ar(?:craft|frame|hammer)|eebuv.+?|hip|orld_of_warcraft)|'  # w
+    r'w(?:ar(?:craft|frame|hammer)|eebu.*?|hip|orld_of_warcraft)|'  # w
     r'x(?:_(?:com(?:_\d)?|ray)|enomorph)|'  # x
     r'z(?:o(?:mbies?|otopia))|'  # z
     r'\d{1,2}\+?_?(?:animal|boy|futa|girl|monster)s?.*?'  # 0-9
@@ -194,39 +194,6 @@ def try_parse_id_or_group(ex_tags: List[str]) -> Optional[List[int]]:
         if is_valid_id_or_group(orgr):
             return [int(tag.replace('id=', '')) for tag in orgr[1:-1].split('~')]
     return None
-
-
-def is_valid_neg_author_tag(tag: str) -> bool:
-    return not not re_fullmatch(r'^-a:.+?$', tag)
-
-
-def is_valid_neg_category_tag(tag: str) -> bool:
-    return not not re_fullmatch(r'^-c:.+?$', tag)
-
-
-def validate_neg_author_tag(tag: str) -> None:
-    assert is_valid_neg_author_tag(tag)
-
-
-def validate_neg_cathegory_tag(tag: str) -> None:
-    assert is_valid_neg_category_tag(tag)
-
-
-def is_neg_matching_any(neg_val: str, vals: List[str], validator: Callable[[str], None]) -> bool:
-    validator(neg_val)
-    if is_non_wtag(neg_val):
-        return neg_val[3:].lower() in vals
-    else:
-        re_neg = re_compile(rf'^{normalize_wtag(neg_val[3:].lower())}$')
-        return any(not not re_fullmatch(re_neg, c) for c in vals)
-
-
-def is_neg_author_matching(author: str, neg_author: str) -> bool:
-    return is_neg_matching_any(neg_author, [author], validate_neg_author_tag)
-
-
-def is_neg_categories_matching(categories: List[str], neg_category: str) -> bool:
-    return is_neg_matching_any(neg_category, categories, validate_neg_cathegory_tag)
 
 
 def trim_undersores(base_str: str) -> str:

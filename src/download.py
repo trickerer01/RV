@@ -21,8 +21,7 @@ from defs import (
 )
 from fetch_html import fetch_html, get_proxy
 from tagger import (
-    filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags, is_neg_author_matching,
-    is_neg_categories_matching,
+    filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags,
 )
 
 NEWLINE = '\n'
@@ -148,8 +147,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             Log(f'Warning: cannot extract author for {idi:d}.')
             my_author = ''
         try:
-            my_categories = [str(a.string).lower().replace(' ', '_')
-                             for a in i_html.find('div', string='Categories:').parent.find_all('span')]
+            my_categories = [str(a.string).lower() for a in i_html.find('div', string='Categories:').parent.find_all('span')]
         except Exception:
             Log(f'Warning: cannot extract categories for {idi:d}.')
             my_categories = []
@@ -157,6 +155,9 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             tdiv = i_html.find('div', string='Tags:')
             tags = tdiv.parent.find_all('a', class_='tag_item')
             tags_raw = [str(tag.string).lower() for tag in tags]
+            for add_tag in [ca for ca in my_categories + [my_author] if len(ca) > 0]:
+                if add_tag not in tags_raw:
+                    tags_raw.append(add_tag)
             if len(extra_tags) > 0:
                 for extag in extra_tags:
                     suc = True
@@ -168,14 +169,6 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                         if is_neg_and_group_matches(extag, tags_raw):
                             suc = False
                             Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
-                    elif extag.startswith('-a:'):
-                        if is_neg_author_matching(my_author, extag):
-                            suc = False
-                            Log(f'Video \'rv_{idi:d}.mp4\' has excluded author \'{extag[3:]}\'. Skipped!')
-                    elif extag.startswith('-c:'):
-                        if is_neg_categories_matching(my_categories, extag):
-                            suc = False
-                            Log(f'Video \'rv_{idi:d}.mp4\' has excluded category \'{extag[3:]}\'. Skipped!')
                     else:
                         mtag = get_matching_tag(extag[1:], tags_raw)
                         if mtag is not None and extag[0] == '-':

@@ -18,7 +18,7 @@ from defs import (
     HELP_ARG_DMMODE, ACTION_STORE_TRUE,
 )
 from tagger import (
-    assert_valid_tag, is_non_wtag, assert_valid_or_group, validate_neg_and_group, validate_neg_author_tag, validate_neg_cathegory_tag,
+    assert_valid_tag, is_non_wtag, assert_valid_or_group, validate_neg_and_group,
 )
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
@@ -93,10 +93,6 @@ def validate_parsed(args) -> Namespace:
                         assert_valid_or_group(tag)
                     elif tag.startswith('-('):
                         validate_neg_and_group(tag)
-                    elif tag.startswith('-a:'):
-                        validate_neg_author_tag(tag)
-                    elif tag.startswith('-c:'):
-                        validate_neg_cathegory_tag(tag)
                     elif is_non_wtag(tag[1:]):
                         assert_valid_tag(tag[1:])
                 except Exception:
@@ -159,10 +155,6 @@ def extra_tag(tag: str) -> str:
             assert_valid_or_group(tag)
         elif tag.startswith('-('):
             validate_neg_and_group(tag)
-        elif tag.startswith('-a:'):
-            validate_neg_author_tag(tag)
-        elif tag.startswith('-c:'):
-            validate_neg_cathegory_tag(tag)
         elif is_non_wtag(tag[1:]):
             assert_valid_tag(tag[1:])
     except Exception:
