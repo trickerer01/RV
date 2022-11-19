@@ -19,7 +19,7 @@ from defs import (
 )
 from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence
 from fetch_html import fetch_html, set_proxy
-from tagger import init_tags_file, dump_item_tags
+from tagger import init_tags_files, dump_item_tags
 
 
 class VideoEntryBase:
@@ -160,7 +160,7 @@ async def main() -> None:
     Log(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
     v_entries = list(reversed(v_entries))
     if st and full_download:
-        init_tags_file(f'{dest_base}rv_!tags_{minid:d}-{maxid:d}.txt')
+        init_tags_files(dest_base)
     register_id_sequence([v.my_id for v in v_entries])
     reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if dm == DOWNLOAD_MODE_FULL else 1.0))
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
@@ -168,7 +168,7 @@ async def main() -> None:
         if full_download:
             best = do_full == MODE_BEST
             for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, ex_tags, up, dm, st, s) for v in v_entries]):
+                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, None, ex_tags, up, dm, st, s) for v in v_entries]):
                 await cv
         else:
             for cv in as_completed(

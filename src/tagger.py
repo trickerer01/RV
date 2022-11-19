@@ -11,7 +11,7 @@ from json import loads
 from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
 from typing import List, Dict, Optional
 
-from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8
+from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8, normalize_path
 
 TAG_NUMS_DECODED = loads(b64decode(TAG_NUMS_ENCODED))  # type: Dict[str, str]
 
@@ -274,25 +274,30 @@ def filtered_tags(tags_list: List[str]) -> str:
     return trim_undersores(TAGS_CONCAT_CHAR.join(sorted(tags_list_final)))
 
 
-saved_tags_file_fullpath = ''
-saved_tags_dict = {}  # type: Dict[int, str]
+saved_tags_dest_base = ''
+saved_tags_dict = {'': {}}  # type: Dict[str, Dict[int, str]]
 
 
-def init_tags_file(file_fullpath: str) -> None:
-    global saved_tags_file_fullpath
-    saved_tags_file_fullpath = file_fullpath
+def init_tags_files(dest_base: str) -> None:
+    global saved_tags_dest_base
+    saved_tags_dest_base = dest_base
 
 
-def register_item_tags(item_id: int, tags_str: str) -> None:
-    saved_tags_dict[item_id] = tags_str
+def register_item_tags(item_id: int, tags_str: str, subfolder: str) -> None:
+    if subfolder not in saved_tags_dict.keys():
+        saved_tags_dict[subfolder] = {}
+    saved_tags_dict[subfolder][item_id] = tags_str
 
 
 def dump_item_tags() -> None:
-    assert saved_tags_file_fullpath != ''
-    if len(saved_tags_dict) == 0:
-        return
-    with open(saved_tags_file_fullpath, 'at', encoding=UTF8) as saved_tags_file:
-        saved_tags_file.writelines(f'rv_{idi:d}: {tags.strip()}\n' for idi, tags in sorted(saved_tags_dict.items(), key=lambda t: t[0]))
+    for subfolder, tags_dict in saved_tags_dict.items():
+        if len(tags_dict.items()) == 0:
+            continue
+        min_id = min(tags_dict.keys())
+        max_id = max(tags_dict.keys())
+        fullpath = f'{normalize_path(f"{saved_tags_dest_base}{subfolder}")}rv_!tags_{min_id:d}-{max_id:d}.txt'
+        with open(fullpath, 'at', encoding=UTF8) as saved_tags_file:
+            saved_tags_file.writelines(f'rv_{idi:d}: {tags.strip()}\n' for idi, tags in sorted(tags_dict.items(), key=lambda t: t[0]))
 
 #
 #

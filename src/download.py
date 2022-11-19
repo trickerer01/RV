@@ -10,16 +10,17 @@ from asyncio import sleep
 from os import path, stat, remove, makedirs, listdir
 from random import uniform
 from re import compile, sub, search, match
-from typing import List
+from typing import List, Optional
 
 from aiohttp import ClientSession
 from aiofile import async_open
 
 from defs import (
     Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK,
-    TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH,
+    TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path,
 )
 from fetch_html import fetch_html, get_proxy
+from scenario import DownloadScenario
 from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags,
 )
@@ -110,30 +111,48 @@ async def report_total_queue_size_callback(base_sleep_time: float) -> None:
             download_queue_size_last = downloading_count
 
 
-def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str]) -> bool:
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], do_log=True) -> bool:
     suc = True
     if len(extra_tags) > 0:
         for extag in extra_tags:
             if extag[0] == '(':
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
-                    Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
+                    if do_log:
+                        Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
-                    Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
+                    if do_log:
+                        Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
             else:
                 mtag = get_matching_tag(extag[1:], tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
-                    Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
+                    if do_log:
+                        Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
                 elif mtag is None and extag[0] == '+':
                     suc = False
-                    Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
-    return suc
+                    if do_log:
+                        Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
+    return not suc
 
 
-async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool,
+def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], scenario: DownloadScenario) -> int:
+    for idx, sq in enumerate(scenario.queries):
+        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, False):
+            return idx
+    return -1
+
+
+def get_uvp_always_subquery_idx(scenario: DownloadScenario) -> int:
+    for idx, sq in enumerate(scenario.queries):
+        if sq.uvp == DOWNLOAD_POLICY_ALWAYS:
+            return idx
+    return -1
+
+
+async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, scenario: Optional[DownloadScenario],
                       extra_tags: List[str], untagged_policy: str, download_mode: str, save_tags: bool, session: ClientSession) -> None:
     global current_ididx
 
@@ -145,6 +164,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
 
     current_ididx += 1
 
+    my_subfolder = ''
+    my_quality = req_quality
     my_tags = 'no_tags'
     likes = ''
     i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
@@ -183,11 +204,25 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                     tags_raw.append(add_tag)
             if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags):
                 return await try_unregister_from_queue(idi)
+            if scenario is not None:
+                sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, scenario)
+                if sub_idx == -1:
+                    Log(f'Info: unable to find matching scenario subquery for {idi:d}, skipping...')
+                    return await try_unregister_from_queue(idi)
+                my_subfolder = scenario.queries[sub_idx].subfolder
+                my_quality = scenario.queries[sub_idx].quality
             if save_tags:
-                register_item_tags(idi, ' '.join(sorted(tag.replace(' ', '_') for tag in tags_raw)))
+                register_item_tags(idi, ' '.join(sorted(tag.replace(' ', '_') for tag in tags_raw)), my_subfolder)
             my_tags = filtered_tags(list(sorted(tag.replace(' ', '_') for tag in tags_raw)))
         except Exception:
-            if len(extra_tags) > 0 and untagged_policy != DOWNLOAD_POLICY_ALWAYS:
+            if scenario is not None:
+                uvp_idx = get_uvp_always_subquery_idx(scenario)
+                if uvp_idx == -1:
+                    Log(f'Warning: could not extract tags from id {idi:d}, skipping due to untagged videos download policy (scenario)...')
+                    return await try_unregister_from_queue(idi)
+                my_subfolder = scenario.queries[uvp_idx].subfolder
+                my_quality = scenario.queries[uvp_idx].quality
+            elif len(extra_tags) > 0 and untagged_policy != DOWNLOAD_POLICY_ALWAYS:
                 Log(f'Warning: could not extract tags from id {idi:d}, skipping due to untagged videos download policy...')
                 return await try_unregister_from_queue(idi)
             Log(f'Warning: could not extract tags from id {idi:d}...')
@@ -217,31 +252,32 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             if q:
                 qualities.append(q.group(1))
 
-        if not (req_quality in qualities):
+        if not (my_quality in qualities):
             q_idx = 0 if best_quality else -1
-            if req_quality != QUALITY_UNK:
-                Log(f'cannot find quality \'{req_quality}\' for {idi:d}, using \'{qualities[q_idx]}\'')
-            req_quality = qualities[q_idx]
+            if my_quality != QUALITY_UNK:
+                Log(f'cannot find quality \'{my_quality}\' for {idi:d}, using \'{qualities[q_idx]}\'')
+            my_quality = qualities[q_idx]
             link_idx = q_idx
         else:
-            link_idx = qualities.index(req_quality)
+            link_idx = qualities.index(my_quality)
 
         link = links[link_idx].get('href')
     else:
         Log(f'Unable to retreive html for {idi:d}! Aborted!')
         return await try_unregister_from_queue(idi)
 
+    my_dest_base = normalize_path(f'{dest_base}{my_subfolder}')
     my_score = f'+{likes}' if len(likes) > 0 else 'unk'
     fname_part1 = f'rv_{idi:d}_score({my_score}){f"_{my_title}" if my_title != "" else ""}'
-    fname_part2 = f'{req_quality}_pydw{extract_ext(link)}'
+    fname_part2 = f'{my_quality}_pydw{extract_ext(link)}'
     extra_len = 5 + 2 + 2  # 2 underscores + 2 brackets + len('2160p') - max len of all qualities
-    while len(my_tags) > max(0, 240 - (len(dest_base) + len(fname_part1) + len(fname_part2) + extra_len)):
+    while len(my_tags) > max(0, 240 - (len(my_dest_base) + len(fname_part1) + len(fname_part2) + extra_len)):
         my_tags = my_tags[:max(0, my_tags.rfind(TAGS_CONCAT_CHAR))]
-    if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(dest_base) + len(fname_part2) + extra_len)):
-        fname_part1 = fname_part1[:max(0, 240 - (len(dest_base) + len(fname_part2) + extra_len))]
+    if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len)):
+        fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
     filename = f'{fname_part1}{f"_({my_tags})" if len(my_tags) > 0 else ""}_{fname_part2}'
 
-    await download_file(idi, filename, dest_base, link, download_mode, session, True)
+    await download_file(idi, filename, my_dest_base, link, download_mode, session, True)
 
     return await try_unregister_from_queue(idi)
 

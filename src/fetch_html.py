@@ -6,6 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from asyncio import sleep
 from typing import Optional
 
 from bs4 import BeautifulSoup
@@ -37,6 +38,8 @@ async def fetch_html(url: str, tries: Optional[int] = None) -> Optional[Beautifu
         while retries < tries:
             try:
                 async with s.request('GET', url, timeout=5, proxy=proxy) as r:
+                    if r.status != 404:
+                        r.raise_for_status()
                     content = await r.read()
                     return BeautifulSoup(content, 'html.parser')
             except (KeyboardInterrupt,):
@@ -46,6 +49,7 @@ async def fetch_html(url: str, tries: Optional[int] = None) -> Optional[Beautifu
                     Log('ERROR: 404')
                     assert False
                 retries += 1
+                await sleep(2.0)
                 continue
 
     if retries >= tries:
