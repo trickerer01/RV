@@ -110,6 +110,29 @@ async def report_total_queue_size_callback(base_sleep_time: float) -> None:
             download_queue_size_last = downloading_count
 
 
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str]) -> bool:
+    suc = True
+    if len(extra_tags) > 0:
+        for extag in extra_tags:
+            if extag[0] == '(':
+                if get_or_group_matching_tag(extag, tags_raw) is None:
+                    suc = False
+                    Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
+            elif extag.startswith('-('):
+                if is_neg_and_group_matches(extag, tags_raw):
+                    suc = False
+                    Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
+            else:
+                mtag = get_matching_tag(extag[1:], tags_raw)
+                if mtag is not None and extag[0] == '-':
+                    suc = False
+                    Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
+                elif mtag is None and extag[0] == '+':
+                    suc = False
+                    Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
+    return suc
+
+
 async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool,
                       extra_tags: List[str], untagged_policy: str, download_mode: str, save_tags: bool, session: ClientSession) -> None:
     global current_ididx
@@ -158,27 +181,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
             for add_tag in [ca for ca in my_categories + [my_author] if len(ca) > 0]:
                 if add_tag not in tags_raw:
                     tags_raw.append(add_tag)
-            if len(extra_tags) > 0:
-                for extag in extra_tags:
-                    suc = True
-                    if extag[0] == '(':
-                        if get_or_group_matching_tag(extag, tags_raw) is None:
-                            suc = False
-                            Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
-                    elif extag.startswith('-('):
-                        if is_neg_and_group_matches(extag, tags_raw):
-                            suc = False
-                            Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
-                    else:
-                        mtag = get_matching_tag(extag[1:], tags_raw)
-                        if mtag is not None and extag[0] == '-':
-                            suc = False
-                            Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
-                        elif mtag is None and extag[0] == '+':
-                            suc = False
-                            Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
-                    if suc is False:
-                        return await try_unregister_from_queue(idi)
+            if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags):
+                return await try_unregister_from_queue(idi)
             if save_tags:
                 register_item_tags(idi, ' '.join(sorted(tag.replace(' ', '_') for tag in tags_raw)))
             my_tags = filtered_tags(list(sorted(tag.replace(' ', '_') for tag in tags_raw)))
