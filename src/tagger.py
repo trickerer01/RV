@@ -63,7 +63,7 @@ re_tags_to_not_exclude = re_compile(
     r'm(?:a(?:chine|g(?:ic|mallow)|id|jora|le(?:_(?:male|only)|sub)?)|ccree|e(?:klab|ltrib|ru|troid)|'  # m
     r'i(?:dget|driff|ku|lf|n(?:ecraft|otaur|us8)|ruko|s(?:syb|tress))|o(?:nster(?:_.+?|s)?|rty|xxy))|'  # m
     r'n(?:a(?:g(?:a|oonimation)|vi)|o(?:ih(?:_2)|name.+?)|ualia|yl.*?)|'  # n
-    r'o(?:gre|ne_piece|p(?:helia|iumud)|r(?:al|cs|gy)|verwatch)|'  # o
+    r'o(?:gre|mitome|ne_piece|p(?:helia|iumud)|r(?:al|cs|gy)|verwatch)|'  # o
     r'p(?:a(?:inful|ladins|ragon|uline)|ersona(?:_\d)?|i(?:kachu|ssing)|mv|o(?:kemon|ny|wergirl)|'  # p
     r'r(?:e(?:dator|gnant)|ison(?:er)?|olapse))|'  # p
     r'r(?:a(?:d(?:eong3d|roachhd)|p(?:e|unzel)|tchet)|e(?:becca|dapple2|ey.+?)|i(?:eklig|kolo)|opeboundart|u(?:bber|kia)|yona)|'  # r

@@ -126,15 +126,16 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
                     if do_log:
                         Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
             else:
-                mtag = get_matching_tag(extag[1:], tags_raw)
+                my_extag = extag[1:] if extag[0] == '-' else extag
+                mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
                     if do_log:
                         Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
-                elif mtag is None and extag[0] == '+':
+                elif mtag is None and extag[0] != '-':
                     suc = False
                     if do_log:
-                        Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag[1:]}\'. Skipped!')
+                        Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{my_extag}\'. Skipped!')
     return not suc
 
 
