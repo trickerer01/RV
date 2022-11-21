@@ -17,7 +17,7 @@ from aiofile import async_open
 
 from defs import (
     Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK,
-    TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path,
+    TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path, get_elapsed_time_s,
 )
 from fetch_html import fetch_html, get_proxy
 from scenario import DownloadScenario
@@ -106,7 +106,7 @@ async def report_total_queue_size_callback(base_sleep_time: float) -> None:
         downloading_count = len(downloads_queue)
         queue_size = total_queue_size - downloading_count
         if total_queue_size_last != queue_size or (queue_size == 0 and download_queue_size_last != downloading_count):
-            Log(f'[Queue] items left: {queue_size} (downloading: {downloading_count})')
+            Log(f'[{get_elapsed_time_s()}] queue: {queue_size}, downloading: {downloading_count}')
             total_queue_size_last = queue_size
             download_queue_size_last = downloading_count
 
