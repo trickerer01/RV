@@ -16,6 +16,7 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_pages
 from defs import (
     Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, MODE_BEST, MODE_LOWQ, QUALITY_UNK, DOWNLOAD_MODE_FULL,
+    DOWNLOAD_POLICY_DEFAULT,
 )
 from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence
 from fetch_html import fetch_html, set_proxy
@@ -73,6 +74,16 @@ async def main() -> None:
         st = arglist.dump_tags
         ex_tags = arglist.extra_tags
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
+
+        full_download = do_full in [MODE_BEST, MODE_LOWQ]
+        if full_download is False:
+            if len(ex_tags) > 0:
+                Log('Info: tags are ignored for previews!')
+            if up != DOWNLOAD_POLICY_DEFAULT:
+                Log('Info: untagged videos download policy is ignored for previews!')
+            if st is True:
+                Log('Info: tags are saved for previews!')
+            await sleep(3.0)
     except Exception:
         Log('\nError reading parsed arglist!')
         return
@@ -80,7 +91,6 @@ async def main() -> None:
     v_entries = list()
     maxpage = 0
 
-    full_download = do_full in [MODE_BEST, MODE_LOWQ]
     pi = start_page
     while pi < start_page + pages_count:
         if pi > maxpage > 0:
