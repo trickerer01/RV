@@ -30,7 +30,7 @@ def extra_tag(tag: str) -> str:
     except Exception:
         raise ArgumentError
 
-    return tag
+    return tag.lower().replace(' ', '_')
 
 
 class SubQueryParams(object):
