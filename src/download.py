@@ -164,6 +164,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
     while not await try_register_in_queue(idi):
         await sleep(1.5)
 
+    await sleep(0.25)  # max 4 base requests per second
+
     current_ididx += 1
 
     my_subfolder = ''
