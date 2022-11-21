@@ -8,7 +8,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from asyncio import sleep
 from os import path, stat, remove, makedirs, listdir
-from random import uniform
 from re import compile, sub, search, match
 from typing import List, Optional
 
@@ -157,11 +156,13 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                       extra_tags: List[str], untagged_policy: str, download_mode: str, save_tags: bool, session: ClientSession) -> None:
     global current_ididx
 
+    my_index = id_sequence.index(idi)
     while id_sequence[current_ididx] != idi:
-        await sleep(min(10.0, 0.2 * abs(id_sequence.index(idi) - current_ididx)))
+        diff = abs(my_index - current_ididx)
+        await sleep((0.1 * diff) if (diff < 100) else (10.0 + 0.05 * diff))
 
     while not await try_register_in_queue(idi):
-        await sleep(uniform(2.0, 4.0))
+        await sleep(1.5)
 
     current_ididx += 1
 
