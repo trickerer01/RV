@@ -73,9 +73,18 @@ async def main() -> None:
         dm = arglist.download_mode
         st = arglist.dump_tags
         ex_tags = arglist.extra_tags
+        ds = arglist.download_scenario
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
 
         full_download = do_full in [MODE_BEST, MODE_LOWQ]
+
+        if ds:
+            if up != DOWNLOAD_POLICY_DEFAULT:
+                Log('Info: running download script, outer untagged policy will be ignored')
+                up = DOWNLOAD_POLICY_DEFAULT
+            if len(ex_tags) > 0:
+                Log(f'Info: running download script: outer extra tags: {str(ex_tags)}')
+
         if full_download is False:
             if len(ex_tags) > 0:
                 Log('Info: tags are ignored for previews!')
@@ -83,6 +92,8 @@ async def main() -> None:
                 Log('Info: untagged videos download policy is ignored for previews!')
             if st is True:
                 Log('Info: tags are saved for previews!')
+            if ds:
+                Log('Info: scenarios are ignored for previews!')
             await sleep(3.0)
     except Exception:
         Log('\nError reading parsed arglist!')
@@ -178,7 +189,7 @@ async def main() -> None:
         if full_download:
             best = do_full == MODE_BEST
             for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, None, ex_tags, up, dm, st, s) for v in v_entries]):
+                    [download_id(v.my_id, v.my_title, dest_base, QUALITY_UNK, best, ds, ex_tags, up, dm, st, s) for v in v_entries]):
                 await cv
         else:
             for cv in as_completed(
