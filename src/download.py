@@ -117,37 +117,37 @@ async def report_total_queue_size_callback(base_sleep_time: float) -> None:
             download_queue_size_last = downloading_count
 
 
-def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str]) -> bool:
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], do_log=True) -> bool:
     suc = True
     if len(extra_tags) > 0:
         for extag in extra_tags:
             if extag[0] == '(':
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
-                    if verbose:
+                    if do_log or verbose:
                         Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
-                    if verbose:
+                    if do_log or verbose:
                         Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
-                    if verbose:
+                    if do_log or verbose:
                         Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
                 elif mtag is None and extag[0] != '-':
                     suc = False
-                    if verbose:
+                    if do_log or verbose:
                         Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{my_extag}\'. Skipped!')
     return not suc
 
 
 def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], scenario: DownloadScenario) -> int:
     for idx, sq in enumerate(scenario.queries):
-        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags):
+        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, False):
             return idx
     return -1
 
