@@ -75,10 +75,9 @@ class DownloadScenario(object):
         parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=extra_tag)
 
         for query_raw in fmt_str.split('; '):
-            subfolder, args = query_raw.split(': ')
-
             error_to_print = ''
             try:
+                subfolder, args = query_raw.split(': ')
                 parsed, unks = parser.parse_known_args(args.split())
                 if len(unks) > 0:
                     for tag in unks:

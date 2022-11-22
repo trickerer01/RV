@@ -30,10 +30,9 @@ NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
 SLASH = '/'
 UTF8 = 'utf-8'
 
-QUALITIES = ['2160p', '1080p', '720p', '480p', '360p']
-QUALITY_UNK = 'unknown'
+QUALITIES = ['2160p', '1080p', '720p', '480p', '360p', 'preview']
 
-DEFAULT_QUALITY = QUALITIES[0]
+DEFAULT_QUALITY = QUALITIES[4]
 
 # untagged videos download policy
 DOWNLOAD_POLICY_NOFILTERS = 'nofilters'
@@ -50,17 +49,16 @@ DOWNLOAD_MODE_DEFAULT = DOWNLOAD_MODE_FULL
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
-HELP_MODE = 'Video size and quality. You can download just previews, full videos with highest quality, or ' \
-            'full videos with lowest quality (360p typically). Default is \'best\''
 HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
 HELP_BEGIN_ID = 'If you want to download only videos above or equal to this id'
 HELP_PATH = 'Download destination. Default is current folder'
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
-HELP_QUALITY = 'Prefered video quality. Default is the best quality found (up to 4K)'
+HELP_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
 HELP_ARG_UVPOLICY = (
-    'Untagged videos download policy. By default these videos are ignored if you use extra +tags/-tags. Use \'always\' to override'
+    'Untagged videos download policy. By default these videos are ignored if you use extra +tags/-tags. Use'
+    f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'
 )
 HELP_ARG_DMMODE = 'Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (

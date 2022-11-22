@@ -15,7 +15,7 @@ from aiohttp import ClientSession
 from aiofile import async_open
 
 from defs import (
-    Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO, QUALITY_UNK,
+    Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO,
     TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path, get_elapsed_time_s,
 )
 from fetch_html import fetch_html, get_proxy
@@ -159,7 +159,7 @@ def get_uvp_always_subquery_idx(scenario: DownloadScenario) -> int:
     return -1
 
 
-async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str, best_quality: bool, scenario: Optional[DownloadScenario],
+async def download_id(idi: int, my_title: str, dest_base: str, quality: str, scenario: Optional[DownloadScenario],
                       extra_tags: List[str], untagged_policy: str, download_mode: str, save_tags: bool, session: ClientSession) -> None:
     global current_ididx
 
@@ -176,7 +176,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
     current_ididx += 1
 
     my_subfolder = ''
-    my_quality = req_quality
+    my_quality = quality
     my_tags = 'no_tags'
     likes = ''
     i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
@@ -224,7 +224,9 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                 my_quality = scenario.queries[sub_idx].quality
             if save_tags:
                 register_item_tags(idi, ' '.join(sorted(tags_raw)), my_subfolder)
-            my_tags = filtered_tags(list(sorted(tags_raw)))
+            tags_str = filtered_tags(list(sorted(tags_raw)))
+            if tags_str != '':
+                my_tags = tags_str
         except Exception:
             if scenario is not None:
                 uvp_idx = get_uvp_always_subquery_idx(scenario)
@@ -264,9 +266,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, req_quality: str,
                 qualities.append(q.group(1))
 
         if not (my_quality in qualities):
-            q_idx = 0 if best_quality else -1
-            if my_quality != QUALITY_UNK:
-                Log(f'cannot find quality \'{my_quality}\' for {idi:d}, using \'{qualities[q_idx]}\'')
+            q_idx = 0
+            Log(f'cannot find quality \'{my_quality}\' for {idi:d}, using \'{qualities[q_idx]}\'')
             my_quality = qualities[q_idx]
             link_idx = q_idx
         else:

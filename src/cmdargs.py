@@ -12,8 +12,8 @@ from re import match as re_match, sub as re_sub
 from typing import Optional, List
 
 from defs import (
-    SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, DEFAULT_QUALITY, MODE_PREVIEW, MODE_BEST, MODE_LOWQ, HELP_PATH, HELP_QUALITY, HELP_PAGES,
-    HELP_STOP_ID, HELP_MODE, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID,
+    SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, DEFAULT_QUALITY, HELP_PATH, HELP_QUALITY, HELP_PAGES,
+    HELP_STOP_ID, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID,
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, ACTION_STORE_TRUE, normalize_path,
 )
@@ -21,8 +21,6 @@ from scenario import DownloadScenario, extra_tag
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
-
-MODES = (MODE_PREVIEW, MODE_BEST, MODE_LOWQ)
 
 parser = None  # type: Optional[ArgumentParser]
 
@@ -147,6 +145,7 @@ def download_scenario_format(fmt_str: str) -> DownloadScenario:
 
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
+    parser_or_group.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_QUALITY, choices=QUALITIES)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
@@ -168,7 +167,6 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
     arggr_ids = parser.add_mutually_exclusive_group()
     arggr_ids.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=valid_positive_nonzero_int)
     arggr_ids.add_argument('-end', metavar='#number', default=1, help='End video id', type=valid_positive_nonzero_int)
-    parser.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_QUALITY, choices=QUALITIES)
     add_common_args(parser)
 
     def finalize_ex_groups(parsed: Namespace) -> Namespace:
@@ -196,7 +194,6 @@ def prepare_arglist_pages(args: List[str]) -> Namespace:
     parser.add_argument('-pages', metavar='#number', required=True, help=HELP_PAGES, type=valid_positive_nonzero_int)
     parser.add_argument('-stop_id', metavar='#number', default=1, help=HELP_STOP_ID, type=valid_positive_nonzero_int)
     parser.add_argument('-begin_id', metavar='#number', default=1000000000, help=HELP_BEGIN_ID, type=valid_positive_nonzero_int)
-    parser.add_argument('-mode', default=MODE_BEST, help=HELP_MODE, choices=MODES)
     parser.add_argument('-search', metavar='#string', default='', help=HELP_SEARCH, type=valid_search_string)
     add_common_args(parser)
 
