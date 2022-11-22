@@ -78,23 +78,32 @@ async def main() -> None:
 
         full_download = quality != QUALITIES[-1]
 
+        delay_for_message = False
         if ds:
             if up != DOWNLOAD_POLICY_DEFAULT:
                 Log('Info: running download script, outer untagged policy will be ignored')
                 up = DOWNLOAD_POLICY_DEFAULT
+                delay_for_message = True
             if len(ex_tags) > 0:
                 Log(f'Info: running download script: outer extra tags: {str(ex_tags)}')
-            await sleep(3.0)
+                delay_for_message = True
 
         if full_download is False:
             if len(ex_tags) > 0:
                 Log('Info: tags are ignored for previews!')
+                delay_for_message = True
             if up != DOWNLOAD_POLICY_DEFAULT:
                 Log('Info: untagged videos download policy is ignored for previews!')
+                delay_for_message = True
             if st is True:
                 Log('Info: tags are not saved for previews!')
+                delay_for_message = True
             if ds:
                 Log('Info: scenarios are ignored for previews!')
+                delay_for_message = True
+
+        if delay_for_message:
+            await sleep(3.0)
     except Exception:
         Log('\nError reading parsed arglist!')
         return
