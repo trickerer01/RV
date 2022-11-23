@@ -6,8 +6,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+import sys
 from asyncio import run as run_async, sleep, as_completed, get_running_loop
-from sys import argv
 
 from aiohttp import ClientSession, TCPConnector
 
@@ -20,7 +20,7 @@ from tagger import try_parse_id_or_group, init_tags_files, dump_item_tags
 
 async def main() -> None:
     try:
-        arglist = prepare_arglist_ids(argv[1:])
+        arglist = prepare_arglist_ids(sys.argv[1:])
     except Exception:
         Log('\nUnable to parse cmdline. Exiting...')
         return
@@ -95,6 +95,7 @@ async def run_main() -> None:
 
 
 if __name__ == '__main__':
+    assert sys.version_info >= (3, 7), 'Minimum python version required is 3.7!'
     run_async(run_main())
     exit(0)
 
