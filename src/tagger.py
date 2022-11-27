@@ -152,7 +152,7 @@ def assert_valid_or_group(orgr: str) -> None:
 def normalize_wtag(wtag: str) -> str:
     return (
         wtag.replace('.', '\\.').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('-', '\\-')
-            .replace('*', '.*').replace('?', '.')
+            .replace('*', '.*').replace('?', '.').replace('+', '\\+')
     )
 
 

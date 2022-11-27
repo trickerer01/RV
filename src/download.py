@@ -117,7 +117,7 @@ async def report_total_queue_size_callback(base_sleep_time: float) -> None:
             download_queue_size_last = downloading_count
 
 
-def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], do_log=True) -> bool:
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], subfolder: str, do_log=True) -> bool:
     suc = True
     if len(extra_tags) > 0:
         for extag in extra_tags:
@@ -125,29 +125,29 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
                     if do_log or verbose:
-                        Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'. Skipped!')
+                        Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'!')
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
                     if do_log or verbose:
-                        Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'. Skipped!')
+                        Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'!')
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
                     if do_log or verbose:
-                        Log(f'Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'. Skipped!')
+                        Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'!')
                 elif mtag is None and extag[0] != '-':
                     suc = False
                     if do_log or verbose:
-                        Log(f'Video \'rv_{idi:d}.mp4\' misses required tag matching \'{my_extag}\'. Skipped!')
+                        Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' misses required tag matching \'{my_extag}\'!')
     return not suc
 
 
 def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], scenario: DownloadScenario) -> int:
     for idx, sq in enumerate(scenario.queries):
-        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, False):
+        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.subfolder, False):
             return idx
     return -1
 
@@ -213,7 +213,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
             for add_tag in [ca.replace(' ', '_') for ca in my_categories + [my_author] if len(ca) > 0]:
                 if add_tag not in tags_raw:
                     tags_raw.append(add_tag)
-            if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags):
+            if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags, my_subfolder):
+                Log(f'Info: video {idi:d} is filtered out by outer extra tags, skipping...')
                 return await try_unregister_from_queue(idi)
             if scenario is not None:
                 sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, scenario)
@@ -289,13 +290,15 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
         fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
     filename = f'{fname_part1}{f"_({my_tags})" if len(my_tags) > 0 else ""}_{fname_part2}'
 
-    await download_file(idi, filename, my_dest_base, link, download_mode, session, True)
+    await download_file(idi, filename, my_dest_base, link, download_mode, session, True, my_subfolder)
 
     return await try_unregister_from_queue(idi)
 
 
-async def download_file(idi: int, filename: str, dest_base: str, link: str, download_mode: str, s: ClientSession, from_ids=False) -> int:
+async def download_file(idi: int, filename: str, dest_base: str, link: str, download_mode: str, s: ClientSession,
+                        from_ids=False, subfolder='') -> int:
     dest = normalize_filename(filename, dest_base)
+    sfilename = f'{f"{subfolder}/" if len(subfolder) > 0 else ""}{filename}'
     file_size = 0
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS
@@ -304,7 +307,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
         try:
             makedirs(dest_base)
         except Exception:
-            raise IOError('ERROR: Unable to create subfolder!')
+            raise IOError(f'ERROR: Unable to create subfolder \'{dest_base}\'!')
     else:
         # to check if file already exists we only take into account id and quality
         rv_match = match(re_rvfile, filename)
@@ -335,7 +338,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
     while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
             if download_mode == DOWNLOAD_MODE_TOUCH:
-                Log(f'Saving<touch> {0.0:.2f} Mb to {filename}')
+                Log(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
                 with open(dest, 'wb'):
                     pass
                 break
@@ -352,7 +355,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
                     raise FileNotFoundError(link)
 
                 expected_size = r.content_length
-                Log(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {filename}')
+                Log(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {sfilename}')
 
                 async with async_open(dest, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**20):
@@ -360,7 +363,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
 
                 file_size = stat(dest).st_size
                 if expected_size and file_size != expected_size:
-                    Log(f'Error: file size mismatch for {filename}: {file_size:d} / {expected_size:d}')
+                    Log(f'Error: file size mismatch for {sfilename}: {file_size:d} / {expected_size:d}')
                     raise IOError(link)
                 break
         except (KeyboardInterrupt,):
@@ -369,7 +372,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
             import sys
             print(sys.exc_info()[0], sys.exc_info()[1])
             retries += 1
-            Log(f'{filename}: error #{retries:d}...')
+            Log(f'{sfilename}: error #{retries:d}...')
             if r:
                 r.close()
             if path.exists(dest):
