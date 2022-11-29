@@ -57,13 +57,13 @@ HELP_SEARCH = 'If you want to only traverse pages matching some search query'
 HELP_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
 HELP_ARG_UVPOLICY = (
-    'Untagged videos download policy. By default these videos are ignored if you use extra +tags/-tags. Use'
+    'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'
     f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'
 )
 HELP_ARG_DMMODE = 'Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (
-    'All remaining \'-args\' and \'+args\' count as tags to exclude / require.'
-    ' Videos containing any of -tags, or not containing all of +tags will be skipped. Only existing tags are allowed'
+    'All remaining \'args\' and \'-args\' count as tags to exclude / require.'
+    ' Videos containing any of \'-tags\', or not containing all of \'tags\' will be skipped. Only existing tags are allowed'
 )
 HELP_ARG_DWN_SCENARIO = (
     'Download scenario. This allows to scan for tags and sort videos accordingly in a single pass.'
