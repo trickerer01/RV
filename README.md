@@ -17,8 +17,8 @@ RV is a video downloader with a lot of features, most of which are filters for f
 
 #### Additional info
 1. `OR` / `AND` groups:
-  - `OR` group is a parenthesized tilda (**~**) -separated group of tags:
-    - **(\<tag1>~\<tag2>~...~\<tagN>)**
+  - `OR` group is a parenthesized tilda (**\~**) -separated group of tags:
+    - **(\<tag1>\~\<tag2>\~...\~\<tagN>)**
     - video containing **any** of the tags in `OR` group is considered matching said group
   - `AND` group is a parenthesized comma (**,**) -separated group of tags. It is only used for exclusion:
     - **-(\<tag1>,\<tag2>,...,\<tagN>)**
@@ -32,16 +32,16 @@ RV is a video downloader with a lot of features, most of which are filters for f
    - *SCRIPT* always contains spaces hence has to be escaped by quotes:
      - python ids.py \<args>... -script ***"***<NOTHING>sub1: tags1; sub2: tags2 ...***"***
    - Typically each next group is better exclude all required tags in a previous group and retain excluded tags, so you know exactly what file goes where:
-     - ... -script "s1: a b (c~d) **-e**; s2: **-a -b -c -d -e** f g (h~i); s3:..."
+     - ... -script "s1: a b (c\~d) **-e**; s2: **-a -b -c -d -e** f g (h\~i); s3:..."
    - Besides just tags, each group can also have `-quality` set, which will be used to download files matching tags in that group. You can also set `-uvp` for **one** group
 
 3. `--use-id-sequence`:
   - Syntax: `--use-id-sequence SEQUENCE` / `-seq SEQUENCE`, ***ids.py*** only
   - Id sequence is used to download set of ids instead of id range
   - *SEQUENCE* is an `OR` group of ids:
-    - **(id=\<id1>~id=\<id2>~...~id=\<idN>)**
+    - **(id=\<id1>\~id=\<id2>\~...\~id=\<idN>)**
   - Id sequence is used **INSTEAD** of id range, you can't use both
-    - python ids.py \<args>... -seq (id=1337~id=9999~id=1001)
+    - python ids.py \<args>... -seq (id=1337\~id=9999\~id=1001)
 
 4. File Naming
   - File names are generated based on video *title* and *tags*:
