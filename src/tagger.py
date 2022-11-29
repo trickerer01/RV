@@ -150,21 +150,19 @@ def assert_valid_or_group(orgr: str) -> None:
 
 
 def normalize_wtag(wtag: str) -> str:
-    return (
-        wtag.replace('.', '\\.').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('-', '\\-')
-            .replace('*', '.*').replace('?', '.').replace('+', '\\+')
-    )
+    for c in '.[]()-+':
+        wtag = wtag.replace(c, f'\\{c}')
+    return wtag.replace('*', '.*').replace('?', '.')
 
 
 def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
     if is_non_wtag(wtag):
         return wtag if wtag in mtags else None
-    else:
-        pat = re_compile(rf'^{normalize_wtag(wtag)}$')
-        for htag in mtags:
-            if re_fullmatch(pat, htag):
-                return htag
-        return None
+    pat = re_compile(rf'^{normalize_wtag(wtag)}$')
+    for htag in mtags:
+        if re_fullmatch(pat, htag):
+            return htag
+    return None
 
 
 def get_or_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
