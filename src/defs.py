@@ -12,6 +12,15 @@ from datetime import datetime
 
 __RV_DEBUG__ = False
 
+
+class BaseConfig(object):
+    def __init__(self):
+        self.verbose = False
+        self.validate_tags = True
+
+
+ExtraConfig = BaseConfig()
+
 # SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20v').decode()
 # Params required: str, int. Ex. SITE_AJAX_REQUEST_BASE % ('sfw', 1)
 SITE_AJAX_REQUEST_BASE = b64decode(
@@ -63,7 +72,8 @@ HELP_ARG_UVPOLICY = (
 HELP_ARG_DMMODE = 'Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (
     'All remaining \'args\' and \'-args\' count as tags to exclude / require.'
-    ' Videos containing any of \'-tags\', or not containing all of \'tags\' will be skipped. Only existing tags are allowed'
+    ' Videos containing any of \'-tags\', or not containing all of \'tags\' will be skipped. Only existing tags are allowed.'
+    ' Use can skip validity checks with \'--no-validation\' option'
 )
 HELP_ARG_DWN_SCENARIO = (
     'Download scenario. This allows to scan for tags and sort videos accordingly in a single pass.'

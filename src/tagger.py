@@ -11,7 +11,7 @@ from json import loads
 from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
 from typing import List, Dict, Optional
 
-from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8, normalize_path
+from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8, Log, normalize_path
 
 TAG_NUMS_DECODED = {k.replace(' ', '_'): v for k, v in loads(b64decode(TAG_NUMS_ENCODED)).items()}  # type: Dict[str, str]
 
@@ -114,6 +114,35 @@ TAG_ALIASES = {
 }
 
 
+def extra_tag(tag: str) -> str:
+    try:
+        if tag[0] == '(':
+            assert_valid_or_group(tag)
+        elif tag.startswith('-('):
+            validate_neg_and_group(tag)
+        return tag.lower().replace(' ', '_')
+    except Exception:
+        Log(f'Fatal: invalid tags group: \'{tag}\'!')
+        raise ValueError
+
+
+def validate_tags(tags: List[str]) -> None:
+    all_valid = True
+    for tag in tags:
+        try:
+            if tag[0] == '(' or tag.startswith('-('):
+                pass
+            elif is_non_wtag(tag[1:]):
+                assert_valid_tag(tag[1:])
+        except Exception:
+            Log(f'Error: invalid extra_tag value: \'{tag}\'!')
+            all_valid = False
+            continue
+    if not all_valid:
+        Log('Fatal: Invalid extra tags found!')
+        raise ValueError
+
+
 def is_non_wtag(tag: str) -> bool:
     return not re_fullmatch(r'^[^?*]*[?*].*?$', tag)
 
@@ -140,9 +169,7 @@ def validate_neg_and_group(andgr: str) -> None:
 
 
 def is_valid_or_group(orgr: str) -> bool:
-    if len(orgr) >= len('(.~.)') and orgr[0] == '(' and orgr[-1] == ')' and orgr.find('~') != -1 and len(orgr[1:-1].split('~', 1)) == 2:
-        return all(is_valid_tag(tag) for tag in orgr[1:-1].split('~') if is_non_wtag(tag) and is_non_idtag(tag))
-    return False
+    return len(orgr) >= len('(.~.)') and orgr[0] == '(' and orgr[-1] == ')' and orgr.find('~') != -1 and len(orgr[1:-1].split('~', 1)) == 2
 
 
 def assert_valid_or_group(orgr: str) -> None:

@@ -17,7 +17,8 @@ from defs import (
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, ACTION_STORE_TRUE, normalize_path,
 )
-from scenario import DownloadScenario, extra_tag
+from scenario import DownloadScenario
+from tagger import extra_tag
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
@@ -79,14 +80,7 @@ def validate_parsed(args) -> Namespace:
     error_to_print = ''
     try:
         parsed, unks = parser.parse_known_args(args)
-        if len(unks) > 0:
-            for tag in unks:
-                try:
-                    assert extra_tag(tag)
-                except Exception:
-                    error_to_print = f'\nInvalid tag: \'{tag}\'\n'
-                    raise
-            parsed.extra_tags += [tag.replace(' ', '_') for tag in unks]
+        parsed.extra_tags += [tag.lower().replace(' ', '_') for tag in unks]
         # Log('parsed:', parsed)
     except (ArgumentError, TypeError, Exception):
         # Log('\n', e)
@@ -151,6 +145,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
     parser_or_group.add_argument('-tdump', '--dump-tags', action=ACTION_STORE_TRUE, help='Save tags (full download only)')
     parser_or_group.add_argument('--verbose', action=ACTION_STORE_TRUE, help='Use verbose mode for output')
+    parser_or_group.add_argument('--no-validation', action=ACTION_STORE_TRUE, help='Skip extra tags validation')
     parser_or_group.add_argument('-script', '--download-scenario', default=None, help=HELP_ARG_DWN_SCENARIO, type=download_scenario_format)
     parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=extra_tag)
 

@@ -14,23 +14,9 @@ from defs import (
     Log, DEFAULT_QUALITY, HELP_QUALITY, QUALITIES, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, HELP_ARG_EXTRA_TAGS, DOWNLOAD_POLICY_DEFAULT,
     DOWNLOAD_POLICY_ALWAYS
 )
-from tagger import assert_valid_or_group, validate_neg_and_group, is_non_wtag, assert_valid_tag
+from tagger import extra_tag
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
-
-
-def extra_tag(tag: str) -> str:
-    try:
-        if tag[0] == '(':
-            assert_valid_or_group(tag)
-        elif tag.startswith('-('):
-            validate_neg_and_group(tag)
-        elif is_non_wtag(tag[1:]):
-            assert_valid_tag(tag[1:])
-    except Exception:
-        raise ArgumentError
-
-    return tag.lower().replace(' ', '_')
 
 
 class SubQueryParams(object):
@@ -79,14 +65,7 @@ class DownloadScenario(object):
             try:
                 subfolder, args = query_raw.split(': ')
                 parsed, unks = parser.parse_known_args(args.split())
-                if len(unks) > 0:
-                    for tag in unks:
-                        try:
-                            assert extra_tag(tag)
-                        except Exception:
-                            error_to_print = f'\nInvalid tag: \'{tag}\'\n'
-                            raise
-                    parsed.extra_tags += [tag for tag in unks]
+                parsed.extra_tags += [tag.lower().replace(' ', '_') for tag in unks]
                 if parsed.untag_video_policy == DOWNLOAD_POLICY_ALWAYS and ds.has_subquery(untag_video_policy=DOWNLOAD_POLICY_ALWAYS):
                     error_to_print = f'Scenario can only have one subquery with untagged video policy \'{DOWNLOAD_POLICY_ALWAYS}\'!'
                     raise ValueError

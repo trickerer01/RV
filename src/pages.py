@@ -16,10 +16,11 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_pages
 from defs import (
     Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, QUALITIES,
+    ExtraConfig,
 )
-from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence, set_verbosity
+from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence
 from fetch_html import fetch_html, set_proxy
-from tagger import init_tags_files, dump_item_tags
+from tagger import init_tags_files, dump_item_tags, validate_tags
 
 
 class VideoEntryBase:
@@ -61,6 +62,9 @@ async def main() -> None:
         return
 
     try:
+        ExtraConfig.verbose = arglist.verbose
+        ExtraConfig.validate_tags = not arglist.no_validation
+
         dest_base = arglist.path
         start_page = arglist.start
         pages_count = arglist.pages
@@ -74,7 +78,9 @@ async def main() -> None:
         ex_tags = arglist.extra_tags
         ds = arglist.download_scenario
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
-        set_verbosity(arglist.verbose)
+
+        if ExtraConfig.validate_tags:
+            validate_tags(ex_tags)
 
         full_download = quality != QUALITIES[-1]
 

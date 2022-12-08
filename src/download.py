@@ -16,7 +16,7 @@ from aiofile import async_open
 
 from defs import (
     Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO,
-    TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path, get_elapsed_time_s,
+    TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path, get_elapsed_time_s, ExtraConfig,
 )
 from fetch_html import fetch_html, get_proxy
 from scenario import DownloadScenario
@@ -27,8 +27,6 @@ from tagger import (
 NEWLINE = '\n'
 re_rvfile = compile(r'^rv_([^_]+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
 
-verbose = False
-
 downloads_queue = []  # type: List[int]
 failed_items = []  # type: List[int]
 total_queue_size = 0
@@ -36,11 +34,6 @@ total_queue_size_last = 0
 download_queue_size_last = 0
 id_sequence = []  # type: List[int]
 current_ididx = 0
-
-
-def set_verbosity(verb: bool) -> None:
-    global verbose
-    verbose = verb
 
 
 def register_id_sequence(id_seq: List[int]) -> None:
@@ -124,23 +117,23 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
             if extag[0] == '(':
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
-                    if do_log or verbose:
+                    if do_log or ExtraConfig.verbose:
                         Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'!')
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
-                    if do_log or verbose:
+                    if do_log or ExtraConfig.verbose:
                         Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'!')
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
-                    if do_log or verbose:
+                    if do_log or ExtraConfig.verbose:
                         Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'!')
                 elif mtag is None and extag[0] != '-':
                     suc = False
-                    if do_log or verbose:
+                    if do_log or ExtraConfig.verbose:
                         Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' misses required tag matching \'{my_extag}\'!')
     return not suc
 

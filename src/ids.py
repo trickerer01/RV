@@ -12,10 +12,10 @@ from asyncio import run as run_async, sleep, as_completed, get_running_loop
 from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_ids
-from defs import Log, MAX_VIDEOS_QUEUE_SIZE, DEFAULT_HEADERS, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY
-from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence, set_verbosity
+from defs import Log, MAX_VIDEOS_QUEUE_SIZE, DEFAULT_HEADERS, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, ExtraConfig
+from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence
 from fetch_html import set_proxy
-from tagger import try_parse_id_or_group, init_tags_files, dump_item_tags
+from tagger import try_parse_id_or_group, init_tags_files, dump_item_tags, validate_tags
 
 
 async def main() -> None:
@@ -26,6 +26,9 @@ async def main() -> None:
         return
 
     try:
+        ExtraConfig.verbose = arglist.verbose
+        ExtraConfig.validate_tags = not arglist.no_validation
+
         dest_base = arglist.path
         start_id = arglist.start
         end_id = arglist.end
@@ -36,7 +39,9 @@ async def main() -> None:
         ex_tags = arglist.extra_tags
         ds = arglist.download_scenario
         set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
-        set_verbosity(arglist.verbose)
+
+        if ExtraConfig.validate_tags:
+            validate_tags(ex_tags)
 
         if arglist.use_id_sequence:
             id_sequence = try_parse_id_or_group(ex_tags)
