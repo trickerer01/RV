@@ -75,6 +75,7 @@ class DownloadScenario(object):
                     Log(error_to_print)
                 raise
 
+        assert len(ds) > 0
         return ds
 
 #

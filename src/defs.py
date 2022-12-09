@@ -64,7 +64,7 @@ HELP_BEGIN_ID = 'If you want to download only videos above or equal to this id'
 HELP_PATH = 'Download destination. Default is current folder'
 HELP_SEARCH = 'If you want to only traverse pages matching some search query'
 HELP_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
-HELP_ARG_PROXY = 'Proxy to use in format: a.d.d.r:port'
+HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
 HELP_ARG_UVPOLICY = (
     'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'
     f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'
@@ -84,6 +84,7 @@ HELP_ARG_DWN_SCENARIO = (
     ' Example:'
     ' \'python ids.py --download-scenario "1g: 1girl -1monster -quality 480p; 2g: 2girls -1girl -1monster -quality 720p"\''
 )
+HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
 
 MODE_PREVIEW = 'preview'
 MODE_BEST = 'best'
