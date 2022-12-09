@@ -27,6 +27,7 @@ async def main() -> None:
 
     try:
         ExtraConfig.verbose = arglist.verbose
+        ExtraConfig.min_score = arglist.minimum_score
         ExtraConfig.validate_tags = not arglist.no_validation
 
         dest_base = arglist.path

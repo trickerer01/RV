@@ -216,6 +216,13 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
                     return await try_unregister_from_queue(idi)
                 my_subfolder = scenario.queries[sub_idx].subfolder
                 my_quality = scenario.queries[sub_idx].quality
+            if ExtraConfig.min_score and len(likes) > 0:
+                try:
+                    if int(likes) < ExtraConfig.min_score:
+                        Log(f'Info: video {idi:d} has low score \'{int(likes):d}\' (required {ExtraConfig.min_score:d}), skipping...')
+                        return await try_unregister_from_queue(idi)
+                except Exception:
+                    pass
             if save_tags:
                 register_item_tags(idi, ' '.join(sorted(tags_raw)), my_subfolder)
             tags_str = filtered_tags(list(sorted(tags_raw)))

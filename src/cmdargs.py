@@ -15,7 +15,7 @@ from defs import (
     SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, DEFAULT_QUALITY, HELP_PATH, HELP_QUALITY, HELP_PAGES,
     HELP_STOP_ID, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID,
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
-    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_NO_VALIDATION, ACTION_STORE_TRUE, normalize_path,
+    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_NO_VALIDATION, HELP_ARG_MINSCORE, ACTION_STORE_TRUE, normalize_path,
 )
 from scenario import DownloadScenario
 from tagger import extra_tag
@@ -41,6 +41,13 @@ def unquote(string: str) -> str:
         return string
     except Exception:
         raise ValueError
+
+
+def valid_int(val: str) -> int:
+    try:
+        return int(val)
+    except Exception:
+        raise ArgumentError
 
 
 def valid_positive_nonzero_int(val: str) -> int:
@@ -140,6 +147,7 @@ def download_scenario_format(fmt_str: str) -> DownloadScenario:
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
     parser_or_group.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_QUALITY, choices=QUALITIES)
+    parser_or_group.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)

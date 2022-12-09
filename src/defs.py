@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from base64 import b64decode
 from datetime import datetime
+from typing import Optional
 
 
 __RV_DEBUG__ = False
@@ -16,6 +17,7 @@ __RV_DEBUG__ = False
 class BaseConfig(object):
     def __init__(self):
         self.verbose = False
+        self.min_score = None  # type: Optional[int]
         self.validate_tags = True
 
 
@@ -83,6 +85,10 @@ HELP_ARG_DWN_SCENARIO = (
     ' You can also use following arguments in each subquery: -quality, -uvp.'
     ' Example:'
     ' \'python ids.py --download-scenario "1g: 1girl -1monster -quality 480p; 2g: 2girls -1girl -1monster -quality 720p"\''
+)
+HELP_ARG_MINSCORE = (
+    'Score filter for videos (likes minus dislikes).'
+    ' Videos having score below this value will be skipped, unless score extraction fails - in that case video always get a pass'
 )
 HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
 
