@@ -96,7 +96,7 @@ async def main() -> None:
                 delay_for_message = True
 
         if full_download is False:
-            if len(ex_tags) > 0:
+            if len(ex_tags) > 0 or ExtraConfig.validate_tags:
                 Log('Info: tags are ignored for previews!')
                 delay_for_message = True
             if up != DOWNLOAD_POLICY_DEFAULT:
@@ -107,6 +107,9 @@ async def main() -> None:
                 delay_for_message = True
             if ds:
                 Log('Info: scenarios are ignored for previews!')
+                delay_for_message = True
+            if ExtraConfig.min_score:
+                Log('Info: score is not extracted from previews!')
                 delay_for_message = True
 
         if delay_for_message:
