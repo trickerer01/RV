@@ -17,7 +17,7 @@ from defs import (
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_NO_VALIDATION, HELP_ARG_MINSCORE, ACTION_STORE_TRUE, normalize_path,
 )
-from scenario import DownloadScenario
+from scenario import DownloadScenario, valid_int
 from tagger import extra_tag
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
@@ -41,13 +41,6 @@ def unquote(string: str) -> str:
         return string
     except Exception:
         raise ValueError
-
-
-def valid_int(val: str) -> int:
-    try:
-        return int(val)
-    except Exception:
-        raise ArgumentError
 
 
 def valid_positive_nonzero_int(val: str) -> int:

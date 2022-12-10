@@ -138,9 +138,17 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
     return not suc
 
 
-def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], scenario: DownloadScenario) -> int:
+def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], likes: str, scenario: DownloadScenario) -> int:
     for idx, sq in enumerate(scenario.queries):
         if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.subfolder, False):
+            if len(likes) > 0:
+                try:
+                    if int(likes) < sq.minscore:
+                        if ExtraConfig.verbose:
+                            Log(f'[{sq.subfolder}] Video \'rv_{idi:d}.mp4\' has low score \'{int(likes):d}\' (required {sq.minscore:d})!')
+                        continue
+                except Exception:
+                    pass
             return idx
     return -1
 
@@ -209,13 +217,6 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
             if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags, my_subfolder):
                 Log(f'Info: video {idi:d} is filtered out by outer extra tags, skipping...')
                 return await try_unregister_from_queue(idi)
-            if scenario is not None:
-                sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, scenario)
-                if sub_idx == -1:
-                    Log(f'Info: unable to find matching scenario subquery for {idi:d}, skipping...')
-                    return await try_unregister_from_queue(idi)
-                my_subfolder = scenario.queries[sub_idx].subfolder
-                my_quality = scenario.queries[sub_idx].quality
             if ExtraConfig.min_score and len(likes) > 0:
                 try:
                     if int(likes) < ExtraConfig.min_score:
@@ -223,6 +224,13 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
                         return await try_unregister_from_queue(idi)
                 except Exception:
                     pass
+            if scenario is not None:
+                sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, likes, scenario)
+                if sub_idx == -1:
+                    Log(f'Info: unable to find matching scenario subquery for {idi:d}, skipping...')
+                    return await try_unregister_from_queue(idi)
+                my_subfolder = scenario.queries[sub_idx].subfolder
+                my_quality = scenario.queries[sub_idx].quality
             if save_tags:
                 register_item_tags(idi, ' '.join(sorted(tags_raw)), my_subfolder)
             tags_str = filtered_tags(list(sorted(tags_raw)))
