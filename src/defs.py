@@ -91,6 +91,10 @@ HELP_ARG_MINSCORE = (
     'Score filter for videos (likes minus dislikes).'
     ' Videos having score below this value will be skipped, unless score extraction fails - in that case video always get a pass'
 )
+HELP_CMDFILE = (
+    'Full path to file containing cmdline arguments. One word per line. Useful when cmdline length exceeds maximum for your OS.'
+    ' Windows: ~32000, MinGW: ~4000 to ~32000, Linux: ~127000+'
+)
 HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
 
 MODE_PREVIEW = 'preview'

@@ -217,7 +217,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
             if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags, my_subfolder):
                 Log(f'Info: video {idi:d} is filtered out by outer extra tags, skipping...')
                 return await try_unregister_from_queue(idi)
-            if ExtraConfig.min_score and len(likes) > 0:
+            if len(likes) > 0:
                 try:
                     if int(likes) < ExtraConfig.min_score:
                         Log(f'Info: video {idi:d} has low score \'{int(likes):d}\' (required {ExtraConfig.min_score:d}), skipping...')

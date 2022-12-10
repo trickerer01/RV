@@ -7,11 +7,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import sys
-from asyncio import run as run_async, sleep, as_completed, get_running_loop
+from asyncio import run as run_async, as_completed, sleep, get_running_loop
 
 from aiohttp import ClientSession, TCPConnector
 
-from cmdargs import prepare_arglist_ids
+from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, MAX_VIDEOS_QUEUE_SIZE, DEFAULT_HEADERS, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, ExtraConfig
 from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence
 from fetch_html import set_proxy
@@ -21,8 +21,10 @@ from tagger import try_parse_id_or_group, init_tags_files, dump_item_tags, valid
 async def main() -> None:
     try:
         arglist = prepare_arglist_ids(sys.argv[1:])
+        while is_parsed_cmdfile(arglist):
+            arglist = prepare_arglist_ids(read_cmdfile(arglist.path))
     except Exception:
-        Log('\nUnable to parse cmdline. Exiting...')
+        Log(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
         return
 
     try:
@@ -39,7 +41,7 @@ async def main() -> None:
         st = arglist.dump_tags
         ex_tags = arglist.extra_tags
         ds = arglist.download_scenario
-        set_proxy(arglist.proxy if hasattr(arglist, 'proxy') else None)
+        set_proxy(arglist.proxy)
 
         if ExtraConfig.validate_tags:
             validate_tags(ex_tags)
