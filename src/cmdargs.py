@@ -16,7 +16,7 @@ from defs import (
     HELP_STOP_ID, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID,
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     NAMING_FLAGS, NAMING_FLAGS_FULL, NAMING_FLAGS_DEFAULT,
-    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_NO_VALIDATION, HELP_ARG_MINSCORE, HELP_CMDFILE, HELP_ARG_NAMING,
+    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_NO_VALIDATION, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING,
     ACTION_STORE_TRUE, normalize_path, UTF8,
 )
 from scenario import DownloadScenario, valid_int
@@ -210,7 +210,7 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
     par_file = subs.add_parser(PARSER_TITLE_FILE, description='Run using text file containing cmdline', add_help=False)
     par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
 
-    par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_CMDFILE, type=valid_filepath_abs)
+    par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     arggr_start_or_seq = par_cmd.add_mutually_exclusive_group(required=True)
     arggr_start_or_seq.add_argument('-start', metavar='#number', help='Start video id. Required', type=valid_positive_nonzero_int)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help='Use id sequence instead (in tags)')
@@ -248,7 +248,7 @@ def prepare_arglist_pages(args: List[str]) -> Namespace:
     par_file = subs.add_parser(PARSER_TITLE_FILE, description='Run using text file containing cmdline', add_help=False)
     par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
 
-    par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_CMDFILE, type=valid_filepath_abs)
+    par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     par_cmd.add_argument('-start', metavar='#number', default=1, help="Start page number. Default is '1'", type=valid_positive_nonzero_int)
     par_cmd.add_argument('-pages', metavar='#number', required=True, help=HELP_PAGES, type=valid_positive_nonzero_int)
     par_cmd.add_argument('-stop_id', metavar='#number', default=1, help=HELP_STOP_ID, type=valid_positive_nonzero_int)
