@@ -18,6 +18,7 @@ class BaseConfig(object):
     def __init__(self):
         self.verbose = False
         self.min_score = None  # type: Optional[int]
+        self.naming_flags = 0
         self.validate_tags = True
 
 
@@ -57,6 +58,20 @@ DOWNLOAD_MODE_TOUCH = 'touch'
 DOWNLOAD_MODES = [DOWNLOAD_MODE_FULL, DOWNLOAD_MODE_TOUCH]
 DOWNLOAD_MODE_DEFAULT = DOWNLOAD_MODE_FULL
 
+NAMING_FLAG_PREFIX = 0x01
+NAMING_FLAG_SCORE = 0x02
+NAMING_FLAG_TITLE = 0x04
+NAMING_FLAG_TAGS = 0x08
+NAMING_FLAGS_FULL = NAMING_FLAG_PREFIX | NAMING_FLAG_SCORE | NAMING_FLAG_TITLE | NAMING_FLAG_TAGS
+NAMING_FLAGS = {
+    'prefix': f'0x{NAMING_FLAG_PREFIX:02X}',
+    'score': f'0x{NAMING_FLAG_SCORE:02X}',
+    'title': f'0x{NAMING_FLAG_TITLE:02X}',
+    'tags': f'0x{NAMING_FLAG_TAGS:02X}',
+    'full': f'0x{NAMING_FLAGS_FULL:02X}'
+}
+NAMING_FLAGS_DEFAULT = NAMING_FLAGS_FULL
+
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
@@ -95,6 +110,11 @@ HELP_CMDFILE = (
     'Full path to file containing cmdline arguments. One word per line. Useful when cmdline length exceeds maximum for your OS.'
     ' Windows: ~32000, MinGW: ~4000 to ~32000, Linux: ~127000+'
 )
+HELP_ARG_NAMING = (
+    f'File naming flags: {str(NAMING_FLAGS)}.'
+    f' You can combine them via names \'prefix|score|title\', otherwise it has to be an int or a hex number.'
+    f' Default is \'full\''
+)
 HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
 
 MODE_PREVIEW = 'preview'
@@ -112,6 +132,10 @@ TAGS_CONCAT_CHAR = ','
 start_time = datetime.now()
 
 
+def prefixp() -> str:
+    return 'rv_'
+
+
 def get_elapsed_time_s() -> str:
     mm, ss = divmod((datetime.now() - start_time).seconds, 60)
     hh, mm = divmod(mm, 60)
@@ -123,6 +147,10 @@ def normalize_path(basepath: str, append_slash: bool = True) -> str:
     if append_slash and len(normalized_path) != 0 and normalized_path[-1] != SLASH:
         normalized_path += SLASH
     return normalized_path
+
+
+def has_naming_flag(flag: int) -> bool:
+    return not not ExtraConfig.naming_flags & flag
 
 
 class DownloadResult:

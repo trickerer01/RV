@@ -17,6 +17,7 @@ from aiofile import async_open
 from defs import (
     Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO,
     TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path, get_elapsed_time_s, ExtraConfig,
+    has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_SCORE, NAMING_FLAG_TITLE, NAMING_FLAG_TAGS
 )
 from fetch_html import fetch_html, get_proxy
 from scenario import DownloadScenario
@@ -25,7 +26,7 @@ from tagger import (
 )
 
 NEWLINE = '\n'
-re_rvfile = compile(r'^rv_([^_]+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
+re_rvfile = compile(r'^(?:rv_)?(\d+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
 
 downloads_queue = []  # type: List[int]
 failed_items = []  # type: List[int]
@@ -118,23 +119,23 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
                     if do_log or ExtraConfig.verbose:
-                        Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' misses required tag matching \'{extag}\'!')
+                        Log(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' misses required tag matching \'{extag}\'!')
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
                     if do_log or ExtraConfig.verbose:
-                        Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'!')
+                        Log(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'!')
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
                     if do_log or ExtraConfig.verbose:
-                        Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' contains excluded tag \'{mtag}\'!')
+                        Log(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' contains excluded tag \'{mtag}\'!')
                 elif mtag is None and extag[0] != '-':
                     suc = False
                     if do_log or ExtraConfig.verbose:
-                        Log(f'[{subfolder}] Video \'rv_{idi:d}.mp4\' misses required tag matching \'{my_extag}\'!')
+                        Log(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' misses required tag matching \'{my_extag}\'!')
     return not suc
 
 
@@ -145,7 +146,8 @@ def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], likes: str
                 try:
                     if int(likes) < sq.minscore:
                         if ExtraConfig.verbose:
-                            Log(f'[{sq.subfolder}] Video \'rv_{idi:d}.mp4\' has low score \'{int(likes):d}\' (required {sq.minscore:d})!')
+                            Log(f'[{sq.subfolder}] Video \'{prefixp()}{idi:d}.mp4\''
+                                f' has low score \'{int(likes):d}\' (required {sq.minscore:d})!')
                         continue
                 except Exception:
                     pass
@@ -289,14 +291,22 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
 
     my_dest_base = normalize_path(f'{dest_base}{my_subfolder}')
     my_score = f'+{likes}' if len(likes) > 0 else 'unk'
-    fname_part1 = f'rv_{idi:d}_score({my_score}){f"_{my_title}" if my_title != "" else ""}'
-    fname_part2 = f'{my_quality}_pydw{extract_ext(link)}'
     extra_len = 5 + 2 + 2  # 2 underscores + 2 brackets + len('2160p') - max len of all qualities
-    while len(my_tags) > max(0, 240 - (len(my_dest_base) + len(fname_part1) + len(fname_part2) + extra_len)):
-        my_tags = my_tags[:max(0, my_tags.rfind(TAGS_CONCAT_CHAR))]
+    fname_part2 = f'{my_quality}_pydw{extract_ext(link)}'
+    fname_part1 = (
+        f'{prefixp() if has_naming_flag(NAMING_FLAG_PREFIX) else ""}'
+        f'{idi:d}'
+        f'{f"_score({my_score})" if has_naming_flag(NAMING_FLAG_SCORE) else ""}'
+        f'{f"_{my_title}" if my_title != "" and has_naming_flag(NAMING_FLAG_TITLE) else ""}'
+    )
+    if has_naming_flag(NAMING_FLAG_TAGS):
+        while len(my_tags) > max(0, 240 - (len(my_dest_base) + len(fname_part1) + len(fname_part2) + extra_len)):
+            my_tags = my_tags[:max(0, my_tags.rfind(TAGS_CONCAT_CHAR))]
+        fname_part1 = f'{fname_part1}{f"_({my_tags})" if len(my_tags) > 0 else ""}'
+
     if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len)):
         fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
-    filename = f'{fname_part1}{f"_({my_tags})" if len(my_tags) > 0 else ""}_{fname_part2}'
+    filename = f'{fname_part1}_{fname_part2}'
 
     await download_file(idi, filename, my_dest_base, link, download_mode, session, True, my_subfolder)
 

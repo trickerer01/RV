@@ -11,7 +11,7 @@ from json import loads
 from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
 from typing import List, Dict, Optional
 
-from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8, Log, normalize_path
+from defs import TAGS_CONCAT_CHAR, TAG_NUMS_ENCODED, UTF8, Log, normalize_path, prefixp
 
 TAG_NUMS_DECODED = {k.replace(' ', '_'): v for k, v in loads(b64decode(TAG_NUMS_ENCODED)).items()}  # type: Dict[str, str]
 
@@ -320,9 +320,10 @@ def dump_item_tags() -> None:
             continue
         min_id = min(tags_dict.keys())
         max_id = max(tags_dict.keys())
-        fullpath = f'{normalize_path(f"{saved_tags_dest_base}{subfolder}")}rv_!tags_{min_id:d}-{max_id:d}.txt'
+        fullpath = f'{normalize_path(f"{saved_tags_dest_base}{subfolder}")}{prefixp()}!tags_{min_id:d}-{max_id:d}.txt'
         with open(fullpath, 'at', encoding=UTF8) as saved_tags_file:
-            saved_tags_file.writelines(f'rv_{idi:d}: {tags.strip()}\n' for idi, tags in sorted(tags_dict.items(), key=lambda t: t[0]))
+            saved_tags_file.writelines(f'{prefixp()}{idi:d}: {tags.strip()}\n'
+                                       for idi, tags in sorted(tags_dict.items(), key=lambda t: t[0]))
 
 #
 #

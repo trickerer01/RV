@@ -15,7 +15,8 @@ from defs import (
     SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, DEFAULT_QUALITY, HELP_PATH, HELP_QUALITY, HELP_PAGES,
     HELP_STOP_ID, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID,
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
-    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_NO_VALIDATION, HELP_ARG_MINSCORE, HELP_CMDFILE,
+    NAMING_FLAGS, NAMING_FLAGS_FULL, NAMING_FLAGS_DEFAULT,
+    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_NO_VALIDATION, HELP_ARG_MINSCORE, HELP_CMDFILE, HELP_ARG_NAMING,
     ACTION_STORE_TRUE, normalize_path, UTF8,
 )
 from scenario import DownloadScenario, valid_int
@@ -23,6 +24,7 @@ from tagger import extra_tag
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
+NAMING_DEFAULT = NAMING_FLAGS_DEFAULT
 
 PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
@@ -170,9 +172,24 @@ def download_scenario_format(fmt_str: str) -> DownloadScenario:
         raise ArgumentError
 
 
+def naming_flags(flags: str) -> int:
+    try:
+        if flags[0].isnumeric():
+            intflags = int(flags, base=16 if flags.startswith('0x') else 10)
+            assert intflags & ~NAMING_FLAGS_FULL == 0
+        else:
+            intflags = 0
+            for fname in flags.split('|'):
+                intflags |= int(NAMING_FLAGS[fname], base=16)
+        return intflags
+    except Exception:
+        raise ArgumentError
+
+
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
     parser_or_group.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_QUALITY, choices=QUALITIES)
+    parser_or_group.add_argument('-naming', metavar='#MASK', default=NAMING_DEFAULT, help=HELP_ARG_NAMING, type=naming_flags)
     parser_or_group.add_argument('-minscore', '--minimum-score', metavar='#score', default=-999999, help=HELP_ARG_MINSCORE, type=valid_int)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', default=None, help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)

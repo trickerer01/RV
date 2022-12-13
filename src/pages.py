@@ -16,7 +16,7 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
     Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, QUALITIES,
-    ExtraConfig,
+    ExtraConfig, has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_TITLE,
 )
 from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence
 from fetch_html import fetch_html, set_proxy
@@ -66,6 +66,7 @@ async def main() -> None:
     try:
         ExtraConfig.verbose = arglist.verbose
         ExtraConfig.min_score = arglist.minimum_score
+        ExtraConfig.naming_flags = arglist.naming
         ExtraConfig.validate_tags = not arglist.no_validation
 
         dest_base = arglist.path
@@ -176,7 +177,7 @@ async def main() -> None:
             for i, p in enumerate(prev_all):
                 cur_num += 1
                 link = p.get('data-preview')
-                name = titl_all[i].text
+                title = titl_all[i].text
                 v_id = search(r'/(\d+)_preview[^.]*?\.([^/]+)/', link)
                 try:
                     cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
@@ -192,7 +193,11 @@ async def main() -> None:
                         already_queued = True
                         break
                 if not already_queued:
-                    v_entries.append(VideoEntryPrev(cur_id, f'rv_{cur_id:d}_{name}_pypv.{cur_ext}', link))
+                    v_entries.append(VideoEntryPrev(cur_id,
+                                                    f'{prefixp() if has_naming_flag(NAMING_FLAG_PREFIX) else ""}'
+                                                    f'{cur_id:d}'
+                                                    f'{f"_{title}" if has_naming_flag(NAMING_FLAG_TITLE) else ""}'
+                                                    f'_pypv.{cur_ext}', link))
 
     if len(v_entries) == 0:
         Log('\nNo videos found. Aborted.')
