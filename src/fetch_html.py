@@ -54,9 +54,9 @@ async def fetch_html(url: str, tries: Optional[int] = None) -> Optional[Beautifu
 
     if retries >= tries:
         errmsg = f'Unable to connect. Aborting {url}'
-        Log(errmsg, True)
+        Log(errmsg)
     elif r is None:
-        Log('ERROR: Failed to receive any data', True)
+        Log('ERROR: Failed to receive any data')
 
     return None
 
