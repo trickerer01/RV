@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from base64 import b64decode
 from datetime import datetime
+from locale import getpreferredencoding
 from typing import Optional
 
 
@@ -122,10 +123,24 @@ CONNECT_RETRIES_ITEM = 50
 
 MAX_VIDEOS_QUEUE_SIZE = 8
 
-Log = print
-
 TAGS_CONCAT_CHAR = ','
 start_time = datetime.now()
+
+
+# noinspection PyPep8Naming
+def Log(text: str) -> None:
+    try:
+        print(text)
+    except UnicodeError:
+        try:
+            print(text.encode(UTF8).decode())
+        except Exception:
+            try:
+                print(text.encode(UTF8).decode(getpreferredencoding()))
+            except Exception:
+                print(f'<Message was not logged due to UnicodeError>')
+        finally:
+            print('Previous message caused UnicodeError...')
 
 
 def prefixp() -> str:
