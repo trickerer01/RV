@@ -46,7 +46,7 @@ async def fetch_html(url: str, tries: Optional[int] = None) -> Optional[Beautifu
                 assert False
             except (Exception,):
                 if r and str(r.url).find('404.') != -1:
-                    Log('ERROR: 404')
+                    Log.error('ERROR: 404')
                     assert False
                 retries += 1
                 await sleep(2.0)
@@ -54,9 +54,9 @@ async def fetch_html(url: str, tries: Optional[int] = None) -> Optional[Beautifu
 
     if retries >= tries:
         errmsg = f'Unable to connect. Aborting {url}'
-        Log(errmsg)
+        Log.error(errmsg)
     elif r is None:
-        Log('ERROR: Failed to receive any data')
+        Log.error('ERROR: Failed to receive any data')
 
     return None
 

@@ -2126,7 +2126,7 @@ def extra_tag(tag: str) -> str:
             validate_neg_and_group(tag)
         return tag.lower().replace(' ', '_')
     except Exception:
-        Log(f'Fatal: invalid tags group: \'{tag}\'!')
+        Log.fatal(f'Fatal: invalid tags group: \'{tag}\'!')
         raise ValueError
 
 
@@ -2139,11 +2139,11 @@ def validate_tags(tags: List[str]) -> None:
             elif is_non_wtag(tag[1:]):
                 assert_valid_tag(tag[1:])
         except Exception:
-            Log(f'Error: invalid extra_tag value: \'{tag}\'!')
+            Log.error(f'Error: invalid extra_tag value: \'{tag}\'!')
             all_valid = False
             continue
     if not all_valid:
-        Log('Fatal: Invalid extra tags found!')
+        Log.fatal('Fatal: Invalid extra tags found!')
         raise ValueError
 
 

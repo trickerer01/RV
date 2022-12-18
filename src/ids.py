@@ -24,13 +24,13 @@ async def main() -> None:
         while is_parsed_cmdfile(arglist):
             arglist = prepare_arglist_ids(read_cmdfile(arglist.path))
     except Exception:
-        Log(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
+        Log.fatal(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
         return
 
     try:
-        ExtraConfig.verbose = arglist.verbose
         ExtraConfig.min_score = arglist.minimum_score
         ExtraConfig.naming_flags = arglist.naming
+        ExtraConfig.logging_flags = arglist.log_level
         ExtraConfig.validate_tags = not arglist.no_validation
 
         dest_base = arglist.path
@@ -50,31 +50,31 @@ async def main() -> None:
         if arglist.use_id_sequence:
             id_sequence = try_parse_id_or_group(ex_tags)
             if id_sequence is None:
-                Log(f'\nInvalid ID \'or\' group \'{ex_tags[0] if len(ex_tags) > 0 else ""}\'!')
+                Log.fatal(f'\nInvalid ID \'or\' group \'{ex_tags[0] if len(ex_tags) > 0 else ""}\'!')
                 raise ValueError
         else:
             id_sequence = None
             if start_id > end_id:
-                Log(f'\nError: start ({start_id:d}) > end ({end_id:d})')
+                Log.fatal(f'\nError: start ({start_id:d}) > end ({end_id:d})')
                 raise ValueError
 
         delay_for_message = False
         if ds:
             if up != DOWNLOAD_POLICY_DEFAULT:
-                Log('Info: running download script, outer untagged policy will be ignored')
+                Log.info('Info: running download script, outer untagged policy will be ignored')
                 up = DOWNLOAD_POLICY_DEFAULT
                 delay_for_message = True
             if len(ex_tags) > 0:
-                Log(f'Info: running download script: outer extra tags: {str(ex_tags)}')
+                Log.info(f'Info: running download script: outer extra tags: {str(ex_tags)}')
                 delay_for_message = True
             if quality != DEFAULT_QUALITY:
-                Log('Info: running download script, outer quality setting will be ignored')
+                Log.info('Info: running download script, outer quality setting will be ignored')
                 delay_for_message = True
 
         if delay_for_message:
             await sleep(3.0)
     except Exception:
-        Log('\nError reading parsed arglist!')
+        Log.fatal('\nError reading parsed arglist!')
         return
 
     if id_sequence is None:

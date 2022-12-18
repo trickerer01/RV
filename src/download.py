@@ -15,9 +15,9 @@ from aiohttp import ClientSession
 from aiofile import async_open
 
 from defs import (
-    Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, __RV_DEBUG__, SLASH, SITE_AJAX_REQUEST_VIDEO,
+    Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, SLASH, SITE_AJAX_REQUEST_VIDEO,
     TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path, get_elapsed_time_s, ExtraConfig,
-    has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_SCORE, NAMING_FLAG_TITLE, NAMING_FLAG_TAGS
+    has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_SCORE, NAMING_FLAG_TITLE, NAMING_FLAG_TAGS, LoggingFlags
 )
 from fetch_html import fetch_html, get_proxy
 from scenario import DownloadScenario
@@ -74,13 +74,11 @@ def extract_ext(href: str) -> str:
 
 async def try_register_in_queue(idi: int) -> bool:
     if is_in_queue(idi):
-        if __RV_DEBUG__:
-            Log(f'try_register_in_queue: {prefixp()}{idi:d}.mp4 is already in queue')
+        Log.debug(f'try_register_in_queue: {prefixp()}{idi:d}.mp4 is already in queue')
         return True
     elif not is_queue_full():
         downloads_queue.append(idi)
-        if __RV_DEBUG__:
-            Log(f'try_register_in_queue: {prefixp()}{idi:d}.mp4 added to queue')
+        Log.debug(f'try_register_in_queue: {prefixp()}{idi:d}.mp4 added to queue')
         return True
     return False
 
@@ -90,11 +88,9 @@ async def try_unregister_from_queue(idi: int) -> None:
     try:
         downloads_queue.remove(idi)
         total_queue_size -= 1
-        if __RV_DEBUG__:
-            Log(f'try_unregister_from_queue: {prefixp()}{idi:d}.mp4 removed from queue')
+        Log.debug(f'try_unregister_from_queue: {prefixp()}{idi:d}.mp4 removed from queue')
     except (ValueError,):
-        if __RV_DEBUG__:
-            Log(f'try_unregister_from_queue: {prefixp()}{idi:d}.mp4 was not in queue')
+        Log.debug(f'try_unregister_from_queue: {prefixp()}{idi:d}.mp4 was not in queue')
 
 
 async def report_total_queue_size_callback(base_sleep_time: float) -> None:
@@ -106,48 +102,48 @@ async def report_total_queue_size_callback(base_sleep_time: float) -> None:
         downloading_count = len(downloads_queue)
         queue_size = total_queue_size - downloading_count
         if total_queue_size_last != queue_size or (queue_size == 0 and download_queue_size_last != downloading_count):
-            Log(f'[{get_elapsed_time_s()}] queue: {queue_size}, downloading: {downloading_count}')
+            Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size}, downloading: {downloading_count}')
             total_queue_size_last = queue_size
             download_queue_size_last = downloading_count
 
 
-def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], subfolder: str, do_log=True) -> bool:
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], subfolder: str) -> bool:
     suc = True
     if len(extra_tags) > 0:
         for extag in extra_tags:
             if extag[0] == '(':
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
-                    if do_log or ExtraConfig.verbose:
-                        Log(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' misses required tag matching \'{extag}\'!')
+                    Log.trace(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' misses required tag matching \'{extag}\'!',
+                              LoggingFlags.LOGGING_EX_MISSING_TAGS)
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
-                    if do_log or ExtraConfig.verbose:
-                        Log(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'!')
+                    Log.info(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' contains excluded tags combination \'{extag[1:]}\'!',
+                             LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
-                    if do_log or ExtraConfig.verbose:
-                        Log(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' contains excluded tag \'{mtag}\'!')
+                    Log.info(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' contains excluded tag \'{mtag}\'!',
+                             LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
                 elif mtag is None and extag[0] != '-':
                     suc = False
-                    if do_log or ExtraConfig.verbose:
-                        Log(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' misses required tag matching \'{my_extag}\'!')
+                    Log.trace(f'[{subfolder}] Video \'{prefixp()}{idi:d}.mp4\' misses required tag matching \'{my_extag}\'!',
+                              LoggingFlags.LOGGING_EX_MISSING_TAGS)
     return not suc
 
 
 def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], likes: str, scenario: DownloadScenario) -> int:
     for idx, sq in enumerate(scenario.queries):
-        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.subfolder, False):
+        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.subfolder):
             if len(likes) > 0:
                 try:
                     if int(likes) < sq.minscore:
-                        if ExtraConfig.verbose:
-                            Log(f'[{sq.subfolder}] Video \'{prefixp()}{idi:d}.mp4\''
-                                f' has low score \'{int(likes):d}\' (required {sq.minscore:d})!')
+                        Log.info(f'[{sq.subfolder}] Video \'{prefixp()}{idi:d}.mp4\''
+                                 f' has low score \'{int(likes):d}\' (required {sq.minscore:d})!',
+                                 LoggingFlags.LOGGING_EX_LOW_SCORE)
                         continue
                 except Exception:
                     pass
@@ -185,7 +181,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
     i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
     if i_html:
         if i_html.find('title', string='404 Not Found'):
-            Log(f'Got error 404 for {prefixp()}{idi:d}.mp4, skipping...')
+            Log.error(f'Got error 404 for {prefixp()}{idi:d}.mp4, skipping...')
             return await try_unregister_from_queue(idi)
 
         if my_title in [None, '']:
@@ -202,12 +198,12 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
         try:
             my_author = str(i_html.find('div', string='Artist:').parent.find('span').string).lower()
         except Exception:
-            Log(f'Warning: cannot extract author for {prefixp()}{idi:d}.mp4.')
+            Log.warn(f'Warning: cannot extract author for {prefixp()}{idi:d}.mp4.')
             my_author = ''
         try:
             my_categories = [str(a.string).lower() for a in i_html.find('div', string='Categories:').parent.find_all('span')]
         except Exception:
-            Log(f'Warning: cannot extract categories for {prefixp()}{idi:d}.mp4.')
+            Log.warn(f'Warning: cannot extract categories for {prefixp()}{idi:d}.mp4.')
             my_categories = []
         try:
             tdiv = i_html.find('div', string='Tags:')
@@ -217,20 +213,20 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
                 if add_tag not in tags_raw:
                     tags_raw.append(add_tag)
             if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags, my_subfolder):
-                Log(f'Info: video {prefixp()}{idi:d}.mp4 is filtered out by outer extra tags, skipping...')
+                Log.info(f'Info: video {prefixp()}{idi:d}.mp4 is filtered out by outer extra tags, skipping...')
                 return await try_unregister_from_queue(idi)
             if len(likes) > 0:
                 try:
                     if int(likes) < ExtraConfig.min_score:
-                        Log(f'Info: video {prefixp()}{idi:d}.mp4'
-                            f' has low score \'{int(likes):d}\' (required {ExtraConfig.min_score:d}), skipping...')
+                        Log.info(f'Info: video {prefixp()}{idi:d}.mp4'
+                                 f' has low score \'{int(likes):d}\' (required {ExtraConfig.min_score:d}), skipping...')
                         return await try_unregister_from_queue(idi)
                 except Exception:
                     pass
             if scenario is not None:
                 sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, likes, scenario)
                 if sub_idx == -1:
-                    Log(f'Info: unable to find matching scenario subquery for {prefixp()}{idi:d}.mp4, skipping...')
+                    Log.info(f'Info: unable to find matching scenario subquery for {prefixp()}{idi:d}.mp4, skipping...')
                     return await try_unregister_from_queue(idi)
                 my_subfolder = scenario.queries[sub_idx].subfolder
                 my_quality = scenario.queries[sub_idx].quality
@@ -243,15 +239,15 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
             if scenario is not None:
                 uvp_idx = get_uvp_always_subquery_idx(scenario)
                 if uvp_idx == -1:
-                    Log(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, '
-                        f'skipping due to untagged videos download policy (scenario)...')
+                    Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, '
+                             f'skipping due to untagged videos download policy (scenario)...')
                     return await try_unregister_from_queue(idi)
                 my_subfolder = scenario.queries[uvp_idx].subfolder
                 my_quality = scenario.queries[uvp_idx].quality
             elif len(extra_tags) > 0 and untagged_policy != DOWNLOAD_POLICY_ALWAYS:
-                Log(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, skipping due to untagged videos download policy...')
+                Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, skipping due to untagged videos download policy...')
                 return await try_unregister_from_queue(idi)
-            Log(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4...')
+            Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4...')
 
         tries = 0
         while True:
@@ -262,7 +258,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
             del_span = i_html.find('span', class_='message')
             if del_span:
                 reason = f'reason: \'{str(del_span.text)}\''
-            Log(f'Cannot find download section for {prefixp()}{idi:d}.mp4, {reason}, skipping...')
+            Log.error(f'Cannot find download section for {prefixp()}{idi:d}.mp4, {reason}, skipping...')
             tries += 1
             if tries >= 5:
                 failed_items.append(idi)
@@ -280,7 +276,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
 
         if not (my_quality in qualities):
             q_idx = 0
-            Log(f'cannot find quality \'{my_quality}\' for {prefixp()}{idi:d}.mp4, using \'{qualities[q_idx]}\'')
+            Log.warn(f'Warning: cannot find quality \'{my_quality}\' for {prefixp()}{idi:d}.mp4, using \'{qualities[q_idx]}\'')
             my_quality = qualities[q_idx]
             link_idx = q_idx
         else:
@@ -288,7 +284,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
 
         link = links[link_idx].get('href')
     else:
-        Log(f'Unable to retreive html for {prefixp()}{idi:d}.mp4! Aborted!')
+        Log.error(f'Error: unable to retreive html for {prefixp()}{idi:d}.mp4! Aborted!')
         return await try_unregister_from_queue(idi)
 
     my_dest_base = normalize_path(f'{dest_base}{my_subfolder}')
@@ -339,7 +335,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
                 f_id = f_match.group(1)
                 f_quality = f_match.group(2)
                 if rv_id == f_id and rv_quality == f_quality:
-                    Log(f'{filename} (or similar) already exists. Skipped.')
+                    Log.info(f'{filename} (or similar) already exists. Skipped.')
                     if from_ids is False:
                         await try_unregister_from_queue(idi)
                     return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
@@ -358,7 +354,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
     while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
             if download_mode == DOWNLOAD_MODE_TOUCH:
-                Log(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
+                Log.info(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
                 with open(dest, 'wb'):
                     pass
                 break
@@ -367,15 +363,15 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
             # timeout must be relatively long, this is a timeout for actual download, not just connection
             async with s.request('GET', link, timeout=7200, proxy=get_proxy()) as r:
                 if r.status == 404:
-                    Log(f'Got 404 for {prefixp()}{idi:d}.mp4...!')
+                    Log.error(f'Got 404 for {prefixp()}{idi:d}.mp4...!')
                     retries = CONNECT_RETRIES_ITEM - 1
                     ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
                 if r.content_type and r.content_type.find('text') != -1:
-                    Log(f'File not found at {link}!')
+                    Log.error(f'File not found at {link}!')
                     raise FileNotFoundError(link)
 
                 expected_size = r.content_length
-                Log(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {sfilename}')
+                Log.info(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {sfilename}')
 
                 async with async_open(dest, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**20):
@@ -383,7 +379,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
 
                 file_size = stat(dest).st_size
                 if expected_size and file_size != expected_size:
-                    Log(f'Error: file size mismatch for {sfilename}: {file_size:d} / {expected_size:d}')
+                    Log.error(f'Error: file size mismatch for {sfilename}: {file_size:d} / {expected_size:d}')
                     raise IOError(link)
                 break
         except (KeyboardInterrupt,):
@@ -392,7 +388,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
             import sys
             print(sys.exc_info()[0], sys.exc_info()[1])
             retries += 1
-            Log(f'{sfilename}: error #{retries:d}...')
+            Log.error(f'{sfilename}: error #{retries:d}...')
             if r:
                 r.close()
             if path.exists(dest):
@@ -417,13 +413,13 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
 
 async def after_download() -> None:
     if not is_queue_empty():
-        Log('queue is not empty at exit!')
+        Log.error('queue is not empty at exit!')
 
     if total_queue_size != 0:
-        Log(f'total queue is still at {total_queue_size} != 0!')
+        Log.error(f'total queue is still at {total_queue_size} != 0!')
 
     if len(failed_items) > 0:
-        Log(f'Failed items:\n{NEWLINE.join(str(fi) for fi in sorted(failed_items))}')
+        Log.error(f'Failed items:\n{NEWLINE.join(str(fi) for fi in sorted(failed_items))}')
 
 #
 #

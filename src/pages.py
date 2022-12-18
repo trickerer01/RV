@@ -60,13 +60,13 @@ async def main() -> None:
         while is_parsed_cmdfile(arglist):
             arglist = prepare_arglist_pages(read_cmdfile(arglist.path))
     except Exception:
-        Log(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
+        Log.fatal(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
         return
 
     try:
-        ExtraConfig.verbose = arglist.verbose
         ExtraConfig.min_score = arglist.minimum_score
         ExtraConfig.naming_flags = arglist.naming
+        ExtraConfig.logging_flags = arglist.log_level
         ExtraConfig.validate_tags = not arglist.no_validation
 
         dest_base = arglist.path
@@ -91,38 +91,38 @@ async def main() -> None:
         delay_for_message = False
         if ds:
             if up != DOWNLOAD_POLICY_DEFAULT:
-                Log('Info: running download script, outer untagged policy will be ignored')
+                Log.info('Info: running download script, outer untagged policy will be ignored')
                 up = DOWNLOAD_POLICY_DEFAULT
                 delay_for_message = True
             if len(ex_tags) > 0:
-                Log(f'Info: running download script: outer extra tags: {str(ex_tags)}')
+                Log.info(f'Info: running download script: outer extra tags: {str(ex_tags)}')
                 delay_for_message = True
 
         if full_download is False:
             if len(ex_tags) > 0 or ExtraConfig.validate_tags:
-                Log('Info: tags are ignored for previews!')
+                Log.info('Info: tags are ignored for previews!')
                 delay_for_message = True
             if up != DOWNLOAD_POLICY_DEFAULT:
-                Log('Info: untagged videos download policy is ignored for previews!')
+                Log.info('Info: untagged videos download policy is ignored for previews!')
                 delay_for_message = True
             if st is True:
-                Log('Info: tags are not saved for previews!')
+                Log.info('Info: tags are not saved for previews!')
                 delay_for_message = True
             if ds:
-                Log('Info: scenarios are ignored for previews!')
+                Log.info('Info: scenarios are ignored for previews!')
                 delay_for_message = True
             if ExtraConfig.min_score:
-                Log('Info: score is not extracted from previews!')
+                Log.info('Info: score is not extracted from previews!')
                 delay_for_message = True
             if ExtraConfig.naming_flags != NAMING_FLAGS_FULL:
                 if has_naming_flag(NAMING_FLAGS_FULL & ~(NAMING_FLAG_PREFIX | NAMING_FLAG_TITLE)):
-                    Log('Info: can only use prefix and title naming flags for previews, other flags will be ignored!')
+                    Log.info('Info: can only use prefix and title naming flags for previews, other flags will be ignored!')
                     delay_for_message = True
 
         if delay_for_message:
             await sleep(3.0)
     except Exception:
-        Log('\nError reading parsed arglist!')
+        Log.fatal('\nError reading parsed arglist!')
         return
 
     v_entries = list()
@@ -131,13 +131,13 @@ async def main() -> None:
     pi = start_page
     while pi < start_page + pages_count:
         if pi > maxpage > 0:
-            Log('reached parsed max page, page scan completed')
+            Log.info('reached parsed max page, page scan completed')
             break
-        Log(f'page {pi:d}...{" (this is the last page!)" if 0 < maxpage == pi else ""}')
+        Log.info(f'page {pi:d}...{" (this is the last page!)" if 0 < maxpage == pi else ""}')
 
         a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
         if not a_html:
-            Log(f'cannot get html for page {pi:d}')
+            Log.error(f'Error: cannot get html for page {pi:d}')
             continue
 
         pi += 1
@@ -154,16 +154,16 @@ async def main() -> None:
             for aref in arefs:
                 cur_id = int(search(r'videos/(\d+)/', str(aref.get('href'))).group(1))  # cur_id = extract_id(aref)
                 if cur_id < stop_id:
-                    Log(f'skipping {cur_id:d} < {stop_id:d}')
+                    Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
                     continue
                 if cur_id > begin_id:
-                    Log(f'skipping {cur_id:d} > {begin_id:d}')
+                    Log.trace(f'skipping {cur_id:d} > {begin_id:d}')
                     continue
                 my_title = aref.get('title')
                 already_queued = False
                 for v in v_entries:
                     if v.my_id == cur_id:
-                        Log(f'Warning: id {cur_id:d} already queued, skipping')
+                        Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         already_queued = True
                         break
                 if not already_queued:
@@ -172,7 +172,7 @@ async def main() -> None:
             content_div = a_html.find('div', class_='thumbs clearfix')
 
             if content_div is None:
-                Log(f'cannot get content div for page {pi:d}')
+                Log.error(f'Error: cannot get content div for page {pi:d}')
                 continue
 
             prev_all = content_div.find_all('div', class_='img wrap_image')
@@ -188,12 +188,12 @@ async def main() -> None:
                 except Exception:
                     cur_id, cur_ext = 1000000000, '.mp4'
                 if cur_id < stop_id:
-                    Log(f'skipping {cur_id:d} < {stop_id:d}')
+                    Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
                     continue
                 already_queued = False
                 for v in v_entries:
                     if v.my_id == cur_id:
-                        Log(f'Warning: id {cur_id:d} already queued, skipping')
+                        Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         already_queued = True
                         break
                 if not already_queued:
@@ -204,11 +204,11 @@ async def main() -> None:
                                                     f'_pypv.{cur_ext}', link))
 
     if len(v_entries) == 0:
-        Log('\nNo videos found. Aborted.')
+        Log.fatal('\nNo videos found. Aborted.')
         return
 
     minid, maxid = get_minmax_ids(v_entries)
-    Log(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
+    Log.info(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
     v_entries = list(reversed(v_entries))
     if st and full_download:
         init_tags_files(dest_base)

@@ -90,7 +90,7 @@ class DownloadScenario(object):
                 ))
             except (ArgumentError, TypeError, Exception):
                 if error_to_print != '':
-                    Log(error_to_print)
+                    Log.error(error_to_print)
                 raise
 
         assert len(ds) > 0

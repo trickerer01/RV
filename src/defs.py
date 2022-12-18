@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from base64 import b64decode
 from datetime import datetime
+from enum import IntEnum
 from locale import getpreferredencoding
 from typing import Optional
 
@@ -17,9 +18,9 @@ __RV_DEBUG__ = False
 
 class BaseConfig(object):
     def __init__(self):
-        self.verbose = False
         self.min_score = None  # type: Optional[int]
         self.naming_flags = 0
+        self.logging_flags = 0
         self.validate_tags = True
 
 
@@ -73,6 +74,34 @@ NAMING_FLAGS = {
 }
 NAMING_FLAGS_DEFAULT = NAMING_FLAGS_FULL
 
+
+class LoggingFlags(IntEnum):
+    LOGGING_NONE = 0x000
+    LOGGING_TRACE = 0x001
+    LOGGING_DEBUG = 0x002
+    LOGGING_INFO = 0x004
+    LOGGING_WARN = 0x008
+    LOGGING_ERROR = 0x010
+    LOGGING_FATAL = 0x800
+    # some extra logging flags are merged into normal flags for now
+    # LOGGING_EX_MISSING_TAGS = LOGGING_TRACE
+    # LOGGING_EX_EXCLUDED_TAGS = LOGGING_INFO
+    # LOGGING_EX_LOW_SCORE = LOGGING_INFO
+    LOGGING_ALL = LOGGING_FATAL | LOGGING_ERROR | LOGGING_WARN | LOGGING_INFO | LOGGING_DEBUG | LOGGING_TRACE
+
+    def __str__(self) -> str:
+        return f'{self._name_} (0x{self.value:03X})'
+
+
+LOGGING_FLAGS = {
+    'error': f'0x{LoggingFlags.LOGGING_ERROR.value:03X}',
+    'warn': f'0x{LoggingFlags.LOGGING_WARN.value:03X}',
+    'info': f'0x{LoggingFlags.LOGGING_INFO.value:03X}',
+    'debug': f'0x{LoggingFlags.LOGGING_DEBUG.value:03X}',
+    'trace': f'0x{LoggingFlags.LOGGING_TRACE.value:03X}',
+}
+LOGGING_FLAGS_DEFAULT = LoggingFlags.LOGGING_INFO
+
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
@@ -116,6 +145,7 @@ HELP_ARG_NAMING = (
     f' You can combine them via names \'prefix|score|title\', otherwise it has to be an int or a hex number.'
     f' Default is \'full\''
 )
+HELP_ARG_LOGGING = f'Logging level: {str(LOGGING_FLAGS.keys())}. All messages equal of above this level will be logged. Default is \'info\''
 HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
 
 CONNECT_RETRIES_PAGE = 5
@@ -127,20 +157,49 @@ TAGS_CONCAT_CHAR = ','
 start_time = datetime.now()
 
 
-# noinspection PyPep8Naming
-def Log(text: str) -> None:
-    try:
-        print(text)
-    except UnicodeError:
+class Log:
+    @staticmethod
+    def log(text: str, flags: LoggingFlags) -> None:
+        # if flags & LoggingFlags.LOGGING_FATAL == 0 and ExtraConfig.logging_flags & flags != flags:
+        if flags < ExtraConfig.logging_flags:
+            return
+
         try:
-            print(text.encode(UTF8).decode())
-        except Exception:
+            print(text)
+        except UnicodeError:
             try:
-                print(text.encode(UTF8).decode(getpreferredencoding()))
+                print(text.encode(UTF8).decode())
             except Exception:
-                print(f'<Message was not logged due to UnicodeError>')
-        finally:
-            print('Previous message caused UnicodeError...')
+                try:
+                    print(text.encode(UTF8).decode(getpreferredencoding()))
+                except Exception:
+                    print(f'<Message was not logged due to UnicodeError>')
+            finally:
+                print('Previous message caused UnicodeError...')
+
+    @staticmethod
+    def fatal(text: str) -> None:
+        return Log.log(text, LoggingFlags.LOGGING_FATAL)
+
+    @staticmethod
+    def error(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
+        return Log.log(text, LoggingFlags.LOGGING_ERROR | extra_flags)
+
+    @staticmethod
+    def warn(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
+        return Log.log(text, LoggingFlags.LOGGING_WARN | extra_flags)
+
+    @staticmethod
+    def info(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
+        return Log.log(text, LoggingFlags.LOGGING_INFO | extra_flags)
+
+    @staticmethod
+    def debug(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
+        return Log.log(text, LoggingFlags.LOGGING_DEBUG | extra_flags)
+
+    @staticmethod
+    def trace(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
+        return Log.log(text, LoggingFlags.LOGGING_TRACE | extra_flags)
 
 
 def prefixp() -> str:
