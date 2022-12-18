@@ -105,6 +105,7 @@ LOGGING_FLAGS_DEFAULT = LoggingFlags.LOGGING_INFO
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
+HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
 HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
 HELP_BEGIN_ID = 'If you want to download only videos above or equal to this id'
@@ -145,8 +146,9 @@ HELP_ARG_NAMING = (
     f' You can combine them via names \'prefix|score|title\', otherwise it has to be an int or a hex number.'
     f' Default is \'full\''
 )
-HELP_ARG_LOGGING = f'Logging level: {str(LOGGING_FLAGS.keys())}. All messages equal of above this level will be logged. Default is \'info\''
-HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
+HELP_ARG_LOGGING = (
+    f'Logging level: {str(list(LOGGING_FLAGS.keys()))}. All messages equal or above this level will be logged. Default is \'info\''
+)
 
 CONNECT_RETRIES_PAGE = 5
 CONNECT_RETRIES_ITEM = 50
