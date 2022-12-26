@@ -148,6 +148,9 @@ async def main() -> None:
                     maxpage = max(maxpage, int(search(r'from_albums:(\d+)', str(page_ajax.get('data-parameters'))).group(1)))
                 except Exception:
                     pass
+            if maxpage == 0:
+                Log.info('Could not extract max page, assuming single page search')
+                maxpage = 1
 
         if full_download:
             arefs = a_html.find_all('a', class_='th js-open-popup')

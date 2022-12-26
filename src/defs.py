@@ -169,13 +169,14 @@ class Log:
         try:
             print(text)
         except UnicodeError:
+            # print(f'message was: {bytearray(map(ord, text))}')
             try:
                 print(text.encode(UTF8).decode())
             except Exception:
                 try:
                     print(text.encode(UTF8).decode(getpreferredencoding()))
                 except Exception:
-                    print(f'<Message was not logged due to UnicodeError>')
+                    print('<Message was not logged due to UnicodeError>')
             finally:
                 print('Previous message caused UnicodeError...')
 

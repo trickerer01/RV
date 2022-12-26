@@ -2052,11 +2052,11 @@ re_tags_to_not_exclude = re_compile(
     r'a(?:lien(?:_.+?|s)?|m(?:azonium|b(?:er|rosine))|n(?:al|gel|imopron|thro)|r(?:achnid|iel)|yasz)|'  # a
     r'b(?:a(?:ndoned|ronstrap|tesz)|dsm|e(?:a(?:st|r)|n_10|wyx)|i(?:gjohnson|mbo|oshock|r(?:dway|th))|'  # b
     r'l(?:ack(?:ed|j.+?)?|o(?:od|wjob))|o(?:dysuit|ndage|vine))|'  # b
-    r'c(?:a(?:ge|nine|t(?:_girl|woman))|entaur|hained|lass_sweeb|o(?:lonelyobo|ot27|rset)|reampie|u(?:ckold|m))|'  # c
+    r'c(?:a(?:ge|nine|t(?:_girl|woman))|entaur|hained|lass_sweeb|o(?:lonelyobo|mic|ot27|rset)|reampie|u(?:ckold|m))|'  # c
     r'd(?:ark_elf|e(?:a(?:dpool|ath)|er|mons?|ntol|rpixon|zmall)|i(?:ablo|gimon|ldo)|mitrys|o(?:cking|gs?|nkey|om)|ragon(?:ess)?|va)|'  # d
     r'e(?:ggs|lves|nema|quine|xtreme|zria)|'  # e
     r'f(?:a(?:cesitting|rt(?:ing)?)|e(?:m(?:boy|dom|shep)|ral)|isting|o(?:rtnite|x_girl)|rozen|u(?:rry|ta(?:holic|nari)))|'  # f
-    r'g(?:a(?:ngbang|p(?:e|ing))|craw|i(?:ant(?:ess)?|fdoozer)|o(?:blins?|o_girl|re|th)|r(?:an(?:d.+?|ny)|eatb8)|'  # g
+    r'g(?:a(?:ngbang|p(?:e|ing))|craw|ennariel|i(?:ant(?:ess)?|fdoozer)|o(?:blins?|o_girl|re|th)|r(?:an(?:d.+?|ny)|eatb8)|'  # g
     r'u(?:il(?:mon|tyk)|robase))|'  # g
     r'h(?:a(?:iry|l(?:f_elf|o)|ndjob)|e(?:lena|tero)|i(?:gh_elf|nca_p|ve)|mv|'  # h
     r'o(?:ovesart|r(?:ror|se(?:_?(?:cock|girl|s(?:ex)?))?)|usewife)|rfidy|ulk|v54rdsl|ydrafxx)|'  # h
