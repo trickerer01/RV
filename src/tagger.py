@@ -2050,7 +2050,7 @@ re_tags_exclude_major2 = re_compile(
 re_tags_to_not_exclude = re_compile(
     r'^(?:'
     r'a(?:lien(?:_.+?|s)?|m(?:azonium|b(?:er|rosine))|n(?:al|gel|imopron|thro)|r(?:achnid|iel)|yasz)|'  # a
-    r'b(?:a(?:ndoned|ronstrap|tesz)|dsm|e(?:a(?:st|r)|n_10|wyx)|i(?:gjohnson|mbo|oshock|r(?:dway|th))|'  # b
+    r'b(?:a(?:ndoned|ronstrap|tesz)|dsm|e(?:a(?:st|r)|lly_?b.+?|n_10|wyx)|i(?:gjohnson|mbo|oshock|r(?:dway|th))|'  # b
     r'l(?:ack(?:ed|j.+?)?|o(?:od|wjob))|o(?:dysuit|ndage|vine))|'  # b
     r'c(?:a(?:ge|nine|t(?:_girl|woman))|entaur|hained|lass_sweeb|o(?:lonelyobo|mic|ot27|rset)|reampie|u(?:ckold|m))|'  # c
     r'd(?:ark_elf|e(?:a(?:dpool|ath)|er|mons?|ntol|rpixon|zmall)|i(?:ablo|gimon|ldo)|mitrys|o(?:cking|gs?|nkey|om)|ragon(?:ess)?|va)|'  # d
@@ -2115,6 +2115,38 @@ TAG_ALIASES = {
     'hmv': 'HMV',
     'sfmpmv': 'PMV',
     'sfmhmv': 'HMV',
+    'tentacle_in_mouth': 'tentacle',
+    'tentacle_monster': 'tentacle',
+    'tentacle_penis': 'tentacle',
+    'tentacle sex': 'tentacle',
+    'tentacle_tongue': 'tentacle',
+    'belly_expansion': 'belly_bulge',
+    'belly_inflation': 'belly_bulge',
+    'bellybulge': 'belly_bulge',
+    'futanari_dominates_female': 'futanari',
+    'futanari_horsecock': 'futanari',
+    'futanari_is_bigger': 'futanari',
+    'futanari_masturbation': 'futanari',
+    'futanari_on_female': 'futanari',
+    'futanari_on_futanari': 'futanari',
+    'futanari_only': 'futanari',
+    'futanari_penetrated': 'futanari',
+    'futanari_penetrating': 'futanari',
+    'futanari_penetrating_female': 'futanari',
+    'futanari_pov': 'futanari',
+    'futanari_transformation': 'futanari',
+    'athletic_futanari': 'futanari',
+    'completely_nude_futanari': 'futanari',
+    'dark skinned_futanari': 'futanari',
+    'dominant_futanari': 'futanari',
+    'female_on_futanari': 'futanari',
+    'futa_penetrated': 'futanari',
+    'futa_pov': 'futanari',
+    'futadom': 'futanari',
+    'futasub': 'futanari',
+    'larger_futanari': 'futanari',
+    'light skinned_futanari': 'futanari',
+    'smaller_futanari': 'futanari',
 }
 
 
