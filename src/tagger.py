@@ -2054,7 +2054,7 @@ re_tags_to_not_exclude = re_compile(
     r'l(?:ack(?:ed|j.+?)?|o(?:od|wjob))|o(?:dysuit|ndage|vine))|'  # b
     r'c(?:a(?:ge|nine|t(?:_girl|woman))|entaur|hained|lass_sweeb|o(?:lonelyobo|mic|ot27|rset)|reampie|u(?:ckold|m))|'  # c
     r'd(?:ark_elf|e(?:a(?:dpool|ath)|er|mons?|ntol|rpixon|zmall)|i(?:ablo|gimon|ldo)|mitrys|o(?:cking|gs?|nkey|om)|ragon(?:ess)?|va)|'  # d
-    r'e(?:ggs|lves|nema|quine|xtreme|zria)|'  # e
+    r'e(?:gg(?:_.+?|s)|lves|nema|quine|xtreme|zria)|'  # e
     r'f(?:a(?:cesitting|rt(?:ing)?)|e(?:m(?:boy|dom|shep)|ral)|isting|o(?:rtnite|x_girl)|rozen|u(?:rry|ta(?:holic|nari)))|'  # f
     r'g(?:a(?:ngbang|p(?:e|ing))|craw|ennariel|i(?:ant(?:ess)?|fdoozer)|o(?:blins?|o_girl|re|th)|r(?:an(?:d.+?|ny)|eatb8)|'  # g
     r'u(?:il(?:mon|tyk)|robase))|'  # g
@@ -2325,7 +2325,7 @@ def dump_item_tags() -> None:
         min_id = min(tags_dict.keys())
         max_id = max(tags_dict.keys())
         fullpath = f'{normalize_path(f"{saved_tags_dest_base}{subfolder}")}{prefixp()}!tags_{min_id:d}-{max_id:d}.txt'
-        with open(fullpath, 'at', encoding=UTF8) as saved_tags_file:
+        with open(fullpath, 'wt', encoding=UTF8) as saved_tags_file:
             saved_tags_file.writelines(f'{prefixp()}{idi:d}: {tags.strip()}\n'
                                        for idi, tags in sorted(tags_dict.items(), key=lambda t: t[0]))
 
