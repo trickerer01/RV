@@ -287,6 +287,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
         link = links[link_idx].get('href')
     else:
         Log.error(f'Error: unable to retreive html for {prefixp()}{idi:d}.mp4! Aborted!')
+        failed_items.append(idi)
         return await try_unregister_from_queue(idi)
 
     my_dest_base = normalize_path(f'{dest_base}{my_subfolder}')
@@ -398,7 +399,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
             if retries >= CONNECT_RETRIES_ITEM and ret != DownloadResult.DOWNLOAD_FAIL_NOT_FOUND:
                 failed_items.append(idi)
                 break
-            await sleep(frand(1.0, 7.0))
+            await sleep(frand(3.0, 7.0))
             continue
 
     # delay next file if queue is full
