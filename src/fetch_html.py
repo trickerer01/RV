@@ -15,11 +15,12 @@ from urllib import parse
 from bs4 import BeautifulSoup
 from aiohttp import ClientSession, http_parser
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, HOST
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, HOST, MAX_VIDEOS_QUEUE_SIZE
 
 proxy = None  # type: Optional[str]
 bypass_in_progress = False
 wellknown_sub = None  # type: Optional[str]
+retries_403 = 0
 
 
 class BypassException(Exception):
@@ -30,6 +31,12 @@ class BypassException(Exception):
 def set_proxy(prox: str) -> None:
     global proxy
     proxy = prox
+
+
+async def bypass_ddos_guard_again(s: ClientSession, url: str) -> None:
+    global wellknown_sub
+    wellknown_sub = None
+    await bypass_ddos_guard(s, url)
 
 
 async def bypass_ddos_guard(s: ClientSession, url: str) -> None:
@@ -82,11 +89,13 @@ async def wrap_request(s: ClientSession, method: str, url: str, **kwargs):
 
 
 async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> Optional[BeautifulSoup]:
+    global retries_403
     # very basic, minimum validation
     tries = tries or CONNECT_RETRIES_PAGE
 
     r = None
     retries = 0
+    retries_403_local = 0
     while retries < tries:
         try:
             # async with s.request('GET', url, timeout=5, proxy=proxy) as r:
@@ -96,6 +105,8 @@ async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> 
                 if r.status != 404:
                     r.raise_for_status()
                 content = await r.read()
+                if retries_403_local > 0:
+                    Log.trace(f'fetch_html success: took {retries_403_local:d} tries...')
                 return BeautifulSoup(content, 'html.parser')
         except (KeyboardInterrupt,):
             assert False
@@ -108,8 +119,14 @@ async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> 
             # do not count tries if blocked by ddg
             if r is None or r.status != 403:
                 retries += 1
+            elif r is not None and r.status == 403:
+                retries_403 += 1
+                retries_403_local += 1
+                if retries_403 >= CONNECT_RETRIES_PAGE * MAX_VIDEOS_QUEUE_SIZE:
+                    await bypass_ddos_guard_again(session, url)
+                    retries_403 = 0
             if retries < tries:
-                await sleep(frand(3.0, 7.0))
+                await sleep(frand(1.0, 7.0))
             continue
 
     if retries >= tries:

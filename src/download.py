@@ -390,8 +390,9 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
         except (Exception,):
             import sys
             print(sys.exc_info()[0], sys.exc_info()[1])
-            retries += 1
-            Log.error(f'{sfilename}: error #{retries:d}...')
+            if r is None or r.status != 403:
+                retries += 1
+                Log.error(f'{sfilename}: error #{retries:d}...')
             if r:
                 r.close()
             if path.exists(dest):
@@ -399,7 +400,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
             if retries >= CONNECT_RETRIES_ITEM and ret != DownloadResult.DOWNLOAD_FAIL_NOT_FOUND:
                 failed_items.append(idi)
                 break
-            await sleep(frand(3.0, 7.0))
+            await sleep(frand(1.0, 7.0))
             continue
 
     # delay next file if queue is full
