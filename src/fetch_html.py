@@ -124,9 +124,11 @@ async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> 
                 assert False
             elif r is not None:
                 Log.error(f'fetch_html exception: status {r.status:d}')
-            retries += 1
+            # do not count tries if blocked by ddg
+            if r is None or r.status != 403:
+                retries += 1
             if retries < tries:
-                await sleep(frand(1.5, 3.0))
+                await sleep(frand(3.0, 7.0))
             continue
 
     if retries >= tries:
