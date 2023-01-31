@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from asyncio import sleep
 from os import path, stat, remove, makedirs, listdir
+from random import uniform as frand
 from re import compile, sub, search, match
 from typing import List, Optional
 
@@ -19,7 +20,7 @@ from defs import (
     TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path, get_elapsed_time_s, ExtraConfig,
     has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_SCORE, NAMING_FLAG_TITLE, NAMING_FLAG_TAGS, LoggingFlags
 )
-from fetch_html import fetch_html, get_proxy
+from fetch_html import fetch_html, wrap_request
 from scenario import DownloadScenario
 from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags,
@@ -178,7 +179,8 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
     my_quality = quality
     my_tags = 'no_tags'
     likes = ''
-    i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
+    popup_id = 2 + current_ididx % 10  # 2-11
+    i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % idi}?popup_id={popup_id}', session=session)
     if i_html:
         if i_html.find('title', string='404 Not Found'):
             Log.error(f'Got error 404 for {prefixp()}{idi:d}.mp4, skipping...')
@@ -265,7 +267,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
                 return await try_unregister_from_queue(idi)
             elif reason != 'probably an error':
                 return await try_unregister_from_queue(idi)
-            i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi)
+            i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi, session=session)
 
         links = ddiv.parent.find_all('a', class_='tag_item')
         qualities = []
@@ -361,7 +363,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
 
             r = None
             # timeout must be relatively long, this is a timeout for actual download, not just connection
-            async with s.request('GET', link, timeout=7200, proxy=get_proxy()) as r:
+            async with await wrap_request(s, 'GET', link, timeout=7200, headers={'Referer': link}) as r:
                 if r.status == 404:
                     Log.error(f'Got 404 for {prefixp()}{idi:d}.mp4...!')
                     retries = CONNECT_RETRIES_ITEM - 1
@@ -396,7 +398,7 @@ async def download_file(idi: int, filename: str, dest_base: str, link: str, down
             if retries >= CONNECT_RETRIES_ITEM and ret != DownloadResult.DOWNLOAD_FAIL_NOT_FOUND:
                 failed_items.append(idi)
                 break
-            await sleep(1)
+            await sleep(frand(1.0, 7.0))
             continue
 
     # delay next file if queue is full

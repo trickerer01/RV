@@ -2033,7 +2033,7 @@ re_tags_to_process = re_compile(
     r'^(?:.+?_warc.+?|(?:[a-z]+?_)?elf|drae.{3}|tent[a-z]{3}es|(?:bell[a-z]|sto[a-z]{4})_bul[a-z]{2,3}|inf[a-z]{5}n|egg(?:_[a-z]{3,9}|s)?|'
     r'[a-z]{4}hral_i.+?|(?:\d{1,2}\+?)?(?:boys?|girls?|fu[a-z]{2}(?:[a-z]{4}|s)?|in[d-v]{2}cts?|monsters?)|succ[a-z]{4}|'
     r'bbw|dog|f(?:acesitting|ur)|hmv|pmv|tar|c(?:\.c\.|um)|monster_girl|'
-    r'[^(]+\([^)]+\).*?|[a-z_\-]+\d+?|\d{2,4}[a-z_\-]+?|[a-z_]{2,15}sfm|[^_]+_pov|fu[a-z]{2}(?:/|_(?:on|with)_)[a-z]{4}|'
+    r'[^(]+\([^)]+\).*?|[a-z_\-]+\d+?|\d{2,4}[a-z_\-]+?|[a-z_]{2,15}sfm|[^_]+_pov|fu[a-z]{6}(?:/|_(?:on|with)_)[a-z]{4}(?:oy)?|'
     r'[a-z][a-z_]{3,11}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$'
 )
 
@@ -2055,7 +2055,8 @@ re_tags_to_not_exclude = re_compile(
     r'c(?:a(?:ge|nine|t(?:_girl|woman))|entaur|hained|lass_sweeb|o(?:lonelyobo|mic|ot27|rset)|reampie|u(?:ckold|m))|'  # c
     r'd(?:ark_elf|e(?:a(?:dpool|ath)|er|mons?|ntol|rpixon|zmall)|i(?:ablo|gimon|ldo)|mitrys|o(?:cking|gs?|nkey|om)|ragon(?:ess)?|va)|'  # d
     r'e(?:gg(?:_.+?|s)|lves|nema|quine|xtreme|zria)|'  # e
-    r'f(?:a(?:cesitting|rt(?:ing)?)|e(?:m(?:boy|dom|shep)|ral)|isting|o(?:rtnite|x_girl)|rozen|u(?:rry|ta(?:holic|nari)))|'  # f
+    r'f(?:a(?:cesitting|rt(?:ing)?)|e(?:m(?:boy|dom|shep)|ral)|isting|o(?:rtnite|x_girl)|rozen|'  # f
+    r'u(?:rry|ta(?:holic|nari(?:_on_[a-p]{4})?)))|'  # f
     r'g(?:a(?:ngbang|p(?:e|ing))|craw|ennariel|i(?:ant(?:ess)?|fdoozer)|o(?:blins?|o_girl|re|th)|r(?:an(?:d.+?|ny)|eatb8)|'  # g
     r'u(?:il(?:mon|tyk)|robase))|'  # g
     r'h(?:a(?:iry|l(?:f_elf|o)|ndjob)|e(?:lena|tero)|i(?:gh_elf|nca_p|ve)|mv|'  # h
@@ -2147,6 +2148,7 @@ TAG_ALIASES = {
     'larger_futanari': 'futanari',
     'light skinned_futanari': 'futanari',
     'smaller_futanari': 'futanari',
+    'futanari_on_male': 'futa_on_male',
 }
 
 

@@ -129,82 +129,83 @@ async def main() -> None:
     maxpage = 0
 
     pi = start_page
-    while pi < start_page + pages_count:
-        if pi > maxpage > 0:
-            Log.info('reached parsed max page, page scan completed')
-            break
-        Log.info(f'page {pi:d}...{" (this is the last page!)" if 0 < maxpage == pi else ""}')
+    async with ClientSession() as session:
+        while pi < start_page + pages_count:
+            if pi > maxpage > 0:
+                Log.info('reached parsed max page, page scan completed')
+                break
+            Log.info(f'page {pi:d}...{" (this is the last page!)" if 0 < maxpage == pi else ""}')
 
-        a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi))
-        if not a_html:
-            Log.error(f'Error: cannot get html for page {pi:d}')
-            continue
-
-        pi += 1
-
-        if maxpage == 0:
-            for page_ajax in a_html.find_all('a', attrs={'data-action': 'ajax'}):
-                try:
-                    maxpage = max(maxpage, int(search(r'from_albums:(\d+)', str(page_ajax.get('data-parameters'))).group(1)))
-                except Exception:
-                    pass
-            if maxpage == 0:
-                Log.info('Could not extract max page, assuming single page search')
-                maxpage = 1
-
-        if full_download:
-            arefs = a_html.find_all('a', class_='th js-open-popup')
-            for aref in arefs:
-                cur_id = int(search(r'videos/(\d+)/', str(aref.get('href'))).group(1))  # cur_id = extract_id(aref)
-                if cur_id < stop_id:
-                    Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
-                    continue
-                if cur_id > begin_id:
-                    Log.trace(f'skipping {cur_id:d} > {begin_id:d}')
-                    continue
-                my_title = aref.get('title')
-                already_queued = False
-                for v in v_entries:
-                    if v.my_id == cur_id:
-                        Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
-                        already_queued = True
-                        break
-                if not already_queued:
-                    v_entries.append(VideoEntryFull(cur_id, my_title))
-        else:
-            content_div = a_html.find('div', class_='thumbs clearfix')
-
-            if content_div is None:
-                Log.error(f'Error: cannot get content div for page {pi:d}')
+            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi), session=session)
+            if not a_html:
+                Log.error(f'Error: cannot get html for page {pi:d}')
                 continue
 
-            prev_all = content_div.find_all('div', class_='img wrap_image')
-            titl_all = content_div.find_all('div', class_='thumb_title')
-            cur_num = 1
-            for i, p in enumerate(prev_all):
-                cur_num += 1
-                link = p.get('data-preview')
-                title = titl_all[i].text
-                v_id = search(r'/(\d+)_preview[^.]*?\.([^/]+)/', link)
-                try:
-                    cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
-                except Exception:
-                    cur_id, cur_ext = 1000000000, '.mp4'
-                if cur_id < stop_id:
-                    Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
+            pi += 1
+
+            if maxpage == 0:
+                for page_ajax in a_html.find_all('a', attrs={'data-action': 'ajax'}):
+                    try:
+                        maxpage = max(maxpage, int(search(r'from_albums:(\d+)', str(page_ajax.get('data-parameters'))).group(1)))
+                    except Exception:
+                        pass
+                if maxpage == 0:
+                    Log.info('Could not extract max page, assuming single page search')
+                    maxpage = 1
+
+            if full_download:
+                arefs = a_html.find_all('a', class_='th js-open-popup')
+                for aref in arefs:
+                    cur_id = int(search(r'videos/(\d+)/', str(aref.get('href'))).group(1))  # cur_id = extract_id(aref)
+                    if cur_id < stop_id:
+                        Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
+                        continue
+                    if cur_id > begin_id:
+                        Log.trace(f'skipping {cur_id:d} > {begin_id:d}')
+                        continue
+                    my_title = aref.get('title')
+                    already_queued = False
+                    for v in v_entries:
+                        if v.my_id == cur_id:
+                            Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
+                            already_queued = True
+                            break
+                    if not already_queued:
+                        v_entries.append(VideoEntryFull(cur_id, my_title))
+            else:
+                content_div = a_html.find('div', class_='thumbs clearfix')
+
+                if content_div is None:
+                    Log.error(f'Error: cannot get content div for page {pi:d}')
                     continue
-                already_queued = False
-                for v in v_entries:
-                    if v.my_id == cur_id:
-                        Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
-                        already_queued = True
-                        break
-                if not already_queued:
-                    v_entries.append(VideoEntryPrev(cur_id,
-                                                    f'{prefixp() if has_naming_flag(NAMING_FLAG_PREFIX) else ""}'
-                                                    f'{cur_id:d}'
-                                                    f'{f"_{title}" if has_naming_flag(NAMING_FLAG_TITLE) else ""}'
-                                                    f'_pypv.{cur_ext}', link))
+
+                prev_all = content_div.find_all('div', class_='img wrap_image')
+                titl_all = content_div.find_all('div', class_='thumb_title')
+                cur_num = 1
+                for i, p in enumerate(prev_all):
+                    cur_num += 1
+                    link = p.get('data-preview')
+                    title = titl_all[i].text
+                    v_id = search(r'/(\d+)_preview[^.]*?\.([^/]+)/', link)
+                    try:
+                        cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
+                    except Exception:
+                        cur_id, cur_ext = 1000000000, '.mp4'
+                    if cur_id < stop_id:
+                        Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
+                        continue
+                    already_queued = False
+                    for v in v_entries:
+                        if v.my_id == cur_id:
+                            Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
+                            already_queued = True
+                            break
+                    if not already_queued:
+                        v_entries.append(VideoEntryPrev(cur_id,
+                                                        f'{prefixp() if has_naming_flag(NAMING_FLAG_PREFIX) else ""}'
+                                                        f'{cur_id:d}'
+                                                        f'{f"_{title}" if has_naming_flag(NAMING_FLAG_TITLE) else ""}'
+                                                        f'_pypv.{cur_ext}', link))
 
     if len(v_entries) == 0:
         Log.fatal('\nNo videos found. Aborted.')

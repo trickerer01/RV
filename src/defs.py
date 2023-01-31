@@ -11,6 +11,7 @@ from datetime import datetime
 from enum import IntEnum
 from locale import getpreferredencoding
 from typing import Optional
+from urllib.parse import urlparse
 
 
 __RV_DEBUG__ = False
@@ -26,7 +27,7 @@ class BaseConfig(object):
 
 ExtraConfig = BaseConfig()
 
-# SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20v').decode()
+SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20v').decode()
 # Params required: str, int. Ex. SITE_AJAX_REQUEST_BASE % ('sfw', 1)
 SITE_AJAX_REQUEST_BASE = b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vc2VhcmNoLz9tb2RlPWFzeW5jJmZ1bmN0aW9uPWdldF9ibG9jayZibG9ja19pZD1jdXN0b21fbGlzdF92aWRlb3NfdmlkZW9zX2xpc3'
@@ -36,7 +37,8 @@ SITE_AJAX_REQUEST_VIDEO = b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vcG9wdXAtdmlkZW8vJWQv').decode()
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:68.9) Gecko/20100101 Goanna/4.8 Firefox/68.9'
-DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
+DEFAULT_HEADERS = {'User-Agent': USER_AGENT, 'Referer': SITE}
+HOST = urlparse(SITE).netloc
 
 REPLACE_SYMBOLS = r'[^\da-zA-Z.,_+%\-()\[\] ]+?'
 NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
@@ -150,7 +152,7 @@ HELP_ARG_LOGGING = (
     f'Logging level: {str(list(LOGGING_FLAGS.keys()))}. All messages equal or above this level will be logged. Default is \'info\''
 )
 
-CONNECT_RETRIES_PAGE = 5
+CONNECT_RETRIES_PAGE = 50
 CONNECT_RETRIES_ITEM = 50
 
 MAX_VIDEOS_QUEUE_SIZE = 8
