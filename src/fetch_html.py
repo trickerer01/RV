@@ -13,7 +13,7 @@ from typing import Optional
 from urllib import parse
 
 from bs4 import BeautifulSoup
-from aiohttp import ClientSession, http_parser
+from aiohttp import ClientSession, ClientResponse, http_parser
 
 from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, HOST, MAX_VIDEOS_QUEUE_SIZE
 
@@ -75,7 +75,8 @@ async def bypass_ddos_guard(s: ClientSession, url: str) -> None:
         bypass_in_progress = False
 
 
-async def wrap_request(s: ClientSession, method: str, url: str, **kwargs):
+# noinspection PyProtectedMember
+async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> ClientResponse:
     while bypass_in_progress is True:
         await sleep(1.0)
     s.headers.update(DEFAULT_HEADERS.copy())
@@ -84,7 +85,7 @@ async def wrap_request(s: ClientSession, method: str, url: str, **kwargs):
     r = await s.request(method, url, **kwargs)
     if r is not None and r.status in [403, 503] and wellknown_sub is None:
         await bypass_ddos_guard(s, url)
-        return s.request(method, url, **kwargs)
+        r = await s.request(method, url, **kwargs)
     return r
 
 
