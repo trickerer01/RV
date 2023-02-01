@@ -75,7 +75,6 @@ async def bypass_ddos_guard(s: ClientSession, url: str) -> None:
         bypass_in_progress = False
 
 
-# noinspection PyProtectedMember
 async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> ClientResponse:
     while bypass_in_progress is True:
         await sleep(1.0)

@@ -129,14 +129,14 @@ async def main() -> None:
     maxpage = 0
 
     pi = start_page
-    async with ClientSession() as session:
+    async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         while pi < start_page + pages_count:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')
                 break
             Log.info(f'page {pi:d}...{" (this is the last page!)" if 0 < maxpage == pi else ""}')
 
-            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi), session=session)
+            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi), session=s)
             if not a_html:
                 Log.error(f'Error: cannot get html for page {pi:d}')
                 continue
@@ -207,18 +207,17 @@ async def main() -> None:
                                                         f'{f"_{title}" if has_naming_flag(NAMING_FLAG_TITLE) else ""}'
                                                         f'_pypv.{cur_ext}', link))
 
-    if len(v_entries) == 0:
-        Log.fatal('\nNo videos found. Aborted.')
-        return
+        if len(v_entries) == 0:
+            Log.fatal('\nNo videos found. Aborted.')
+            return
 
-    minid, maxid = get_minmax_ids(v_entries)
-    Log.info(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
-    v_entries = list(reversed(v_entries))
-    if st and full_download:
-        init_tags_files(dest_base)
-    register_id_sequence([v.my_id for v in v_entries])
-    reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if dm == DOWNLOAD_MODE_FULL else 1.0))
-    async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
+        minid, maxid = get_minmax_ids(v_entries)
+        Log.info(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
+        v_entries = list(reversed(v_entries))
+        if st and full_download:
+            init_tags_files(dest_base)
+        register_id_sequence([v.my_id for v in v_entries])
+        reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if dm == DOWNLOAD_MODE_FULL else 1.0))
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             for cv in as_completed(
@@ -228,7 +227,7 @@ async def main() -> None:
             for cv in as_completed(
                     [download_file(v.my_id, v.my_filename, dest_base, v.my_link, dm, s) for v in v_entries]):
                 await cv
-    await reporter
+        await reporter
 
     if st and full_download:
         dump_item_tags()
