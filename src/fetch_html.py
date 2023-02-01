@@ -44,8 +44,10 @@ async def bypass_ddos_guard(s: ClientSession, url: str) -> None:
     global wellknown_sub
 
     if bypass_in_progress is True:
-        while bypass_in_progress is True:
+        while True:
             await sleep(1.0)
+            if bypass_in_progress is False:
+                break
         return
 
     bypass_in_progress = True
@@ -60,10 +62,11 @@ async def bypass_ddos_guard(s: ClientSession, url: str) -> None:
                 raise BypassException(r.status if r is not None else -1)
             wellknown_sub = re_fullmatch(r'^.*\'(/\.[^\']+)\'.*?$', str(await r.content.read())).group(1)
             await s.request('GET', f'{url_base}{wellknown_sub}', proxy=proxy)
+            Log.info('Bypass: starting response loop, it will succeed eventually, have patience')
             while True:
                 r = await s.request('GET', url, proxy=proxy)
                 if r is None or r.status == 403:
-                    Log.trace(f'Bypass: response from base host is {r.status if r is not None else -1:d} (2)!')
+                    Log.info(f'Bypass: response from base host is {r.status if r is not None else -1:d} (2)!')
                     await sleep(frand(1.0, 7.0))
                 break
     except BypassException as be:
