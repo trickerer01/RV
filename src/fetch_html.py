@@ -13,7 +13,7 @@ from typing import Optional
 from bs4 import BeautifulSoup
 from aiohttp import ClientSession, ClientResponse, http_parser
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, HOST
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, HOST, CONNECT_REQUEST_DELAY
 
 proxy = None  # type: Optional[str]
 request_delay = 0.0
@@ -35,7 +35,7 @@ async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> Cli
         d = request_delay
         request_delay = 0.0
         await sleep(d)
-    request_delay = 0.5
+    request_delay = CONNECT_REQUEST_DELAY
     s.headers.update(DEFAULT_HEADERS.copy())
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'}, http_parser.URL(HOST))
     kwargs.update(proxy=proxy)
