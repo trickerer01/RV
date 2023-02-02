@@ -68,7 +68,8 @@ async def bypass_ddos_guard(s: ClientSession, url: str) -> None:
                 if r is None or r.status == 403:
                     Log.info(f'Bypass: response from base host is {r.status if r is not None else -1:d} (2)!')
                     await sleep(frand(1.0, 7.0))
-                break
+                else:
+                    break
     except BypassException as be:
         if be.status != 200:
             assert False
