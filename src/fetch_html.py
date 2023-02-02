@@ -13,20 +13,9 @@ from typing import Optional
 from bs4 import BeautifulSoup
 from aiohttp import ClientSession, ClientResponse, http_parser
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, HOST, CONNECT_REQUEST_DELAY
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, HOST, CONNECT_REQUEST_DELAY, ExtraConfig
 
-proxy = None  # type: Optional[str]
 request_delay = 0.0
-
-
-class BypassException(Exception):
-    def __init__(self, status: int):
-        self.status = status
-
-
-def set_proxy(prox: str) -> None:
-    global proxy
-    proxy = prox
 
 
 async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> ClientResponse:
@@ -38,7 +27,7 @@ async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> Cli
     request_delay = CONNECT_REQUEST_DELAY
     s.headers.update(DEFAULT_HEADERS.copy())
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'}, http_parser.URL(HOST))
-    kwargs.update(proxy=proxy)
+    kwargs.update(proxy=ExtraConfig.proxy)
     return await s.request(method, url, **kwargs)
 
 

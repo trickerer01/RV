@@ -14,7 +14,6 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, MAX_VIDEOS_QUEUE_SIZE, DEFAULT_HEADERS, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, ExtraConfig
 from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence
-from fetch_html import set_proxy
 from tagger import try_parse_id_or_group, init_tags_files, dump_item_tags, validate_tags
 
 
@@ -28,6 +27,7 @@ async def main() -> None:
         return
 
     try:
+        ExtraConfig.proxy = arglist.proxy
         ExtraConfig.min_score = arglist.minimum_score
         ExtraConfig.naming_flags = arglist.naming
         ExtraConfig.logging_flags = arglist.log_level
@@ -42,7 +42,6 @@ async def main() -> None:
         st = arglist.dump_tags
         ex_tags = arglist.extra_tags
         ds = arglist.download_scenario
-        set_proxy(arglist.proxy)
 
         if ExtraConfig.validate_tags:
             validate_tags(ex_tags)
