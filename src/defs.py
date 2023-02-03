@@ -26,6 +26,7 @@ class BaseConfig(object):
         self.un_video_policy = None  # type: Optional[str]
         self.download_mode = None  # type: Optional[str]
         self.save_tags = None  # type: Optional[bool]
+        self.extra_tags = None  # type: Optional[str]
         self.naming_flags = 0
         self.logging_flags = 0
         self.validate_tags = True

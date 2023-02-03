@@ -201,8 +201,7 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfol
     return False
 
 
-async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario],
-                      extra_tags: List[str], session: ClientSession) -> None:
+async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario], session: ClientSession) -> None:
     global current_ididx
 
     my_index = id_sequence.index(idi)
@@ -257,7 +256,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
             for add_tag in [ca.replace(' ', '_') for ca in my_categories + [my_author] if len(ca) > 0]:
                 if add_tag not in tags_raw:
                     tags_raw.append(add_tag)
-            if is_filtered_out_by_extra_tags(idi, tags_raw, extra_tags, my_subfolder):
+            if is_filtered_out_by_extra_tags(idi, tags_raw, ExtraConfig.extra_tags, my_subfolder):
                 Log.info(f'Info: video {prefixp()}{idi:d}.mp4 is filtered out by outer extra tags, skipping...')
                 return await try_unregister_from_queue(idi)
             if len(likes) > 0:
@@ -289,7 +288,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
                     return await try_unregister_from_queue(idi)
                 my_subfolder = scenario.queries[uvp_idx].subfolder
                 my_quality = scenario.queries[uvp_idx].quality
-            elif len(extra_tags) > 0 and ExtraConfig.uvp != DOWNLOAD_POLICY_ALWAYS:
+            elif len(ExtraConfig.extra_tags) > 0 and ExtraConfig.uvp != DOWNLOAD_POLICY_ALWAYS:
                 Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, skipping due to untagged videos download policy...')
                 return await try_unregister_from_queue(idi)
             Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4...')
