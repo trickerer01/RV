@@ -18,7 +18,7 @@ from defs import (
     Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
     QUALITIES, has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_TITLE, NAMING_FLAGS_FULL,
 )
-from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence
+from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence, scan_dest_folder
 from fetch_html import fetch_html
 from tagger import init_tags_files, dump_item_tags, validate_tags
 
@@ -217,6 +217,7 @@ async def main() -> None:
         if st and full_download:
             init_tags_files(dest_base)
         register_id_sequence([v.my_id for v in v_entries])
+        scan_dest_folder(dest_base)
         reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if dm == DOWNLOAD_MODE_FULL else 1.0))
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:

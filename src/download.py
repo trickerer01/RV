@@ -161,14 +161,11 @@ def get_uvp_always_subquery_idx(scenario: DownloadScenario) -> int:
     return -1
 
 
-def file_exists_in_folder(dest_base: str, idi: int, quality: str, check_subfolders: bool) -> bool:
+def scan_dest_folder(dest_base: str) -> None:
     global found_filenames_base
     global found_filenames_all
 
-    if not path.exists(dest_base):
-        return False
-
-    if len(found_filenames_base) == 0 and len(found_filenames_all) == 0:
+    if path.exists(dest_base):
         subfolders = list()
         cur_names = listdir(dest_base)
         for idx_c in reversed(range(len(cur_names))):
@@ -184,6 +181,14 @@ def file_exists_in_folder(dest_base: str, idi: int, quality: str, check_subfolde
                 fullpath_s = f'{subfolder}{sub_name}'
                 if path.isfile(fullpath_s):
                     found_filenames_all.add(sub_name)
+
+
+def file_exists_in_folder(dest_base: str, idi: int, quality: str, check_subfolders: bool) -> bool:
+    global found_filenames_base
+    global found_filenames_all
+
+    if not path.exists(dest_base):
+        return False
 
     for fname in sorted(found_filenames_all if check_subfolders else found_filenames_base):
         try:
