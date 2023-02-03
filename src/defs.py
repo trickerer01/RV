@@ -34,7 +34,7 @@ class BaseConfig(object):
         self.proxy = params.proxy
         self.min_score = params.minimum_score
         self.quality = params.quality
-        self.un_video_policy = params.unli_video_policy
+        self.un_video_policy = params.untag_video_policy
         self.download_mode = params.download_mode
         self.save_tags = params.dump_tags
         self.extra_tags = params.extra_tags
