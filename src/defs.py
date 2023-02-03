@@ -15,9 +15,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 
-__RV_DEBUG__ = False
-
-
 class BaseConfig(object):
     def __init__(self) -> None:
         self.dest_base = None  # type: Optional[str]
