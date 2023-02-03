@@ -19,6 +19,7 @@ __RV_DEBUG__ = False
 
 class BaseConfig(object):
     def __init__(self):
+        self.dest_base = './'
         self.proxy = None  # type: Optional[str]
         self.min_score = None  # type: Optional[int]
         self.naming_flags = 0

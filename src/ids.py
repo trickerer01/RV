@@ -14,7 +14,7 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, MAX_VIDEOS_QUEUE_SIZE, DEFAULT_HEADERS, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, ExtraConfig
 from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence, scan_dest_folder
-from tagger import try_parse_id_or_group, init_tags_files, dump_item_tags, validate_tags
+from tagger import try_parse_id_or_group, dump_item_tags, validate_tags
 
 
 async def main() -> None:
@@ -27,13 +27,13 @@ async def main() -> None:
         return
 
     try:
+        ExtraConfig.dest_base = arglist.path
         ExtraConfig.proxy = arglist.proxy
         ExtraConfig.min_score = arglist.minimum_score
         ExtraConfig.naming_flags = arglist.naming
         ExtraConfig.logging_flags = arglist.log_level
         ExtraConfig.validate_tags = not arglist.no_validation
 
-        dest_base = arglist.path
         start_id = arglist.start
         end_id = arglist.end
         quality = arglist.quality
@@ -81,14 +81,12 @@ async def main() -> None:
     else:
         ex_tags = []
 
-    if st:
-        init_tags_files(dest_base)
     register_id_sequence(id_sequence)
-    scan_dest_folder(dest_base)
+    scan_dest_folder()
     reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if dm == DOWNLOAD_MODE_FULL else 1.0))
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         s.headers.update(DEFAULT_HEADERS.copy())
-        for cv in as_completed([download_id(idi, '', dest_base, quality, ds, ex_tags, up, dm, st, s) for idi in id_sequence]):
+        for cv in as_completed([download_id(idi, '', quality, ds, ex_tags, up, dm, st, s) for idi in id_sequence]):
             await cv
     await reporter
 
