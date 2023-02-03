@@ -70,6 +70,7 @@ async def main() -> None:
         ExtraConfig.quality = arglist.quality
         ExtraConfig.un_video_policy = arglist.untag_video_policy
         ExtraConfig.download_mode = arglist.download_mode
+        ExtraConfig.save_tags = arglist.dump_tags
         ExtraConfig.naming_flags = arglist.naming
         ExtraConfig.logging_flags = arglist.log_level
         ExtraConfig.validate_tags = not arglist.no_validation
@@ -79,7 +80,6 @@ async def main() -> None:
         stop_id = arglist.stop_id
         begin_id = arglist.begin_id
         search_str = arglist.search
-        st = arglist.dump_tags
         ex_tags = arglist.extra_tags
         ds = arglist.download_scenario
 
@@ -105,7 +105,7 @@ async def main() -> None:
             if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
                 Log.info('Info: untagged videos download policy is ignored for previews!')
                 delay_for_message = True
-            if st is True:
+            if ExtraConfig.save_tags is True:
                 Log.info('Info: tags are not saved for previews!')
                 delay_for_message = True
             if ds:
@@ -220,7 +220,7 @@ async def main() -> None:
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, ds, ex_tags, st, s) for v in v_entries]):
+                    [download_id(v.my_id, v.my_title, ds, ex_tags, s) for v in v_entries]):
                 await cv
         else:
             for cv in as_completed(
@@ -228,7 +228,7 @@ async def main() -> None:
                 await cv
         await reporter
 
-    if st and full_download:
+    if ExtraConfig.save_tags and full_download:
         dump_item_tags()
 
     await after_download()

@@ -33,13 +33,13 @@ async def main() -> None:
         ExtraConfig.quality = arglist.quality
         ExtraConfig.un_video_policy = arglist.untag_video_policy
         ExtraConfig.download_mode = arglist.download_mode
+        ExtraConfig.save_tags = arglist.dump_tags
         ExtraConfig.naming_flags = arglist.naming
         ExtraConfig.logging_flags = arglist.log_level
         ExtraConfig.validate_tags = not arglist.no_validation
 
         start_id = arglist.start
         end_id = arglist.end
-        st = arglist.dump_tags
         ex_tags = arglist.extra_tags
         ds = arglist.download_scenario
 
@@ -86,11 +86,11 @@ async def main() -> None:
     reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if ExtraConfig.dm == DOWNLOAD_MODE_FULL else 1.0))
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         s.headers.update(DEFAULT_HEADERS.copy())
-        for cv in as_completed([download_id(idi, '', ds, ex_tags, st, s) for idi in id_sequence]):
+        for cv in as_completed([download_id(idi, '', ds, ex_tags, s) for idi in id_sequence]):
             await cv
     await reporter
 
-    if st:
+    if ExtraConfig.save_tags:
         dump_item_tags()
 
     await after_download()

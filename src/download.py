@@ -202,7 +202,7 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfol
 
 
 async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario],
-                      extra_tags: List[str], save_tags: bool, session: ClientSession) -> None:
+                      extra_tags: List[str], session: ClientSession) -> None:
     global current_ididx
 
     my_index = id_sequence.index(idi)
@@ -275,7 +275,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
                     return await try_unregister_from_queue(idi)
                 my_subfolder = scenario.queries[sub_idx].subfolder
                 my_quality = scenario.queries[sub_idx].quality
-            if save_tags:
+            if ExtraConfig.save_tags:
                 register_item_tags(idi, ' '.join(sorted(tags_raw)), my_subfolder)
             tags_str = filtered_tags(list(sorted(tags_raw)))
             if tags_str != '':
