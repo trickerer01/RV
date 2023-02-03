@@ -357,23 +357,23 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
     return await try_unregister_from_queue(idi)
 
 
-async def download_file(idi: int, filename: str, dest_base: str, link: str, download_mode: str, s: ClientSession,
+async def download_file(idi: int, filename: str, my_dest_base: str, link: str, download_mode: str, s: ClientSession,
                         from_ids=False, subfolder='') -> int:
-    dest = normalize_filename(filename, dest_base)
+    dest = normalize_filename(filename, my_dest_base)
     sfilename = f'{f"{subfolder}/" if len(subfolder) > 0 else ""}{filename}'
     file_size = 0
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS
 
-    if not path.exists(dest_base):
+    if not path.exists(my_dest_base):
         try:
-            makedirs(dest_base)
+            makedirs(my_dest_base)
         except Exception:
-            raise IOError(f'ERROR: Unable to create subfolder \'{dest_base}\'!')
+            raise IOError(f'ERROR: Unable to create subfolder \'{my_dest_base}\'!')
     else:
         rv_match = match(re_rvfile, filename)
         rv_quality = rv_match.group(2)
-        if file_exists_in_folder(dest_base, idi, rv_quality, False):
+        if file_exists_in_folder(my_dest_base, idi, rv_quality, False):
             Log.info(f'{filename} (or similar) already exists. Skipped.')
             if from_ids is False:
                 await try_unregister_from_queue(idi)
