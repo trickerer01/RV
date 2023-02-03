@@ -166,6 +166,7 @@ def scan_dest_folder(dest_base: str) -> None:
     global found_filenames_all
 
     if path.exists(dest_base):
+        Log.info('Scanning dest folder...')
         subfolders = list()
         cur_names = listdir(dest_base)
         for idx_c in reversed(range(len(cur_names))):
@@ -181,6 +182,9 @@ def scan_dest_folder(dest_base: str) -> None:
                 fullpath_s = f'{subfolder}{sub_name}'
                 if path.isfile(fullpath_s):
                     found_filenames_all.add(sub_name)
+        Log.info(f'Found {len(found_filenames_base):d} files in base and '
+                 f'{len(found_filenames_all) - len(found_filenames_base):d} files in {len(subfolders):d} subfolders '
+                 f'(total files: {len(found_filenames_all):d})')
 
 
 def file_exists_in_folder(dest_base: str, idi: int, quality: str, check_subfolders: bool) -> bool:
@@ -214,8 +218,6 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
 
     while not await try_register_in_queue(idi):
         await sleep(1.5)
-
-    await sleep(0.25)  # max 4 base requests per second
 
     current_ididx += 1
 
