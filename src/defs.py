@@ -6,6 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from argparse import Namespace
 from base64 import b64decode
 from datetime import datetime
 from enum import IntEnum
@@ -18,7 +19,7 @@ __RV_DEBUG__ = False
 
 
 class BaseConfig(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self.dest_base = None  # type: Optional[str]
         self.proxy = None  # type: Optional[str]
         self.min_score = None  # type: Optional[int]
@@ -30,6 +31,18 @@ class BaseConfig(object):
         self.naming_flags = 0
         self.logging_flags = 0
         self.validate_tags = True
+
+    def read_params(self, params: Namespace) -> None:
+        self.dest_base = params.path
+        self.proxy = params.proxy
+        self.min_score = params.minimum_score
+        self.quality = params.quality
+        self.un_video_policy = params.unli_video_policy
+        self.download_mode = params.download_mode
+        self.save_tags = params.dump_tags
+        self.extra_tags = params.extra_tags
+        self.naming_flags = params.naming
+        self.logging_flags = params.log_level
 
     @property
     def uvp(self) -> Optional[str]:
