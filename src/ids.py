@@ -30,13 +30,13 @@ async def main() -> None:
         ExtraConfig.dest_base = arglist.path
         ExtraConfig.proxy = arglist.proxy
         ExtraConfig.min_score = arglist.minimum_score
+        ExtraConfig.quality = arglist.quality
         ExtraConfig.naming_flags = arglist.naming
         ExtraConfig.logging_flags = arglist.log_level
         ExtraConfig.validate_tags = not arglist.no_validation
 
         start_id = arglist.start
         end_id = arglist.end
-        quality = arglist.quality
         up = arglist.untag_video_policy
         dm = arglist.download_mode
         st = arglist.dump_tags
@@ -66,7 +66,7 @@ async def main() -> None:
             if len(ex_tags) > 0:
                 Log.info(f'Info: running download script: outer extra tags: {str(ex_tags)}')
                 delay_for_message = True
-            if quality != DEFAULT_QUALITY:
+            if ExtraConfig.quality != DEFAULT_QUALITY:
                 Log.info('Info: running download script, outer quality setting will be ignored')
                 delay_for_message = True
 
@@ -86,7 +86,7 @@ async def main() -> None:
     reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if dm == DOWNLOAD_MODE_FULL else 1.0))
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         s.headers.update(DEFAULT_HEADERS.copy())
-        for cv in as_completed([download_id(idi, '', quality, ds, ex_tags, up, dm, st, s) for idi in id_sequence]):
+        for cv in as_completed([download_id(idi, '', ds, ex_tags, up, dm, st, s) for idi in id_sequence]):
             await cv
     await reporter
 

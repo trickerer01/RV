@@ -187,7 +187,7 @@ def scan_dest_folder() -> None:
                  f'(total files: {len(found_filenames_all):d})')
 
 
-def file_exists_in_folder(base_folder, idi: int, quality: str, check_subfolders: bool) -> bool:
+def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfolders: bool) -> bool:
     if path.exists(base_folder):
         for fname in sorted(found_filenames_all if check_subfolders else found_filenames_base):
             try:
@@ -201,7 +201,7 @@ def file_exists_in_folder(base_folder, idi: int, quality: str, check_subfolders:
     return False
 
 
-async def download_id(idi: int, my_title: str, quality: str, scenario: Optional[DownloadScenario],
+async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario],
                       extra_tags: List[str], untagged_policy: str, download_mode: str, save_tags: bool, session: ClientSession) -> None:
     global current_ididx
 
@@ -215,12 +215,12 @@ async def download_id(idi: int, my_title: str, quality: str, scenario: Optional[
 
     current_ididx += 1
 
-    if file_exists_in_folder(ExtraConfig.dest_base, idi, quality, True):
+    if file_exists_in_folder(ExtraConfig.dest_base, idi, ExtraConfig.quality, True):
         Log.info(f'download_id: {prefixp()}{idi:d}.mp4 (or similar) found in {ExtraConfig.dest_base} (or subfolder). Skipped.')
         return await try_unregister_from_queue(idi)
 
     my_subfolder = ''
-    my_quality = quality
+    my_quality = ExtraConfig.quality
     my_tags = 'no_tags'
     likes = ''
     i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % idi}?popup_id={2 + current_ididx % 10:d}', session=session)
