@@ -23,6 +23,7 @@ class BaseConfig(object):
         self.proxy = None  # type: Optional[str]
         self.min_score = None  # type: Optional[int]
         self.quality = None  # type: Optional[str]
+        self.uvp = None  # type: Optional[str]
         self.naming_flags = 0
         self.logging_flags = 0
         self.validate_tags = True

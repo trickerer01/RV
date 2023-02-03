@@ -202,7 +202,7 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfol
 
 
 async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario],
-                      extra_tags: List[str], untagged_policy: str, download_mode: str, save_tags: bool, session: ClientSession) -> None:
+                      extra_tags: List[str], download_mode: str, save_tags: bool, session: ClientSession) -> None:
     global current_ididx
 
     my_index = id_sequence.index(idi)
@@ -289,8 +289,8 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
                     return await try_unregister_from_queue(idi)
                 my_subfolder = scenario.queries[uvp_idx].subfolder
                 my_quality = scenario.queries[uvp_idx].quality
-            elif len(extra_tags) > 0 and untagged_policy != DOWNLOAD_POLICY_ALWAYS:
-                Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, skipping due to untagged videos download policy...')
+            elif len(extra_tags) > 0 and ExtraConfig.uvp != DOWNLOAD_POLICY_ALWAYS:
+                Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, skipping due to unlisted videos download policy...')
                 return await try_unregister_from_queue(idi)
             Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4...')
 
