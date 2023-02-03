@@ -223,8 +223,7 @@ async def download_id(idi: int, my_title: str, dest_base: str, quality: str, sce
     my_quality = quality
     my_tags = 'no_tags'
     likes = ''
-    popup_id = 2 + current_ididx % 10  # 2-11
-    i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % idi}?popup_id={popup_id}', session=session)
+    i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % idi}?popup_id={2 + current_ididx % 10:d}', session=session)
     if i_html:
         if i_html.find('title', string='404 Not Found'):
             Log.error(f'Got error 404 for {prefixp()}{idi:d}.mp4, skipping...')
