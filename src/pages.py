@@ -68,7 +68,8 @@ async def main() -> None:
         ExtraConfig.proxy = arglist.proxy
         ExtraConfig.min_score = arglist.minimum_score
         ExtraConfig.quality = arglist.quality
-        ExtraConfig.uvp = arglist.unli_video_policy
+        ExtraConfig.un_video_policy = arglist.untag_video_policy
+        ExtraConfig.download_mode = arglist.download_mode
         ExtraConfig.naming_flags = arglist.naming
         ExtraConfig.logging_flags = arglist.log_level
         ExtraConfig.validate_tags = not arglist.no_validation
@@ -78,7 +79,6 @@ async def main() -> None:
         stop_id = arglist.stop_id
         begin_id = arglist.begin_id
         search_str = arglist.search
-        dm = arglist.download_mode
         st = arglist.dump_tags
         ex_tags = arglist.extra_tags
         ds = arglist.download_scenario
@@ -102,7 +102,7 @@ async def main() -> None:
             if len(ex_tags) > 0 or ExtraConfig.validate_tags:
                 Log.info('Info: tags are ignored for previews!')
                 delay_for_message = True
-            if up != DOWNLOAD_POLICY_DEFAULT:
+            if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
                 Log.info('Info: untagged videos download policy is ignored for previews!')
                 delay_for_message = True
             if st is True:
@@ -216,15 +216,15 @@ async def main() -> None:
         v_entries = list(reversed(v_entries))
         register_id_sequence([v.my_id for v in v_entries])
         scan_dest_folder()
-        reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if dm == DOWNLOAD_MODE_FULL else 1.0))
+        reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if ExtraConfig.dm == DOWNLOAD_MODE_FULL else 1.0))
         s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, ds, ex_tags, dm, st, s) for v in v_entries]):
+                    [download_id(v.my_id, v.my_title, ds, ex_tags, st, s) for v in v_entries]):
                 await cv
         else:
             for cv in as_completed(
-                    [download_file(v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link, dm, s) for v in v_entries]):
+                    [download_file(v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link, s) for v in v_entries]):
                 await cv
         await reporter
 

@@ -23,10 +23,19 @@ class BaseConfig(object):
         self.proxy = None  # type: Optional[str]
         self.min_score = None  # type: Optional[int]
         self.quality = None  # type: Optional[str]
-        self.uvp = None  # type: Optional[str]
+        self.un_video_policy = None  # type: Optional[str]
+        self.download_mode = None  # type: Optional[str]
         self.naming_flags = 0
         self.logging_flags = 0
         self.validate_tags = True
+
+    @property
+    def uvp(self) -> Optional[str]:
+        return self.un_video_policy
+
+    @property
+    def dm(self) -> Optional[str]:
+        return self.download_mode
 
 
 ExtraConfig = BaseConfig()

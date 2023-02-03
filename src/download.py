@@ -202,7 +202,7 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfol
 
 
 async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario],
-                      extra_tags: List[str], download_mode: str, save_tags: bool, session: ClientSession) -> None:
+                      extra_tags: List[str], save_tags: bool, session: ClientSession) -> None:
     global current_ididx
 
     my_index = id_sequence.index(idi)
@@ -290,7 +290,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
                 my_subfolder = scenario.queries[uvp_idx].subfolder
                 my_quality = scenario.queries[uvp_idx].quality
             elif len(extra_tags) > 0 and ExtraConfig.uvp != DOWNLOAD_POLICY_ALWAYS:
-                Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, skipping due to unlisted videos download policy...')
+                Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, skipping due to untagged videos download policy...')
                 return await try_unregister_from_queue(idi)
             Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4...')
 
@@ -352,13 +352,12 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
         fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
     filename = f'{fname_part1}_{fname_part2}'
 
-    await download_file(idi, filename, my_dest_base, link, download_mode, session, True, my_subfolder)
+    await download_file(idi, filename, my_dest_base, link, session, True, my_subfolder)
 
     return await try_unregister_from_queue(idi)
 
 
-async def download_file(idi: int, filename: str, my_dest_base: str, link: str, download_mode: str, s: ClientSession,
-                        from_ids=False, subfolder='') -> int:
+async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s: ClientSession, from_ids=False, subfolder='') -> int:
     dest = normalize_filename(filename, my_dest_base)
     sfilename = f'{f"{subfolder}/" if len(subfolder) > 0 else ""}{filename}'
     file_size = 0
@@ -390,7 +389,7 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, d
     # Log('Retrieving %s...' % filename_short)
     while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
-            if download_mode == DOWNLOAD_MODE_TOUCH:
+            if ExtraConfig.dm == DOWNLOAD_MODE_TOUCH:
                 Log.info(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
                 with open(dest, 'wb'):
                     pass
