@@ -28,7 +28,6 @@ async def main() -> None:
 
     try:
         ExtraConfig.read_params(arglist)
-        ExtraConfig.validate_tags = not arglist.no_validation
         start_id = arglist.start
         end_id = arglist.end
         ds = arglist.download_scenario

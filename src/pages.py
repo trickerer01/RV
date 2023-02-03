@@ -65,7 +65,6 @@ async def main() -> None:
 
     try:
         ExtraConfig.read_params(arglist)
-        ExtraConfig.validate_tags = not arglist.no_validation
         start_page = arglist.start
         pages_count = arglist.pages
         stop_id = arglist.stop_id

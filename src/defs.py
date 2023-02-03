@@ -40,6 +40,7 @@ class BaseConfig(object):
         self.extra_tags = params.extra_tags
         self.naming_flags = params.naming
         self.logging_flags = params.log_level
+        self.validate_tags = not params.no_validation
 
     @property
     def uvp(self) -> Optional[str]:
