@@ -17,7 +17,7 @@ from defs import (
     HELP_ARG_PROXY, HELP_BEGIN_ID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES,
     DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS, NAMING_FLAGS_FULL, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS, LOGGING_FLAGS_DEFAULT,
     HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_NO_VALIDATION,
-    ACTION_STORE_TRUE, normalize_path, UTF8, LoggingFlags,
+    ACTION_STORE_TRUE, normalize_path, UTF8, LoggingFlags, unquote,
 )
 from scenario import DownloadScenario, valid_int
 from tagger import extra_tag
@@ -31,23 +31,6 @@ PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
 
 parser = None  # type: Optional[ArgumentParser]
-
-
-def unquote(string: str) -> str:
-    try:
-        while True:
-            found = False
-            if len(string) > 1 and string[0] in ['\'', '"']:
-                string = string[1:]
-                found = True
-            if len(string) > 1 and string[-1] in ['\'', '"']:
-                string = string[:-1]
-                found = True
-            if not found:
-                break
-        return string
-    except Exception:
-        raise ValueError
 
 
 def read_cmdfile(cmdfile_path: str) -> List[str]:

@@ -244,6 +244,23 @@ def get_elapsed_time_s() -> str:
     return f'{hh:02d}:{mm:02d}:{ss:02d}'
 
 
+def unquote(string: str) -> str:
+    try:
+        while True:
+            found = False
+            if len(string) > 1 and string[0] in ['\'', '"']:
+                string = string[1:]
+                found = True
+            if len(string) > 1 and string[-1] in ['\'', '"']:
+                string = string[:-1]
+                found = True
+            if not found:
+                break
+        return string
+    except Exception:
+        raise ValueError
+
+
 def normalize_path(basepath: str, append_slash: bool = True) -> str:
     normalized_path = basepath.replace('\\', SLASH)
     if append_slash and len(normalized_path) != 0 and normalized_path[-1] != SLASH:
