@@ -60,10 +60,14 @@ class DownloadScenario(object):
         self.queries.append(subquery)
 
     def has_subquery(self, **kwargs) -> bool:
-        for k, v in kwargs.items():
-            for sq in self.queries:
-                if k in sq.__dict__.keys() and sq.__getattribute__(k) == v:
-                    return True
+        for sq in self.queries:
+            all_matched = True
+            for k, v in kwargs.items():
+                if not (k in sq.__dict__.keys() and sq.__getattribute__(k) == v):
+                    all_matched = False
+                    break
+            if all_matched is True:
+                return True
         return False
 
     @staticmethod
