@@ -7,16 +7,16 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from argparse import ArgumentParser, Namespace, ArgumentError, ZERO_OR_MORE
+from ipaddress import IPv4Address
 from os import path
 from re import match as re_match, sub as re_sub
 from typing import Optional, List
 
 from defs import (
-    SLASH, Log, NON_SEARCH_SYMBOLS, QUALITIES, DEFAULT_QUALITY, HELP_PATH, HELP_QUALITY, HELP_PAGES,
-    HELP_STOP_ID, HELP_SEARCH, HELP_ARG_PROXY, HELP_BEGIN_ID,
-    HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
-    NAMING_FLAGS, NAMING_FLAGS_FULL, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS, LOGGING_FLAGS_DEFAULT,
-    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_NO_VALIDATION, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING,
+    SLASH, Log, NON_SEARCH_SYMBOLS, HELP_PATH, HELP_PAGES, HELP_STOP_ID, HELP_SEARCH, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY,
+    HELP_ARG_PROXY, HELP_BEGIN_ID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES,
+    DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS, NAMING_FLAGS_FULL, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS, LOGGING_FLAGS_DEFAULT,
+    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_NO_VALIDATION,
     ACTION_STORE_TRUE, normalize_path, UTF8, LoggingFlags,
 )
 from scenario import DownloadScenario, valid_int
@@ -130,40 +130,34 @@ def validate_parsed(args: List[str], default_sub: ArgumentParser) -> Namespace:
 
 def valid_proxy(prox: str) -> str:
     try:
-        # replace front trailing zeros: 01.0144.022.055:002022 -> 1.144.22.55:2022
-        newval = str(re_sub(r'([^\d]|^)0+([1-9](?:[0-9]+)?)', r'\1\2', prox))
-        # validate IP with port
-        adr_valid = (newval == '') or re_match(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})', newval) is not None
-        if adr_valid and len(newval) > 0:
-            #  port
-            ps = str(newval).split(':')
-            ips = ps[0].split('.') if (ps and len(ps) > 0) else []
-            if len(ps) != 2 or len(ips) != 4:
-                adr_valid = False
-            if adr_valid:
-                try:
-                    if ps[1][0] == '0':
-                        raise Exception
-                    port = int(ps[1])
-                    if port < 20 or port > 65535:
-                        raise Exception
-                except Exception:
-                    adr_valid = False
-            #  ip
-            if adr_valid:
-                try:
-                    for ip in ips:
-                        if len(ip) == 0 or (len(ip) > 1 and ip[0] == '0'):
-                            raise Exception
-                        iip = int(ip)
-                        if iip < 0 or iip > 255:
-                            raise Exception
-                except Exception as e:
-                    raise e
+        try:
+            pt, pv = tuple(prox.split('://', 1))
+        except ValueError:
+            Log.error('Failed to split proxy type and value/port!')
+            raise
+        if pt not in ['http', 'https', 'socks5']:
+            Log.error(f'Invalid proxy type: \'{pt}\'!')
+            raise ValueError
+        try:
+            pv, pp = tuple(pv.split(':', 1))
+        except ValueError:
+            Log.error('Failed to split proxy value and port!')
+            raise
+        try:
+            pva = IPv4Address(pv)
+        except ValueError:
+            Log.error(f'Invalid proxy ip address value \'{pv}\'!')
+            raise
+        try:
+            ppi = int(pp)
+            assert 20 < ppi < 65535
+        except (ValueError, AssertionError,):
+            Log.error(f'Invalid proxy ip port value \'{pp}\'!')
+            raise
     except Exception:
         raise ArgumentError
 
-    return newval
+    return f'{pt}://{str(pva)}:{ppi:d}'
 
 
 def download_scenario_format(fmt_str: str) -> DownloadScenario:
