@@ -7,20 +7,22 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from argparse import ArgumentParser, Namespace, ArgumentError, ZERO_OR_MORE
-from ipaddress import IPv4Address
 from os import path
-from re import match as re_match, sub as re_sub
+from re import sub as re_sub
 from typing import Optional, List
 
 from defs import (
-    SLASH, Log, NON_SEARCH_SYMBOLS, HELP_PATH, HELP_PAGES, HELP_STOP_ID, HELP_SEARCH, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY,
-    HELP_ARG_PROXY, HELP_BEGIN_ID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES,
-    DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS, NAMING_FLAGS_FULL, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS, LOGGING_FLAGS_DEFAULT,
-    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_NO_VALIDATION,
-    ACTION_STORE_TRUE, normalize_path, UTF8, LoggingFlags, unquote,
+    Log, HELP_PATH, HELP_PAGES, HELP_STOP_ID, HELP_SEARCH, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY, HELP_ARG_PROXY, HELP_BEGIN_ID,
+    HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
+    NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE,
+    HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_NO_VALIDATION,
+    ACTION_STORE_TRUE, UTF8,
 )
-from scenario import DownloadScenario, valid_int
+from scenario import DownloadScenario
 from tagger import extra_tag
+from validators import (
+    valid_int, valid_positive_nonzero_int, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags, log_level,
+)
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
@@ -47,50 +49,6 @@ def is_parsed_cmdfile(parse_result: Namespace) -> bool:
     return hasattr(parse_result, 'path') and not hasattr(parse_result, 'extra_tags')
 
 
-def valid_positive_nonzero_int(val: str) -> int:
-    try:
-        val = int(val)
-        assert(val > 0)
-    except Exception:
-        raise ArgumentError
-
-    return val
-
-
-def valid_path(pathstr: str) -> str:
-    try:
-        newpath = normalize_path(unquote(pathstr))
-        if not path.exists(newpath[:(newpath.find(SLASH) + 1)]):
-            raise ValueError
-    except Exception:
-        raise ArgumentError
-
-    return newpath
-
-
-def valid_filepath_abs(pathstr: str) -> str:
-    try:
-        newpath = normalize_path(unquote(pathstr), False)
-        if not path.isfile(newpath):
-            raise ValueError
-        if not path.isabs(newpath):
-            raise ValueError
-    except Exception:
-        raise ArgumentError
-
-    return newpath
-
-
-def valid_search_string(search_str: str) -> str:
-    try:
-        if len(search_str) > 0 and re_match(fr'^.*{NON_SEARCH_SYMBOLS}.*$', search_str):
-            raise ValueError
-    except Exception:
-        raise ArgumentError
-
-    return search_str
-
-
 def validate_parsed(args: List[str], default_sub: ArgumentParser) -> Namespace:
     global parser
 
@@ -109,59 +67,6 @@ def validate_parsed(args: List[str], default_sub: ArgumentParser) -> Namespace:
         raise
 
     return parsed
-
-
-def valid_proxy(prox: str) -> str:
-    try:
-        try:
-            pt, pv = tuple(prox.split('://', 1))
-        except ValueError:
-            Log.error('Failed to split proxy type and value/port!')
-            raise
-        if pt not in ['http', 'https', 'socks5']:
-            Log.error(f'Invalid proxy type: \'{pt}\'!')
-            raise ValueError
-        try:
-            pv, pp = tuple(pv.split(':', 1))
-        except ValueError:
-            Log.error('Failed to split proxy value and port!')
-            raise
-        try:
-            pva = IPv4Address(pv)
-        except ValueError:
-            Log.error(f'Invalid proxy ip address value \'{pv}\'!')
-            raise
-        try:
-            ppi = int(pp)
-            assert 20 < ppi < 65535
-        except (ValueError, AssertionError,):
-            Log.error(f'Invalid proxy ip port value \'{pp}\'!')
-            raise
-    except Exception:
-        raise ArgumentError
-
-    return f'{pt}://{str(pva)}:{ppi:d}'
-
-
-def naming_flags(flags: str) -> int:
-    try:
-        if flags[0].isnumeric():
-            intflags = int(flags, base=16 if flags.startswith('0x') else 10)
-            assert intflags & ~NAMING_FLAGS_FULL == 0
-        else:
-            intflags = 0
-            for fname in flags.split('|'):
-                intflags |= int(NAMING_FLAGS[fname], base=16)
-        return intflags
-    except Exception:
-        raise ArgumentError
-
-
-def log_level(level: str) -> LoggingFlags:
-    try:
-        return LoggingFlags(int(LOGGING_FLAGS[level], 16))
-    except Exception:
-        raise ArgumentError
 
 
 def add_common_args(parser_or_group: ArgumentParser) -> None:

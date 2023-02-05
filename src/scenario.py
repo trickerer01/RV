@@ -6,7 +6,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from __future__ import annotations
 from argparse import ArgumentParser, ZERO_OR_MORE, ArgumentError
 from typing import List
 
@@ -15,16 +14,9 @@ from defs import (
     DOWNLOAD_POLICY_ALWAYS, HELP_ARG_MINSCORE
 )
 from tagger import extra_tag
+from validators import valid_int
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
-
-
-# todo: create validators and move everything there
-def valid_int(val: str) -> int:
-    try:
-        return int(val)
-    except Exception:
-        raise ArgumentError
 
 
 class SubQueryParams(object):
