@@ -11,7 +11,7 @@ from json import loads
 from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
 from typing import List, Dict, Optional
 
-from defs import TAGS_CONCAT_CHAR, UTF8, Log, normalize_path, prefixp
+from defs import TAGS_CONCAT_CHAR, UTF8, Log, normalize_path, prefixp, ExtraConfig
 
 TAG_NUMS_ENCODED = (
     'ewogICAgICIwMiAoZGFybGluZyBpbiB0aGUgZnJhbnh4KSI6ICIzNDk1MSIsCiAgICAgIjE4ZGFydDEgKGFydGlzdCkiOiAiMTA3NDMiLAogICAgICIxYW5pbWFsIjogIjI5Nz'

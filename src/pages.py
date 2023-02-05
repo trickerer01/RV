@@ -15,7 +15,7 @@ from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    Log, SITE_AJAX_REQUEST_BASE, DEFAULT_HEADERS, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
+    Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
     QUALITIES, has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_TITLE, NAMING_FLAGS_FULL,
 )
 from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence, scan_dest_folder
@@ -206,7 +206,6 @@ async def main() -> None:
         register_id_sequence([v.my_id for v in v_entries])
         scan_dest_folder()
         reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if ExtraConfig.dm == DOWNLOAD_MODE_FULL else 1.0))
-        s.headers.update(DEFAULT_HEADERS.copy())
         if full_download:
             for cv in as_completed(
                     [download_id(v.my_id, v.my_title, ds, s) for v in v_entries]):
