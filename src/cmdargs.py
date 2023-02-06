@@ -24,6 +24,8 @@ from validators import (
     valid_int, valid_positive_nonzero_int, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags, log_level,
 )
 
+__all__ = ('prepare_arglist_pages', 'prepare_arglist_ids', 'read_cmdfile', 'is_parsed_cmdfile')
+
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
 NAMING_DEFAULT = NAMING_FLAGS_DEFAULT

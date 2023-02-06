@@ -26,6 +26,8 @@ from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags,
 )
 
+__all__ = ('download_id', 'download_file', 'after_download', 'report_total_queue_size_callback', 'register_id_sequence', 'scan_dest_folder')
+
 NEWLINE = '\n'
 re_rvfile = compile(r'^(?:rv_)?(\d+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
 

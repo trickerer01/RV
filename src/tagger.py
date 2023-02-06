@@ -2019,6 +2019,11 @@ TAG_NUMS_ENCODED = (
 
 TAG_NUMS_DECODED = {k.replace(' ', '_'): v for k, v in loads(b64decode(TAG_NUMS_ENCODED)).items()}  # type: Dict[str, str]
 
+__all__ = (
+    'filtered_tags', 'validate_tags', 'get_matching_tag', 'get_or_group_matching_tag', 'is_neg_and_group_matches',
+    'register_item_tags', 'try_parse_id_or_group', 'dump_item_tags', 'extra_tag'
+)
+
 re_replace_symbols = re_compile(
     r'[^0-9a-zA-Z_+()\[\]]+'
 )
