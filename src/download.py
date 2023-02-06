@@ -7,32 +7,31 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from asyncio import sleep
-from os import path, stat, remove, makedirs, listdir
+from os import path, stat, remove, makedirs
 from random import uniform as frand
-from re import compile as re_compile, match, search
-from typing import List, Optional, Set
+from re import match, search
+from typing import List, Optional
 
 from aiohttp import ClientSession
 from aiofile import async_open
 
 from defs import (
-    CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, SITE_AJAX_REQUEST_VIDEO, TAGS_CONCAT_CHAR,
+    CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, TAGS_CONCAT_CHAR, SITE_AJAX_REQUEST_VIDEO,
     DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, NAMING_FLAG_PREFIX, NAMING_FLAG_SCORE, NAMING_FLAG_TITLE, NAMING_FLAG_TAGS,
-    Log, ExtraConfig, normalize_path, normalize_filename, get_elapsed_time_s, has_naming_flag, prefixp, LoggingFlags, extract_ext
+    Log, ExtraConfig, normalize_path, normalize_filename, get_elapsed_time_s, has_naming_flag, prefixp, LoggingFlags, extract_ext,
+    re_rvfile,
 )
 from fetch_html import fetch_html, wrap_request
+from path_util import file_exists_in_folder
 from scenario import DownloadScenario
 from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags,
 )
 
-__all__ = ('download_id', 'download_file', 'after_download', 'report_total_queue_size_callback', 'register_id_sequence', 'scan_dest_folder')
+__all__ = ('download_id', 'download_file', 'after_download', 'report_total_queue_size_callback', 'register_id_sequence')
 
 NEWLINE = '\n'
-re_rvfile = re_compile(r'^(?:rv_)?(\d+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
 
-found_filenames_base = set()  # type: Set[str]
-found_filenames_all = set()  # type: Set[str]
 downloads_queue = []  # type: List[int]
 failed_items = []  # type: List[int]
 total_queue_size = 0
@@ -145,46 +144,6 @@ def get_uvp_always_subquery_idx(scenario: DownloadScenario) -> int:
         if sq.uvp == DOWNLOAD_POLICY_ALWAYS:
             return idx
     return -1
-
-
-def scan_dest_folder() -> None:
-    global found_filenames_base
-    global found_filenames_all
-
-    if path.exists(ExtraConfig.dest_base):
-        Log.info('Scanning dest folder...')
-        subfolders = list()
-        cur_names = listdir(ExtraConfig.dest_base)
-        for idx_c in reversed(range(len(cur_names))):
-            fullpath_c = f'{ExtraConfig.dest_base}{cur_names[idx_c]}'
-            if path.isdir(fullpath_c):
-                subfolders.append(normalize_path(fullpath_c))
-                del cur_names[idx_c]
-            elif path.isfile(fullpath_c):
-                found_filenames_all.add(cur_names[idx_c])
-        found_filenames_base = cur_names
-        for subfolder in subfolders:
-            for sub_name in listdir(subfolder):
-                fullpath_s = f'{subfolder}{sub_name}'
-                if path.isfile(fullpath_s):
-                    found_filenames_all.add(sub_name)
-        Log.info(f'Found {len(found_filenames_base):d} files in base and '
-                 f'{len(found_filenames_all) - len(found_filenames_base):d} files in {len(subfolders):d} subfolders '
-                 f'(total files: {len(found_filenames_all):d})')
-
-
-def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfolders: bool) -> bool:
-    if path.exists(base_folder):
-        for fname in sorted(found_filenames_all if check_subfolders else found_filenames_base):
-            try:
-                f_match = match(re_rvfile, fname)
-                f_id = f_match.group(1)
-                f_quality = f_match.group(2)
-                if str(idi) == f_id and quality == f_quality:
-                    return True
-            except Exception:
-                continue
-    return False
 
 
 async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario], session: ClientSession) -> None:

@@ -18,7 +18,8 @@ from defs import (
     Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
     QUALITIES, has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_TITLE, NAMING_FLAGS_FULL,
 )
-from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence, scan_dest_folder
+from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence
+from path_util import scan_dest_folder
 from fetch_html import fetch_html
 from tagger import dump_item_tags, validate_tags
 
