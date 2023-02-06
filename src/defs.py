@@ -11,6 +11,7 @@ from base64 import b64decode
 from datetime import datetime
 from enum import IntEnum
 from locale import getpreferredencoding
+from re import sub, search
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -266,6 +267,22 @@ def normalize_path(basepath: str, append_slash: bool = True) -> str:
     if append_slash and len(normalized_path) != 0 and normalized_path[-1] != SLASH:
         normalized_path += SLASH
     return normalized_path
+
+
+def normalize_filename(filename: str, base_path: str) -> str:
+    filename = sub(REPLACE_SYMBOLS, '_', filename)
+    dest = base_path.replace('\\', SLASH)
+    if dest[-1] != SLASH:
+        dest += SLASH
+    dest += filename
+    return dest
+
+
+def extract_ext(href: str) -> str:
+    try:
+        return search(r'(\.[^&]{3,5})&', href).group(1)
+    except Exception:
+        return '.mp4'
 
 
 def has_naming_flag(flag: int) -> bool:

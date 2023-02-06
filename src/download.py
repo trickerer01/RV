@@ -9,16 +9,16 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from asyncio import sleep
 from os import path, stat, remove, makedirs, listdir
 from random import uniform as frand
-from re import compile, sub, search, match
+from re import compile as re_compile, match, search
 from typing import List, Optional, Set
 
 from aiohttp import ClientSession
 from aiofile import async_open
 
 from defs import (
-    Log, CONNECT_RETRIES_ITEM, REPLACE_SYMBOLS, MAX_VIDEOS_QUEUE_SIZE, SLASH, SITE_AJAX_REQUEST_VIDEO,
-    TAGS_CONCAT_CHAR, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, normalize_path, get_elapsed_time_s, ExtraConfig,
-    has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_SCORE, NAMING_FLAG_TITLE, NAMING_FLAG_TAGS, LoggingFlags
+    CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, SITE_AJAX_REQUEST_VIDEO, TAGS_CONCAT_CHAR,
+    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, NAMING_FLAG_PREFIX, NAMING_FLAG_SCORE, NAMING_FLAG_TITLE, NAMING_FLAG_TAGS,
+    Log, ExtraConfig, normalize_path, normalize_filename, get_elapsed_time_s, has_naming_flag, prefixp, LoggingFlags, extract_ext
 )
 from fetch_html import fetch_html, wrap_request
 from scenario import DownloadScenario
@@ -29,7 +29,7 @@ from tagger import (
 __all__ = ('download_id', 'download_file', 'after_download', 'report_total_queue_size_callback', 'register_id_sequence', 'scan_dest_folder')
 
 NEWLINE = '\n'
-re_rvfile = compile(r'^(?:rv_)?(\d+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
+re_rvfile = re_compile(r'^(?:rv_)?(\d+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
 
 found_filenames_base = set()  # type: Set[str]
 found_filenames_all = set()  # type: Set[str]
@@ -59,22 +59,6 @@ def is_queue_full() -> bool:
 
 def is_in_queue(idi: int) -> bool:
     return downloads_queue.count(idi) > 0
-
-
-def normalize_filename(filename: str, base_path: str) -> str:
-    filename = sub(REPLACE_SYMBOLS, '_', filename)
-    dest = base_path.replace('\\', SLASH)
-    if dest[-1] != SLASH:
-        dest += SLASH
-    dest += filename
-    return dest
-
-
-def extract_ext(href: str) -> str:
-    try:
-        return search(r'(\.[^&]{3,5})&', href).group(1)
-    except Exception:
-        return '.mp4'
 
 
 async def try_register_in_queue(idi: int) -> bool:
