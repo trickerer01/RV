@@ -23,6 +23,8 @@ from path_util import scan_dest_folder
 from fetch_html import fetch_html
 from tagger import dump_item_tags, validate_tags
 
+__all__ = ()
+
 
 class VideoEntryBase:
     def __init__(self, m_id: int) -> None:

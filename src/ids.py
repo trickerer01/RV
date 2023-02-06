@@ -17,6 +17,8 @@ from download import download_id, after_download, report_total_queue_size_callba
 from path_util import scan_dest_folder
 from tagger import try_parse_id_or_group, dump_item_tags, validate_tags
 
+__all__ = ()
+
 
 async def main() -> None:
     try:
