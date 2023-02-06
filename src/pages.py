@@ -121,7 +121,7 @@ async def main() -> None:
     maxpage = 0
 
     pi = start_page
-    async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
+    async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**22) as s:
         while pi < start_page + pages_count:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')

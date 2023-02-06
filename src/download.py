@@ -354,7 +354,7 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 Log.info(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {sfilename}')
 
                 async with async_open(dest, 'wb') as outf:
-                    async for chunk in r.content.iter_chunked(2**20):
+                    async for chunk in r.content.iter_chunked(2**22):
                         await outf.write(chunk)
 
                 file_size = stat(dest).st_size
