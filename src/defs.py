@@ -54,14 +54,13 @@ class BaseConfig(object):
 
 ExtraConfig = BaseConfig()
 
-SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20v').decode()
+SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS8=').decode()
 # Params required: str, int. Ex. SITE_AJAX_REQUEST_BASE % ('sfw', 1)
 SITE_AJAX_REQUEST_BASE = b64decode(
-    'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vc2VhcmNoLz9tb2RlPWFzeW5jJmZ1bmN0aW9uPWdldF9ibG9jayZibG9ja19pZD1jdXN0b21fbGlzdF92aWRlb3NfdmlkZW9zX2xpc3'
-    'Rfc2VhcmNoJnE9JXMmc29ydF9ieT1wb3N0X2RhdGUmZnJvbV92aWRlb3M9JWQ=').decode()
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9zZWFyY2gvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc192aWRlb3Nf'
+    'bGlzdF9zZWFyY2gmcT0lcyZzb3J0X2J5PXBvc3RfZGF0ZSZmcm9tX3ZpZGVvcz0lZA==').decode()
 # Params required: int. Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)
-SITE_AJAX_REQUEST_VIDEO = b64decode(
-    'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vcG9wdXAtdmlkZW8vJWQv').decode()
+SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wb3B1cC12aWRlby8lZC8=').decode()
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:102.0) Gecko/20100101 Firefox/102.0'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT, 'Referer': SITE}
