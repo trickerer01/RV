@@ -28,15 +28,17 @@ from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags,
 )
 
-__all__ = ('download_id', 'download_file', 'after_download', 'report_total_queue_size_callback', 'register_id_sequence')
+__all__ = ('download_id', 'download_file', 'after_download', 'report_total_queue_size_callback', 'register_id_sequence', 'at_interrupt')
 
 NEWLINE = '\n'
 
 downloads_queue = []  # type: List[int]
+downloads_active = []  # type: List[str]
 failed_items = []  # type: List[int]
 total_queue_size = 0
 total_queue_size_last = 0
 download_queue_size_last = 0
+write_queue_size_last = 0
 id_sequence = []  # type: List[int]
 current_ididx = 0
 
@@ -84,15 +86,18 @@ async def try_unregister_from_queue(idi: int) -> None:
 async def report_total_queue_size_callback(base_sleep_time: float) -> None:
     global total_queue_size_last
     global download_queue_size_last
+    global write_queue_size_last
     while total_queue_size > 0:
         wait_time = base_sleep_time if total_queue_size > 1 else 1.0
         await sleep(wait_time)
         downloading_count = len(downloads_queue)
         queue_size = total_queue_size - downloading_count
-        if total_queue_size_last != queue_size or (queue_size == 0 and download_queue_size_last != downloading_count):
-            Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size}, downloading: {downloading_count}')
+        write_count = len(downloads_active)
+        if total_queue_size_last != queue_size or download_queue_size_last != downloading_count or write_queue_size_last != write_count:
+            Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, downloading: {downloading_count:d} (writing: {write_count:d})')
             total_queue_size_last = queue_size
             download_queue_size_last = downloading_count
+            write_queue_size_last = write_count
 
 
 def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], subfolder: str) -> bool:
@@ -354,27 +359,30 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 expected_size = r.content_length
                 Log.info(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {sfilename}')
 
+                downloads_active.append(dest)
                 async with async_open(dest, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**22):
                         await outf.write(chunk)
+                downloads_active.remove(dest)
 
                 file_size = stat(dest).st_size
                 if expected_size and file_size != expected_size:
                     Log.error(f'Error: file size mismatch for {sfilename}: {file_size:d} / {expected_size:d}')
                     raise IOError(link)
                 break
-        except (KeyboardInterrupt,):
-            assert False
-        except (Exception,):
+        except Exception:
             import sys
             print(sys.exc_info()[0], sys.exc_info()[1])
             if r is None or r.status != 403:
                 retries += 1
                 Log.error(f'{sfilename}: error #{retries:d}...')
-            if r:
+            if r is not None:
                 r.close()
             if path.exists(dest):
                 remove(dest)
+            # Network error may be thrown before item is added to active download
+            if dest in downloads_active:
+                downloads_active.remove(dest)
             if retries >= CONNECT_RETRIES_ITEM and ret != DownloadResult.DOWNLOAD_FAIL_NOT_FOUND:
                 failed_items.append(idi)
                 break
@@ -398,10 +406,24 @@ async def after_download() -> None:
         Log.fatal('queue is not empty at exit!')
 
     if total_queue_size != 0:
-        Log.fatal(f'total queue is still at {total_queue_size} != 0!')
+        Log.fatal(f'total queue is still at {total_queue_size:d} != 0!')
+
+    if len(downloads_active) > 0:
+        Log.fatal(f'active downloads count is still at {len(downloads_active):d} != 0!')
 
     if len(failed_items) > 0:
         Log.fatal(f'Failed items:\n{NEWLINE.join(str(fi) for fi in sorted(failed_items))}')
+
+
+def at_interrupt() -> None:
+    if len(downloads_active) > 0:
+        Log.debug(f'at_interrupt: cleaning {len(downloads_active):d} unfinished files...')
+        for unfinished in sorted(downloads_active):
+            Log.debug(f'at_interrupt: trying to remove \'{unfinished}\'...')
+            if path.exists(unfinished):
+                remove(unfinished)
+            else:
+                Log.debug(f'at_interrupt: file \'{unfinished}\' not found!')
 
 #
 #

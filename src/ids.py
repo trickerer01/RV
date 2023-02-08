@@ -13,7 +13,7 @@ from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, ExtraConfig
-from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence
+from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence, at_interrupt
 from path_util import scan_dest_folder
 from tagger import try_parse_id_or_group, dump_item_tags, validate_tags
 
@@ -94,7 +94,11 @@ async def run_main() -> None:
 
 if __name__ == '__main__':
     assert sys.version_info >= (3, 7), 'Minimum python version required is 3.7!'
-    run_async(run_main())
+    try:
+        run_async(run_main())
+    except (KeyboardInterrupt, SystemExit):
+        Log.warn(f'Warning: catched KeyboardInterrupt/SystemExit...')
+        at_interrupt()
     exit(0)
 
 #
