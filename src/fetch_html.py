@@ -51,9 +51,7 @@ async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> 
                 if retries_403_local > 0:
                     Log.trace(f'fetch_html success: took {retries_403_local:d} tries...')
                 return BeautifulSoup(content, 'html.parser')
-        except (KeyboardInterrupt,):
-            assert False
-        except (Exception,):
+        except Exception:
             if r is not None and str(r.url).find('404.') != -1:
                 Log.error('ERROR: 404')
                 assert False
