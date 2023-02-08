@@ -322,8 +322,9 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 await try_unregister_from_queue(idi)
             return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
 
-    while not await try_register_in_queue(idi):
-        await sleep(1.0)
+    if from_ids is False:
+        while not await try_register_in_queue(idi):
+            await sleep(1.0)
 
     # delay first batch just enough to not make anyone angry
     # we need this when downloading many small files (previews)
