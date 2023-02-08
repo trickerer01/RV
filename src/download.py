@@ -395,13 +395,13 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
 
 async def after_download() -> None:
     if not is_queue_empty():
-        Log.error('queue is not empty at exit!')
+        Log.fatal('queue is not empty at exit!')
 
     if total_queue_size != 0:
-        Log.error(f'total queue is still at {total_queue_size} != 0!')
+        Log.fatal(f'total queue is still at {total_queue_size} != 0!')
 
     if len(failed_items) > 0:
-        Log.error(f'Failed items:\n{NEWLINE.join(str(fi) for fi in sorted(failed_items))}')
+        Log.fatal(f'Failed items:\n{NEWLINE.join(str(fi) for fi in sorted(failed_items))}')
 
 #
 #
