@@ -2353,9 +2353,8 @@ def dump_item_tags() -> None:
         min_id = min(tags_dict.keys())
         max_id = max(tags_dict.keys())
         fullpath = f'{normalize_path(f"{ExtraConfig.dest_base}{subfolder}")}{prefixp()}!tags_{min_id:d}-{max_id:d}.txt'
-        with open(fullpath, 'wt', encoding=UTF8) as saved_tags_file:
-            saved_tags_file.writelines(f'{prefixp()}{idi:d}: {tags.strip()}\n'
-                                       for idi, tags in sorted(tags_dict.items(), key=lambda t: t[0]))
+        with open(fullpath, 'wt', encoding=UTF8) as sfile:
+            sfile.writelines(f'{prefixp()}{idi:d}: {tags.strip()}\n' for idi, tags in sorted(tags_dict.items(), key=lambda t: t[0]))
 
 #
 #
