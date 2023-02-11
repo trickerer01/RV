@@ -25,7 +25,7 @@ class RequestQueue:
 
     @staticmethod
     async def _reset() -> None:
-        await sleep(frand(CONNECT_REQUEST_DELAY - 0.25, CONNECT_REQUEST_DELAY + 0.25))
+        await sleep(frand(CONNECT_REQUEST_DELAY, CONNECT_REQUEST_DELAY + 0.75))
         RequestQueue._ready = True
 
     @staticmethod
