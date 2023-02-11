@@ -2337,7 +2337,7 @@ def filtered_tags(tags_list: List[str]) -> str:
     return trim_undersores(TAGS_CONCAT_CHAR.join(sorted(tags_list_final)))
 
 
-saved_tags_dict = {'': {}}  # type: Dict[str, Dict[int, str]]
+saved_tags_dict = {}  # type: Dict[str, Dict[int, str]]
 
 
 def register_item_tags(item_id: int, tags_str: str, subfolder: str) -> None:
