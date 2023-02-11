@@ -41,7 +41,6 @@ class RequestQueue:
 
 async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> ClientResponse:
     await RequestQueue.until_ready(url)
-    Log.debug(f'wrap_request: {url}')
     s.headers.update(DEFAULT_HEADERS.copy())
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'}, http_parser.URL(HOST))
     kwargs.update(proxy=ExtraConfig.proxy)
