@@ -16,7 +16,7 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
     Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
-    QUALITIES, has_naming_flag, prefixp, NAMING_FLAG_PREFIX, NAMING_FLAG_TITLE, NAMING_FLAGS_FULL,
+    QUALITIES, has_naming_flag, prefixp, NamingFlags,
 )
 from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence, at_interrupt
 from path_util import scan_dest_folder
@@ -106,8 +106,8 @@ async def main() -> None:
             if ExtraConfig.min_score:
                 Log.info('Info: score is not extracted from previews!')
                 delay_for_message = True
-            if ExtraConfig.naming_flags != NAMING_FLAGS_FULL:
-                if has_naming_flag(NAMING_FLAGS_FULL & ~(NAMING_FLAG_PREFIX | NAMING_FLAG_TITLE)):
+            if ExtraConfig.naming_flags != NamingFlags.NAMING_FLAGS_ALL:
+                if has_naming_flag(NamingFlags.NAMING_FLAGS_ALL & ~(NamingFlags.NAMING_FLAG_PREFIX | NamingFlags.NAMING_FLAG_TITLE)):
                     Log.info('Info: can only use prefix and title naming flags for previews, other flags will be ignored!')
                     delay_for_message = True
 
@@ -194,9 +194,9 @@ async def main() -> None:
                             break
                     if not already_queued:
                         v_entries.append(VideoEntryPrev(cur_id,
-                                                        f'{prefixp() if has_naming_flag(NAMING_FLAG_PREFIX) else ""}'
+                                                        f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
                                                         f'{cur_id:d}'
-                                                        f'{f"_{title}" if has_naming_flag(NAMING_FLAG_TITLE) else ""}'
+                                                        f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
                                                         f'_pypv.{cur_ext}', link))
 
         if len(v_entries) == 0:

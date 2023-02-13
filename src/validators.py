@@ -11,7 +11,7 @@ from ipaddress import IPv4Address
 from os import path
 from re import match as re_match
 
-from defs import normalize_path, unquote, Log, LoggingFlags, SLASH, NON_SEARCH_SYMBOLS, NAMING_FLAGS_FULL, NAMING_FLAGS, LOGGING_FLAGS
+from defs import normalize_path, unquote, Log, NamingFlags, LoggingFlags, SLASH, NON_SEARCH_SYMBOLS, NAMING_FLAGS, LOGGING_FLAGS
 
 
 def valid_int(val: str) -> int:
@@ -101,7 +101,7 @@ def naming_flags(flags: str) -> int:
     try:
         if flags[0].isnumeric():
             intflags = int(flags, base=16 if flags.startswith('0x') else 10)
-            assert intflags & ~NAMING_FLAGS_FULL == 0
+            assert intflags & ~NamingFlags.NAMING_FLAGS_ALL == 0
         else:
             intflags = 0
             for fname in flags.split('|'):

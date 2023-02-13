@@ -17,7 +17,7 @@ from aiofile import async_open
 
 from defs import (
     CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, TAGS_CONCAT_CHAR, SITE_AJAX_REQUEST_VIDEO,
-    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, NAMING_FLAG_PREFIX, NAMING_FLAG_SCORE, NAMING_FLAG_TITLE, NAMING_FLAG_TAGS,
+    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, NamingFlags,
     Log, ExtraConfig, normalize_path, normalize_filename, get_elapsed_time_s, has_naming_flag, prefixp, LoggingFlags, extract_ext,
     re_rvfile,
 )
@@ -287,12 +287,12 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
     extra_len = 5 + 2 + 2  # 2 underscores + 2 brackets + len('2160p') - max len of all qualities
     fname_part2 = f'{my_quality}_pydw{extract_ext(link)}'
     fname_part1 = (
-        f'{prefixp() if has_naming_flag(NAMING_FLAG_PREFIX) else ""}'
+        f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
         f'{idi:d}'
-        f'{f"_score({my_score})" if has_naming_flag(NAMING_FLAG_SCORE) else ""}'
-        f'{f"_{my_title}" if my_title != "" and has_naming_flag(NAMING_FLAG_TITLE) else ""}'
+        f'{f"_score({my_score})" if has_naming_flag(NamingFlags.NAMING_FLAG_SCORE) else ""}'
+        f'{f"_{my_title}" if my_title != "" and has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
     )
-    if has_naming_flag(NAMING_FLAG_TAGS):
+    if has_naming_flag(NamingFlags.NAMING_FLAG_TAGS):
         while len(my_tags) > max(0, 240 - (len(my_dest_base) + len(fname_part1) + len(fname_part2) + extra_len)):
             my_tags = my_tags[:max(0, my_tags.rfind(TAGS_CONCAT_CHAR))]
         fname_part1 = f'{fname_part1}{f"_({my_tags})" if len(my_tags) > 0 else ""}'
