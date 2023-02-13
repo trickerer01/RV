@@ -12,7 +12,7 @@ from datetime import datetime
 from enum import IntEnum
 from locale import getpreferredencoding
 from re import compile as re_compile, search, sub
-from typing import Optional
+from typing import Optional, List
 from urllib.parse import urlparse
 
 
@@ -25,7 +25,7 @@ class BaseConfig(object):
         self.un_video_policy = None  # type: Optional[str]
         self.download_mode = None  # type: Optional[str]
         self.save_tags = None  # type: Optional[bool]
-        self.extra_tags = None  # type: Optional[str]
+        self.extra_tags = None  # type: Optional[List[str]]
         self.naming_flags = 0
         self.logging_flags = 0
         self.validate_tags = True
@@ -265,7 +265,7 @@ def unquote(string: str) -> str:
         raise ValueError
 
 
-def normalize_path(basepath: str, append_slash: bool = True) -> str:
+def normalize_path(basepath: str, append_slash=True) -> str:
     normalized_path = basepath.replace('\\', SLASH)
     if append_slash and len(normalized_path) != 0 and normalized_path[-1] != SLASH:
         normalized_path += SLASH
