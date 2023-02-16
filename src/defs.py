@@ -55,18 +55,20 @@ class BaseConfig(object):
 ExtraConfig = BaseConfig()
 
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS8=').decode()
-# Params required: str, int. Ex. SITE_AJAX_REQUEST_BASE % ('sfw', 1)
 SITE_AJAX_REQUEST_BASE = b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9zZWFyY2gvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc192aWRlb3Nf'
     'bGlzdF9zZWFyY2gmcT0lcyZzb3J0X2J5PXBvc3RfZGF0ZSZmcm9tX3ZpZGVvcz0lZA==').decode()
-# Params required: int. Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)
+"""Params required: str, int. Ex. SITE_AJAX_REQUEST_BASE % ('sfw', 1)"""
 SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wb3B1cC12aWRlby8lZC8=').decode()
+"""Params required: int. Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)"""
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:102.0) Gecko/20100101 Firefox/102.0'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT, 'Referer': SITE}
 HOST = urlparse(SITE).netloc
 
+# language=PythonRegExp
 REPLACE_SYMBOLS = r'[^\da-zA-Z.,_+%\-()\[\] ]+?'
+# language=PythonRegExp
 NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
 
 SLASH = '/'
@@ -189,7 +191,7 @@ CONNECT_REQUEST_DELAY = 1.0
 MAX_VIDEOS_QUEUE_SIZE = 8
 
 TAGS_CONCAT_CHAR = ','
-start_time = datetime.now()
+START_TIME = datetime.now()
 
 
 class Log:
@@ -243,7 +245,7 @@ def prefixp() -> str:
 
 
 def get_elapsed_time_s() -> str:
-    mm, ss = divmod((datetime.now() - start_time).seconds, 60)
+    mm, ss = divmod((datetime.now() - START_TIME).seconds, 60)
     hh, mm = divmod(mm, 60)
     return f'{hh:02d}:{mm:02d}:{ss:02d}'
 
