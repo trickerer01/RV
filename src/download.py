@@ -164,10 +164,6 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
 
     current_ididx += 1
 
-    if file_exists_in_folder(ExtraConfig.dest_base, idi, ExtraConfig.quality, True):
-        Log.info(f'download_id: {prefixp()}{idi:d}.mp4 (or similar) found in {ExtraConfig.dest_base} (or subfolder). Skipped.')
-        return await try_unregister_from_queue(idi)
-
     my_subfolder = ''
     my_quality = ExtraConfig.quality
     my_tags = 'no_tags'

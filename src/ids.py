@@ -14,7 +14,7 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, ExtraConfig, calc_sleep_time
 from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence, at_interrupt
-from path_util import scan_dest_folder
+from path_util import scan_dest_folder, prefilter_existing_items
 from tagger import try_parse_id_or_group, dump_item_tags, validate_tags
 
 __all__ = ()
@@ -73,8 +73,9 @@ async def main() -> None:
     else:
         ExtraConfig.extra_tags.clear()
 
-    register_id_sequence(id_sequence)
     scan_dest_folder()
+    prefilter_existing_items(id_sequence)
+    register_id_sequence(id_sequence)
     reporter = get_running_loop().create_task(report_total_queue_size_callback(calc_sleep_time(3.0)))
     async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
         for cv in as_completed([download_id(idi, '', ds, s) for idi in id_sequence]):

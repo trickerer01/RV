@@ -10,9 +10,9 @@ from os import path, listdir
 from re import match
 from typing import Set
 
-from defs import ExtraConfig, Log, normalize_path, re_rvfile
+from defs import ExtraConfig, Log, normalize_path, re_rvfile, prefixp
 
-__all__ = ('scan_dest_folder', 'file_exists_in_folder')
+__all__ = ('scan_dest_folder', 'file_exists_in_folder', 'prefilter_existing_items')
 
 found_filenames_base = set()  # type: Set[str]
 found_filenames_all = set()  # type: Set[str]
@@ -56,6 +56,14 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfol
             except Exception:
                 continue
     return False
+
+
+def prefilter_existing_items(id_sequence: list) -> None:
+    for idx in reversed(range(len(id_sequence))):  # type: int
+        item_id = id_sequence[idx] if isinstance(id_sequence[idx], int) else id_sequence[idx].my_id  # type: int
+        if file_exists_in_folder(ExtraConfig.dest_base, item_id, ExtraConfig.quality, True):
+            Log.info(f'Info: {prefixp()}{item_id:d}.mp4 found in {ExtraConfig.dest_base} (or subfolder). Skipped.')
+            del id_sequence[idx]
 
 #
 #
