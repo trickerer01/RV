@@ -294,6 +294,10 @@ def has_naming_flag(flag: int) -> bool:
     return not not (ExtraConfig.naming_flags & flag)
 
 
+def calc_sleep_time(base_time: float) -> float:
+    return base_time if ExtraConfig.download_mode == DOWNLOAD_MODE_FULL else max(1.0, base_time / 3.0)
+
+
 class DownloadResult:
     DOWNLOAD_SUCCESS = 0
     DOWNLOAD_FAIL_NOT_FOUND = 1

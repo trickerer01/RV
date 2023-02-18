@@ -15,8 +15,8 @@ from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_MODE_FULL, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
-    QUALITIES, has_naming_flag, prefixp, NamingFlags,
+    Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
+    QUALITIES, has_naming_flag, prefixp, NamingFlags, calc_sleep_time,
 )
 from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence, at_interrupt
 from path_util import scan_dest_folder
@@ -29,6 +29,9 @@ __all__ = ()
 class VideoEntryBase:
     def __init__(self, m_id: int) -> None:
         self.my_id = m_id or 0
+
+    def __eq__(self, other) -> bool:
+        return self.my_id == other.my_id if isinstance(other, type(self)) else self.my_id == other if isinstance(other, int) else False
 
 
 class VideoEntryFull(VideoEntryBase):
@@ -68,20 +71,20 @@ async def main() -> None:
 
     try:
         ExtraConfig.read_params(arglist)
-        start_page = arglist.start
-        pages_count = arglist.pages
-        stop_id = arglist.stop_id
-        begin_id = arglist.begin_id
-        search_str = arglist.search
+        start_page = arglist.start  # type: int
+        pages_count = arglist.pages  # type: int
+        stop_id = arglist.stop_id  # type: int
+        begin_id = arglist.begin_id  # type: int
+        search_str = arglist.search  # type: str
         ds = arglist.download_scenario
 
-        if ExtraConfig.validate_tags:
+        if ExtraConfig.validate_tags is True:
             validate_tags(ExtraConfig.extra_tags)
 
         full_download = ExtraConfig.quality != QUALITIES[-1]
 
         delay_for_message = False
-        if ds:
+        if ds is not None:
             if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
                 Log.info('Info: running download script, outer untagged policy will be ignored')
                 ExtraConfig.uvp = DOWNLOAD_POLICY_DEFAULT
@@ -91,7 +94,7 @@ async def main() -> None:
                 delay_for_message = True
 
         if full_download is False:
-            if len(ExtraConfig.extra_tags) > 0 or ExtraConfig.validate_tags:
+            if len(ExtraConfig.extra_tags) > 0 or ExtraConfig.validate_tags is True:
                 Log.info('Info: tags are ignored for previews!')
                 delay_for_message = True
             if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
@@ -100,7 +103,7 @@ async def main() -> None:
             if ExtraConfig.save_tags is True:
                 Log.info('Info: tags are not saved for previews!')
                 delay_for_message = True
-            if ds:
+            if ds is not None:
                 Log.info('Info: scenarios are ignored for previews!')
                 delay_for_message = True
             if ExtraConfig.min_score:
@@ -111,7 +114,7 @@ async def main() -> None:
                     Log.info('Info: can only use prefix and title naming flags for previews, other flags will be ignored!')
                     delay_for_message = True
 
-        if delay_for_message:
+        if delay_for_message is True:
             await sleep(3.0)
     except Exception:
         Log.fatal('\nError reading parsed arglist!')
@@ -148,21 +151,17 @@ async def main() -> None:
             if full_download:
                 arefs = a_html.find_all('a', class_='th js-open-popup')
                 for aref in arefs:
-                    cur_id = int(search(r'videos/(\d+)/', str(aref.get('href'))).group(1))  # cur_id = extract_id(aref)
+                    cur_id = int(search(r'videos/(\d+)/', str(aref.get('href'))).group(1))
                     if cur_id < stop_id:
                         Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
                         continue
                     if cur_id > begin_id:
                         Log.trace(f'skipping {cur_id:d} > {begin_id:d}')
                         continue
-                    my_title = aref.get('title')
-                    already_queued = False
-                    for v in v_entries:
-                        if v.my_id == cur_id:
-                            Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
-                            already_queued = True
-                            break
-                    if not already_queued:
+                    my_title = str(aref.get('title'))
+                    if cur_id in v_entries:
+                        Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
+                    else:
                         v_entries.append(VideoEntryFull(cur_id, my_title))
             else:
                 content_div = a_html.find('div', class_='thumbs clearfix')
@@ -176,28 +175,20 @@ async def main() -> None:
                 cur_num = 1
                 for i, p in enumerate(prev_all):
                     cur_num += 1
-                    link = p.get('data-preview')
-                    title = titl_all[i].text
+                    link = str(p.get('data-preview'))
+                    title = str(titl_all[i].text)
                     v_id = search(r'/(\d+)_preview[^.]*?\.([^/]+)/', link)
-                    try:
-                        cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
-                    except Exception:
-                        cur_id, cur_ext = 1000000000, '.mp4'
+                    cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
                     if cur_id < stop_id:
                         Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
                         continue
-                    already_queued = False
-                    for v in v_entries:
-                        if v.my_id == cur_id:
-                            Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
-                            already_queued = True
-                            break
-                    if not already_queued:
-                        v_entries.append(VideoEntryPrev(cur_id,
-                                                        f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
-                                                        f'{cur_id:d}'
-                                                        f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
-                                                        f'_pypv.{cur_ext}', link))
+                    if cur_id in v_entries:
+                        Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
+                    else:
+                        v_entries.append(
+                            VideoEntryPrev(cur_id,
+                                           f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
+                                           f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_pypv.{cur_ext}', link))
 
         if len(v_entries) == 0:
             Log.fatal('\nNo videos found. Aborted.')
@@ -208,18 +199,16 @@ async def main() -> None:
         v_entries = list(reversed(v_entries))
         register_id_sequence([v.my_id for v in v_entries])
         scan_dest_folder()
-        reporter = get_running_loop().create_task(report_total_queue_size_callback(3.0 if ExtraConfig.dm == DOWNLOAD_MODE_FULL else 1.0))
-        if full_download:
-            for cv in as_completed(
-                    [download_id(v.my_id, v.my_title, ds, s) for v in v_entries]):
+        reporter = get_running_loop().create_task(report_total_queue_size_callback(calc_sleep_time(3.0)))
+        if full_download is True:
+            for cv in as_completed([download_id(v.my_id, v.my_title, ds, s) for v in v_entries]):
                 await cv
         else:
-            for cv in as_completed(
-                    [download_file(v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link, s) for v in v_entries]):
+            for cv in as_completed([download_file(v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link, s) for v in v_entries]):
                 await cv
         await reporter
 
-    if ExtraConfig.save_tags and full_download:
+    if ExtraConfig.save_tags is True and full_download is True:
         dump_item_tags()
 
     await after_download()
