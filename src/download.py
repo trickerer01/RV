@@ -6,14 +6,14 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import sleep
+from asyncio import sleep, as_completed, Queue as AsyncQueue
 from os import path, stat, remove, makedirs
 from random import uniform as frand
 from re import match, search
-from typing import List, Optional
+from typing import List, Optional, Union, Coroutine, Tuple
 
-from aiohttp import ClientSession
 from aiofile import async_open
+from aiohttp import ClientSession, TCPConnector
 
 from defs import (
     CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, TAGS_CONCAT_CHAR, SITE_AJAX_REQUEST_VIDEO,
@@ -25,79 +25,98 @@ from fetch_html import fetch_html, wrap_request
 from path_util import file_exists_in_folder
 from scenario import DownloadScenario
 from tagger import (
-    filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags,
+    filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags, dump_item_tags,
 )
 
-__all__ = ('download_id', 'download_file', 'after_download', 'report_total_queue_size_callback', 'register_id_sequence', 'at_interrupt')
+__all__ = ('DownloadWorker', 'at_interrupt')
 
-NEWLINE = '\n'
-
-downloads_queue = []  # type: List[int]
-downloads_active = []  # type: List[str]
-failed_items = []  # type: List[int]
-total_queue_size = 0
-total_queue_size_last = 0
-download_queue_size_last = 0
-write_queue_size_last = 0
-id_sequence = []  # type: List[int]
-current_ididx = 0
+download_worker = None  # type: Optional[DownloadWorker]
 
 
-def register_id_sequence(id_seq: List[int]) -> None:
-    global id_sequence
-    global total_queue_size
-    id_sequence = id_seq
-    total_queue_size = len(id_sequence)
+class DownloadWorker:
+    params_first_type = Tuple[int, str, Optional[DownloadScenario]]  # download_id
+    params_second_type = Tuple[int, str, str, str, Optional[str]]  # download_file
+    sequence_type = Tuple[Union[params_first_type, params_second_type]]  # Tuple here makes sure argument is not an empty list
 
+    def __init__(self, my_sequence: sequence_type, by_id: bool, session: ClientSession = None) -> None:
+        self._func = download_id if by_id is True else download_file
+        self._seq = list(my_sequence)
+        self._queue = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)  # type: AsyncQueue[Tuple[int, Coroutine]]
+        self.session = session
 
-def is_queue_empty() -> bool:
-    return len(downloads_queue) == 0
+        self._downloads_active = []  # type: List[int]
+        self.writes_active = []  # type: List[str]
+        self.failed_items = []  # type: List[int]
 
+        self._total_queue_size_last = 0
+        self._download_queue_size_last = 0
+        self._write_queue_size_last = 0
 
-def is_queue_full() -> bool:
-    return len(downloads_queue) >= MAX_VIDEOS_QUEUE_SIZE
+        global download_worker
+        assert download_worker is None
+        download_worker = self
 
+    async def _at_task_start(self, idi: int) -> None:
+        self._downloads_active.append(idi)
+        Log.trace(f'[queue] {prefixp()}{idi:d}.mp4 added to queue')
 
-def is_in_queue(idi: int) -> bool:
-    return downloads_queue.count(idi) > 0
+    async def _at_task_finish(self, idi: int) -> None:
+        self._downloads_active.remove(idi)
+        Log.trace(f'[queue] {prefixp()}{idi:d}.mp4 removed from queue')
 
+    async def _prod(self) -> None:
+        while len(self._seq) > 0:
+            if self._queue.full() is False:
+                await self._queue.put((int(self._seq[0][0]), self._func(*self._seq[0])))
+                del self._seq[0]
+            else:
+                await sleep(0.2)
 
-async def try_register_in_queue(idi: int) -> bool:
-    if is_in_queue(idi):
-        Log.debug(f'try_register_in_queue: {prefixp()}{idi:d}.mp4 is already in queue')
-        return True
-    elif not is_queue_full():
-        downloads_queue.append(idi)
-        Log.debug(f'try_register_in_queue: {prefixp()}{idi:d}.mp4 added to queue')
-        return True
-    return False
+    async def _cons(self) -> None:
+        while len(self._seq) + self._queue.qsize() > 0:
+            if self._queue.empty() is False and len(self._downloads_active) < MAX_VIDEOS_QUEUE_SIZE:
+                idi, task = await self._queue.get()
+                await self._at_task_start(idi)
+                await task
+                await self._at_task_finish(idi)
+                self._queue.task_done()
+            else:
+                await sleep(0.25)
 
+    async def _report_total_queue_size_callback(self, base_sleep_time: float) -> None:
+        while len(self._seq) + self._queue.qsize() + len(self._downloads_active) > 0:
+            await sleep(base_sleep_time if len(self._seq) + self._queue.qsize() > 0 else 1.0)
+            queue_size = len(self._seq) + self._queue.qsize()
+            download_count = len(self._downloads_active)
+            write_count = len(self.writes_active)
+            queue_last = self._total_queue_size_last
+            downloading_last = self._download_queue_size_last
+            write_last = self._write_queue_size_last
+            if queue_last != queue_size or downloading_last != download_count or write_last != write_count:
+                Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, downloading: {download_count:d} (writing: {write_count:d})')
+                self._total_queue_size_last = queue_size
+                self._download_queue_size_last = download_count
+                self._write_queue_size_last = write_count
 
-async def try_unregister_from_queue(idi: int) -> None:
-    global total_queue_size
-    try:
-        downloads_queue.remove(idi)
-        total_queue_size -= 1
-        Log.debug(f'try_unregister_from_queue: {prefixp()}{idi:d}.mp4 removed from queue')
-    except (ValueError,):
-        Log.debug(f'try_unregister_from_queue: {prefixp()}{idi:d}.mp4 was not in queue')
+    async def _after_download(self) -> None:
+        newline = '\n'
+        if len(self._seq) != 0:
+            Log.fatal(f'total queue is still at {len(self._seq):d} != 0!')
+        if len(self.writes_active) > 0:
+            Log.fatal(f'active writes count is still at {len(self.writes_active):d} != 0!')
+        if len(self.failed_items) > 0:
+            Log.fatal(f'Failed items:\n{newline.join(str(fi) for fi in sorted(self.failed_items))}')
 
-
-async def report_total_queue_size_callback(base_sleep_time: float) -> None:
-    global total_queue_size_last
-    global download_queue_size_last
-    global write_queue_size_last
-    while total_queue_size > 0:
-        wait_time = base_sleep_time if total_queue_size > 1 else 1.0
-        await sleep(wait_time)
-        downloading_count = len(downloads_queue)
-        queue_size = total_queue_size - downloading_count
-        write_count = len(downloads_active)
-        if total_queue_size_last != queue_size or download_queue_size_last != downloading_count or write_queue_size_last != write_count:
-            Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, downloading: {downloading_count:d} (writing: {write_count:d})')
-            total_queue_size_last = queue_size
-            download_queue_size_last = downloading_count
-            write_queue_size_last = write_count
+    async def run(self) -> None:
+        async with self.session or ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as self.session:
+            workers = [self._report_total_queue_size_callback(calc_sleep_time(3.0)), self._prod()]
+            for _ in range(MAX_VIDEOS_QUEUE_SIZE):
+                workers.append(self._cons())
+            for cv in as_completed(workers):
+                await cv
+        if ExtraConfig.save_tags is True:
+            dump_item_tags()
+        await self._after_download()
 
 
 def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], subfolder: str) -> bool:
@@ -151,28 +170,16 @@ def get_uvp_always_subquery_idx(scenario: DownloadScenario) -> int:
     return -1
 
 
-async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario], session: ClientSession) -> None:
-    global current_ididx
-
-    my_index = id_sequence.index(idi)
-    while id_sequence[current_ididx] != idi:
-        diff = abs(my_index - current_ididx)
-        await sleep((0.1 * diff) if (diff < 100) else (calc_sleep_time(10.0) + 0.05 * diff))
-
-    while not await try_register_in_queue(idi):
-        await sleep(1.5)
-
-    current_ididx += 1
-
+async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario]) -> None:
     my_subfolder = ''
     my_quality = ExtraConfig.quality
     my_tags = 'no_tags'
     likes = ''
-    i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % idi}?popup_id={2 + current_ididx % 10:d}', session=session)
+    i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % idi}?popup_id={2 + idi % 10:d}', session=download_worker.session)
     if i_html:
         if i_html.find('title', string='404 Not Found'):
             Log.error(f'Got error 404 for {prefixp()}{idi:d}.mp4, skipping...')
-            return await try_unregister_from_queue(idi)
+            return
 
         if my_title in [None, '']:
             titleh1 = i_html.find('h1', class_='title_video')
@@ -204,20 +211,20 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
                     tags_raw.append(add_tag)
             if is_filtered_out_by_extra_tags(idi, tags_raw, ExtraConfig.extra_tags, my_subfolder):
                 Log.info(f'Info: video {prefixp()}{idi:d}.mp4 is filtered out by outer extra tags, skipping...')
-                return await try_unregister_from_queue(idi)
+                return
             if len(likes) > 0:
                 try:
                     if int(likes) < ExtraConfig.min_score:
                         Log.info(f'Info: video {prefixp()}{idi:d}.mp4'
                                  f' has low score \'{int(likes):d}\' (required {ExtraConfig.min_score:d}), skipping...')
-                        return await try_unregister_from_queue(idi)
+                        return
                 except Exception:
                     pass
             if scenario is not None:
                 sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, likes, scenario)
                 if sub_idx == -1:
                     Log.info(f'Info: unable to find matching scenario subquery for {prefixp()}{idi:d}.mp4, skipping...')
-                    return await try_unregister_from_queue(idi)
+                    return
                 my_subfolder = scenario.queries[sub_idx].subfolder
                 my_quality = scenario.queries[sub_idx].quality
             if ExtraConfig.save_tags:
@@ -231,12 +238,12 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
                 if uvp_idx == -1:
                     Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, '
                              f'skipping due to untagged videos download policy (scenario)...')
-                    return await try_unregister_from_queue(idi)
+                    return
                 my_subfolder = scenario.queries[uvp_idx].subfolder
                 my_quality = scenario.queries[uvp_idx].quality
             elif len(ExtraConfig.extra_tags) > 0 and ExtraConfig.uvp != DOWNLOAD_POLICY_ALWAYS:
                 Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4, skipping due to untagged videos download policy...')
-                return await try_unregister_from_queue(idi)
+                return
             Log.warn(f'Warning: could not extract tags from {prefixp()}{idi:d}.mp4...')
 
         tries = 0
@@ -251,11 +258,11 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
             Log.error(f'Cannot find download section for {prefixp()}{idi:d}.mp4, {reason}, skipping...')
             tries += 1
             if tries >= 5:
-                failed_items.append(idi)
-                return await try_unregister_from_queue(idi)
+                download_worker.failed_items.append(idi)
+                return
             elif reason != 'probably an error':
-                return await try_unregister_from_queue(idi)
-            i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi, session=session)
+                return
+            i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi, session=download_worker.session)
 
         links = ddiv.parent.find_all('a', class_='tag_item')
         qualities = []
@@ -275,8 +282,8 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
         link = links[link_idx].get('href')
     else:
         Log.error(f'Error: unable to retreive html for {prefixp()}{idi:d}.mp4! Aborted!')
-        failed_items.append(idi)
-        return await try_unregister_from_queue(idi)
+        download_worker.failed_items.append(idi)
+        return
 
     my_dest_base = normalize_path(f'{ExtraConfig.dest_base}{my_subfolder}')
     my_score = f'+{likes}' if len(likes) > 0 else 'unk'
@@ -297,19 +304,17 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
         fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
     filename = f'{fname_part1}_{fname_part2}'
 
-    await download_file(idi, filename, my_dest_base, link, session, True, my_subfolder)
-
-    return await try_unregister_from_queue(idi)
+    await download_file(idi, filename, my_dest_base, link, my_subfolder)
 
 
-async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s: ClientSession, from_ids=False, subfolder='') -> int:
+async def download_file(idi: int, filename: str, my_dest_base: str, link: str, subfolder='') -> int:
     dest = normalize_filename(filename, my_dest_base)
     sfilename = f'{f"{subfolder}/" if len(subfolder) > 0 else ""}{filename}'
     file_size = 0
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS
 
-    if not path.exists(my_dest_base):
+    if not path.isdir(my_dest_base):
         try:
             makedirs(my_dest_base)
         except Exception:
@@ -319,21 +324,11 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
         rv_quality = rv_match.group(2)
         if file_exists_in_folder(my_dest_base, idi, rv_quality, False):
             Log.info(f'{filename} (or similar) already exists. Skipped.')
-            if from_ids is False:
-                await try_unregister_from_queue(idi)
             return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
-
-    if from_ids is False:
-        while not await try_register_in_queue(idi):
-            await sleep(1.0)
-
-    # delay first batch just enough to not make anyone angry
-    # we need this when downloading many small files (previews)
-    await sleep(1.0 - min(0.9, 0.1 * len(downloads_queue)))
 
     # filename_short = 'rv_' + str(idi)
     # Log('Retrieving %s...' % filename_short)
-    while (not (path.exists(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
+    while (not (path.isfile(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
             if ExtraConfig.dm == DOWNLOAD_MODE_TOUCH:
                 Log.info(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
@@ -343,7 +338,7 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
 
             r = None
             # timeout must be relatively long, this is a timeout for actual download, not just connection
-            async with await wrap_request(s, 'GET', link, timeout=7200, headers={'Referer': link}) as r:
+            async with await wrap_request(download_worker.session, 'GET', link, timeout=7200, headers={'Referer': link}) as r:
                 if r.status == 404:
                     Log.error(f'Got 404 for {prefixp()}{idi:d}.mp4...!')
                     retries = CONNECT_RETRIES_ITEM - 1
@@ -355,11 +350,11 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 expected_size = r.content_length
                 Log.info(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {sfilename}')
 
-                downloads_active.append(dest)
+                download_worker.writes_active.append(dest)
                 async with async_open(dest, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**22):
                         await outf.write(chunk)
-                downloads_active.remove(dest)
+                download_worker.writes_active.remove(dest)
 
                 file_size = stat(dest).st_size
                 if expected_size and file_size != expected_size:
@@ -374,49 +369,32 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 Log.error(f'{sfilename}: error #{retries:d}...')
             if r is not None:
                 r.close()
-            if path.exists(dest):
+            if path.isfile(dest):
                 remove(dest)
             # Network error may be thrown before item is added to active download
-            if dest in downloads_active:
-                downloads_active.remove(dest)
+            if dest in download_worker.writes_active:
+                download_worker.writes_active.remove(dest)
             if retries >= CONNECT_RETRIES_ITEM and ret != DownloadResult.DOWNLOAD_FAIL_NOT_FOUND:
-                failed_items.append(idi)
+                download_worker.failed_items.append(idi)
                 break
             await sleep(frand(1.0, 7.0))
             continue
 
-    # delay next file if queue is full
-    if len(downloads_queue) == MAX_VIDEOS_QUEUE_SIZE:
-        await sleep(0.25)
-
     ret = (ret if ret == DownloadResult.DOWNLOAD_FAIL_NOT_FOUND else
            DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_ITEM else
            DownloadResult.DOWNLOAD_FAIL_RETRIES)
-    if from_ids is False:
-        await try_unregister_from_queue(idi)
     return ret
 
 
-async def after_download() -> None:
-    if not is_queue_empty():
-        Log.fatal('queue is not empty at exit!')
-
-    if total_queue_size != 0:
-        Log.fatal(f'total queue is still at {total_queue_size:d} != 0!')
-
-    if len(downloads_active) > 0:
-        Log.fatal(f'active downloads count is still at {len(downloads_active):d} != 0!')
-
-    if len(failed_items) > 0:
-        Log.fatal(f'Failed items:\n{NEWLINE.join(str(fi) for fi in sorted(failed_items))}')
-
-
 def at_interrupt() -> None:
-    if len(downloads_active) > 0:
-        Log.debug(f'at_interrupt: cleaning {len(downloads_active):d} unfinished files...')
-        for unfinished in sorted(downloads_active):
+    if download_worker is None:
+        return
+
+    if len(download_worker.writes_active) > 0:
+        Log.debug(f'at_interrupt: cleaning {len(download_worker.writes_active):d} unfinished files...')
+        for unfinished in sorted(download_worker.writes_active):
             Log.debug(f'at_interrupt: trying to remove \'{unfinished}\'...')
-            if path.exists(unfinished):
+            if path.isfile(unfinished):
                 remove(unfinished)
             else:
                 Log.debug(f'at_interrupt: file \'{unfinished}\' not found!')

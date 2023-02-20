@@ -7,15 +7,14 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import sys
-from asyncio import run as run_async, as_completed, sleep, get_running_loop
-
-from aiohttp import ClientSession, TCPConnector
+from asyncio import run as run_async, sleep
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
-from defs import Log, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, ExtraConfig, calc_sleep_time
-from download import download_id, after_download, report_total_queue_size_callback, register_id_sequence, at_interrupt
-from path_util import scan_dest_folder, prefilter_existing_items
-from tagger import try_parse_id_or_group, dump_item_tags, validate_tags
+from defs import Log, DOWNLOAD_POLICY_DEFAULT, ExtraConfig, DEFAULT_QUALITY
+from download import DownloadWorker, at_interrupt
+from path_util import prefilter_existing_items
+from scenario import DownloadScenario
+from tagger import try_parse_id_or_group, validate_tags
 
 __all__ = ()
 
@@ -33,7 +32,7 @@ async def main() -> None:
         ExtraConfig.read_params(arglist)
         start_id = arglist.start  # type: int
         end_id = arglist.end  # type: int
-        ds = arglist.download_scenario
+        ds = arglist.download_scenario  # type: DownloadScenario
 
         if ExtraConfig.validate_tags is True:
             validate_tags(ExtraConfig.extra_tags)
@@ -73,19 +72,9 @@ async def main() -> None:
     else:
         ExtraConfig.extra_tags.clear()
 
-    scan_dest_folder()
     prefilter_existing_items(id_sequence)
-    register_id_sequence(id_sequence)
-    reporter = get_running_loop().create_task(report_total_queue_size_callback(calc_sleep_time(3.0)))
-    async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
-        for cv in as_completed([download_id(idi, '', ds, s) for idi in id_sequence]):
-            await cv
-    await reporter
 
-    if ExtraConfig.save_tags:
-        dump_item_tags()
-
-    await after_download()
+    await DownloadWorker(((idi, '', ds) for idi in id_sequence), True).run()
 
 
 async def run_main() -> None:

@@ -7,7 +7,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import sys
-from asyncio import run as run_async, as_completed, sleep, get_running_loop
+from asyncio import run as run_async, sleep
 from re import search
 from typing import List, Tuple
 
@@ -16,12 +16,13 @@ from aiohttp import ClientSession, TCPConnector
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
     Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
-    QUALITIES, has_naming_flag, prefixp, NamingFlags, calc_sleep_time,
+    QUALITIES, has_naming_flag, prefixp, NamingFlags,
 )
-from download import download_file, download_id, after_download, report_total_queue_size_callback, register_id_sequence, at_interrupt
-from path_util import scan_dest_folder, prefilter_existing_items
+from download import DownloadWorker, at_interrupt
+from path_util import prefilter_existing_items
 from fetch_html import fetch_html
-from tagger import dump_item_tags, validate_tags
+from scenario import DownloadScenario
+from tagger import validate_tags
 
 __all__ = ()
 
@@ -76,7 +77,7 @@ async def main() -> None:
         stop_id = arglist.stop_id  # type: int
         begin_id = arglist.begin_id  # type: int
         search_str = arglist.search  # type: str
-        ds = arglist.download_scenario
+        ds = arglist.download_scenario  # type: DownloadScenario
 
         if ExtraConfig.validate_tags is True:
             validate_tags(ExtraConfig.extra_tags)
@@ -197,22 +198,12 @@ async def main() -> None:
         minid, maxid = get_minmax_ids(v_entries)
         Log.info(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
         v_entries = list(reversed(v_entries))
-        scan_dest_folder()
+
         prefilter_existing_items(v_entries)
-        register_id_sequence([v.my_id for v in v_entries])
-        reporter = get_running_loop().create_task(report_total_queue_size_callback(calc_sleep_time(3.0)))
-        if full_download is True:
-            for cv in as_completed([download_id(v.my_id, v.my_title, ds, s) for v in v_entries]):
-                await cv
-        else:
-            for cv in as_completed([download_file(v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link, s) for v in v_entries]):
-                await cv
-        await reporter
 
-    if ExtraConfig.save_tags is True and full_download is True:
-        dump_item_tags()
-
-    await after_download()
+        await DownloadWorker(
+            ((v.my_id, v.my_title, ds) if full_download else (v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link) for v in v_entries),
+            full_download, s).run()
 
 
 async def run_main() -> None:
