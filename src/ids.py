@@ -10,11 +10,12 @@ import sys
 from asyncio import run as run_async, sleep
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
-from defs import Log, DOWNLOAD_POLICY_DEFAULT, ExtraConfig, DEFAULT_QUALITY
+from defs import Log, ExtraConfig
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items
 from scenario import DownloadScenario
 from tagger import try_parse_id_or_group, validate_tags
+from validators import find_and_resolve_config_conflicts
 
 __all__ = ()
 
@@ -48,20 +49,7 @@ async def main() -> None:
                 Log.fatal(f'\nError: start ({start_id:d}) > end ({end_id:d})')
                 raise ValueError
 
-        delay_for_message = False
-        if ds is not None:
-            if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
-                Log.info('Info: running download script, outer untagged policy will be ignored')
-                ExtraConfig.uvp = DOWNLOAD_POLICY_DEFAULT
-                delay_for_message = True
-            if len(ExtraConfig.extra_tags) > 0:
-                Log.info(f'Info: running download script: outer extra tags: {str(ExtraConfig.extra_tags)}')
-                delay_for_message = True
-            if ExtraConfig.quality != DEFAULT_QUALITY:
-                Log.info('Info: running download script, outer quality setting will be ignored')
-                delay_for_message = True
-
-        if delay_for_message is True:
+        if find_and_resolve_config_conflicts(False, ds is not None) is True:
             await sleep(3.0)
     except Exception:
         Log.fatal('\nError reading parsed arglist!')

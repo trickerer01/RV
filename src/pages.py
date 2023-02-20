@@ -14,15 +14,13 @@ from typing import List, Tuple
 from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
-from defs import (
-    Log, SITE_AJAX_REQUEST_BASE, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_POLICY_DEFAULT, ExtraConfig,
-    QUALITIES, has_naming_flag, prefixp, NamingFlags,
-)
+from defs import Log, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, SITE_AJAX_REQUEST_BASE, QUALITIES, has_naming_flag, prefixp, NamingFlags
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items
 from fetch_html import fetch_html
 from scenario import DownloadScenario
 from tagger import validate_tags
+from validators import find_and_resolve_config_conflicts
 
 __all__ = ()
 
@@ -84,38 +82,7 @@ async def main() -> None:
 
         full_download = ExtraConfig.quality != QUALITIES[-1]
 
-        delay_for_message = False
-        if ds is not None:
-            if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
-                Log.info('Info: running download script, outer untagged policy will be ignored')
-                ExtraConfig.uvp = DOWNLOAD_POLICY_DEFAULT
-                delay_for_message = True
-            if len(ExtraConfig.extra_tags) > 0:
-                Log.info(f'Info: running download script: outer extra tags: {str(ExtraConfig.extra_tags)}')
-                delay_for_message = True
-
-        if full_download is False:
-            if len(ExtraConfig.extra_tags) > 0 or ExtraConfig.validate_tags is True:
-                Log.info('Info: tags are ignored for previews!')
-                delay_for_message = True
-            if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
-                Log.info('Info: untagged videos download policy is ignored for previews!')
-                delay_for_message = True
-            if ExtraConfig.save_tags is True:
-                Log.info('Info: tags are not saved for previews!')
-                delay_for_message = True
-            if ds is not None:
-                Log.info('Info: scenarios are ignored for previews!')
-                delay_for_message = True
-            if ExtraConfig.min_score:
-                Log.info('Info: score is not extracted from previews!')
-                delay_for_message = True
-            if ExtraConfig.naming_flags != NamingFlags.NAMING_FLAGS_ALL:
-                if has_naming_flag(NamingFlags.NAMING_FLAGS_ALL & ~(NamingFlags.NAMING_FLAG_PREFIX | NamingFlags.NAMING_FLAG_TITLE)):
-                    Log.info('Info: can only use prefix and title naming flags for previews, other flags will be ignored!')
-                    delay_for_message = True
-
-        if delay_for_message is True:
+        if find_and_resolve_config_conflicts(True, ds is not None, full_download) is True:
             await sleep(3.0)
     except Exception:
         Log.fatal('\nError reading parsed arglist!')

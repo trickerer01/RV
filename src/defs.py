@@ -47,6 +47,10 @@ class BaseConfig(object):
     def uvp(self) -> Optional[str]:
         return self.un_video_policy
 
+    @uvp.setter
+    def uvp(self, value: str) -> None:
+        self.un_video_policy = value
+
     @property
     def dm(self) -> Optional[str]:
         return self.download_mode
