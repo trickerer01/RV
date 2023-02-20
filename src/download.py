@@ -109,10 +109,8 @@ class DownloadWorker:
 
     async def run(self) -> None:
         async with self.session or ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as self.session:
-            workers = [self._report_total_queue_size_callback(calc_sleep_time(3.0)), self._prod()]
-            for _ in range(MAX_VIDEOS_QUEUE_SIZE):
-                workers.append(self._cons())
-            for cv in as_completed(workers):
+            for cv in as_completed([self._prod(), self._report_total_queue_size_callback(calc_sleep_time(3.0))] +
+                                   [self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE)]):
                 await cv
         if ExtraConfig.save_tags is True:
             dump_item_tags()
