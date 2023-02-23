@@ -34,6 +34,10 @@ download_worker = None  # type: Optional[DownloadWorker]
 
 
 class DownloadWorker:
+    """
+    Async queue wrapper which binds list of lists of arguments to a download function call and processes them
+    asynchronously with a limit of simulteneous downloads defined by MAX_VIDEOS_QUEUE_SIZE
+    """
     params_first_type = Tuple[int, str, Optional[DownloadScenario]]  # download_id
     params_second_type = Tuple[int, str, str, str, Optional[str]]  # download_file
     sequence_type = Tuple[Union[params_first_type, params_second_type]]  # Tuple here makes sure argument is not an empty list

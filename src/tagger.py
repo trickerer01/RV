@@ -2347,6 +2347,9 @@ def register_item_tags(item_id: int, tags_str: str, subfolder: str) -> None:
 
 
 def dump_item_tags() -> None:
+    """
+    Saves tags for each subfolder in scenario and base dest folder based of registered item tags dict
+    """
     for subfolder, tags_dict in saved_tags_dict.items():
         if len(tags_dict) == 0:
             continue

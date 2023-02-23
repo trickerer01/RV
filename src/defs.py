@@ -17,6 +17,9 @@ from urllib.parse import urlparse
 
 
 class BaseConfig(object):
+    """
+    Parameters container for params used in both **pages** and **ids** modes
+    """
     def __init__(self) -> None:
         self.dest_base = None  # type: Optional[str]
         self.proxy = None  # type: Optional[str]
@@ -81,18 +84,23 @@ UTF8 = 'utf-8'
 QUALITIES = ['2160p', '1080p', '720p', '480p', '360p', 'preview']
 
 DEFAULT_QUALITY = QUALITIES[4]
+"""360p"""
 
 # untagged videos download policy
 DOWNLOAD_POLICY_NOFILTERS = 'nofilters'
 DOWNLOAD_POLICY_ALWAYS = 'always'
 UVIDEO_POLICIES = [DOWNLOAD_POLICY_NOFILTERS, DOWNLOAD_POLICY_ALWAYS]
+"""['nofilters','always']"""
 DOWNLOAD_POLICY_DEFAULT = DOWNLOAD_POLICY_NOFILTERS
+"""'nofilters'"""
 
 # download (file creation) mode
 DOWNLOAD_MODE_FULL = 'full'
 DOWNLOAD_MODE_TOUCH = 'touch'
 DOWNLOAD_MODES = [DOWNLOAD_MODE_FULL, DOWNLOAD_MODE_TOUCH]
+"""['full','touch']"""
 DOWNLOAD_MODE_DEFAULT = DOWNLOAD_MODE_FULL
+"""'full'"""
 
 
 class NamingFlags:
@@ -101,6 +109,7 @@ class NamingFlags:
     NAMING_FLAG_TITLE = 0x04
     NAMING_FLAG_TAGS = 0x08
     NAMING_FLAGS_ALL = NAMING_FLAG_PREFIX | NAMING_FLAG_SCORE | NAMING_FLAG_TITLE | NAMING_FLAG_TAGS
+    """0x0F"""
 
 
 NAMING_FLAGS = {
@@ -110,7 +119,11 @@ NAMING_FLAGS = {
     'tags': f'0x{NamingFlags.NAMING_FLAG_TAGS:02X}',
     'full': f'0x{NamingFlags.NAMING_FLAGS_ALL:02X}'
 }
+"""
+{\n\n'prefix': '0x01',\n\n'score': '0x02',\n\n'title': '0x04',\n\n'tags': '0x08',\n\n'full': '0x0F',\n\n}
+"""
 NAMING_FLAGS_DEFAULT = NamingFlags.NAMING_FLAGS_ALL
+"""0x0F"""
 
 
 class LoggingFlags(IntEnum):
@@ -126,6 +139,7 @@ class LoggingFlags(IntEnum):
     LOGGING_EX_EXCLUDED_TAGS = LOGGING_INFO
     LOGGING_EX_LOW_SCORE = LOGGING_INFO
     LOGGING_ALL = LOGGING_FATAL | LOGGING_ERROR | LOGGING_WARN | LOGGING_INFO | LOGGING_DEBUG | LOGGING_TRACE
+    """0x81F"""
 
     def __str__(self) -> str:
         return f'{self._name_} (0x{self.value:03X})'
@@ -139,6 +153,7 @@ LOGGING_FLAGS = {
     'trace': f'0x{LoggingFlags.LOGGING_TRACE.value:03X}',
 }
 LOGGING_FLAGS_DEFAULT = LoggingFlags.LOGGING_INFO
+"""0x004"""
 
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
@@ -249,12 +264,14 @@ def prefixp() -> str:
 
 
 def get_elapsed_time_s() -> str:
+    """Returns time since launch in format: **hh:mm:ss**"""
     mm, ss = divmod((datetime.now() - START_TIME).seconds, 60)
     hh, mm = divmod(mm, 60)
     return f'{hh:02d}:{mm:02d}:{ss:02d}'
 
 
 def unquote(string: str) -> str:
+    """Removes all leading/trailing single/double quotes. Non-matching quotes are removed too"""
     try:
         while True:
             found = False
@@ -272,6 +289,7 @@ def unquote(string: str) -> str:
 
 
 def normalize_path(basepath: str, append_slash=True) -> str:
+    """Converts path string to universal slash-concatenated string, enclosing slash is optional"""
     normalized_path = basepath.replace('\\', SLASH)
     if append_slash and len(normalized_path) != 0 and normalized_path[-1] != SLASH:
         normalized_path += SLASH
@@ -279,12 +297,8 @@ def normalize_path(basepath: str, append_slash=True) -> str:
 
 
 def normalize_filename(filename: str, base_path: str) -> str:
-    filename = sub(REPLACE_SYMBOLS, '_', filename)
-    dest = base_path.replace('\\', SLASH)
-    if dest[-1] != SLASH:
-        dest += SLASH
-    dest += filename
-    return dest
+    """Returns full path to a file, normalizing base path and removing disallowed symbols from file name"""
+    return normalize_path(base_path) + sub(REPLACE_SYMBOLS, '_', filename)
 
 
 def extract_ext(href: str) -> str:
@@ -299,6 +313,7 @@ def has_naming_flag(flag: int) -> bool:
 
 
 def calc_sleep_time(base_time: float) -> float:
+    """Returns either base_time for full download or shortened time otherwise"""
     return base_time if ExtraConfig.download_mode == DOWNLOAD_MODE_FULL else max(1.0, base_time / 3.0)
 
 

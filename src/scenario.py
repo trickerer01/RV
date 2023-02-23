@@ -16,7 +16,10 @@ from defs import (
 from tagger import extra_tag
 from validators import valid_int
 
+__all__ = ('DownloadScenario')
+
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
+"""'nofilters'"""
 
 
 class SubQueryParams(object):

@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 import sys
 from asyncio import run as run_async, sleep
 from re import search
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from aiohttp import ClientSession, TCPConnector
 
@@ -75,7 +75,7 @@ async def main() -> None:
         stop_id = arglist.stop_id  # type: int
         begin_id = arglist.begin_id  # type: int
         search_str = arglist.search  # type: str
-        ds = arglist.download_scenario  # type: DownloadScenario
+        ds = arglist.download_scenario  # type: Optional[DownloadScenario]
 
         if ExtraConfig.validate_tags is True:
             validate_tags(ExtraConfig.extra_tags)
@@ -164,7 +164,7 @@ async def main() -> None:
 
         minid, maxid = get_minmax_ids(v_entries)
         Log.info(f'\nOk! {len(v_entries):d} videos found, bound {minid:d} to {maxid:d}. Working...\n')
-        v_entries = list(reversed(v_entries))
+        v_entries.reverse()
 
         prefilter_existing_items(v_entries)
 
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     try:
         run_async(run_main())
     except (KeyboardInterrupt, SystemExit):
-        Log.warn(f'Warning: catched KeyboardInterrupt/SystemExit...')
+        Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
         at_interrupt()
     exit(0)
 

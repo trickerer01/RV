@@ -19,6 +19,9 @@ __all__ = ('wrap_request', 'fetch_html')
 
 
 class RequestQueue:
+    """
+    Request delayed queue wrapper
+    """
     _queue = []  # type: List[str]
     _ready = True
     _lock = AsyncLock()
@@ -30,6 +33,7 @@ class RequestQueue:
 
     @staticmethod
     async def until_ready(url: str) -> None:
+        """Pauses request until base delay passes (since last request)"""
         RequestQueue._queue.append(url)
         while RequestQueue._ready is False or RequestQueue._queue[0] != url:
             await sleep(0.1)
@@ -40,6 +44,7 @@ class RequestQueue:
 
 
 async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> ClientResponse:
+    """Queues request, updating headers/proxies beforehand, and returns the response"""
     await RequestQueue.until_ready(url)
     s.headers.update(DEFAULT_HEADERS.copy())
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'}, http_parser.URL(HOST))

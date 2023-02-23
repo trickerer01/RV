@@ -27,9 +27,13 @@ from validators import (
 __all__ = ('prepare_arglist_pages', 'prepare_arglist_ids', 'read_cmdfile', 'is_parsed_cmdfile')
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
+"""'nofilters'"""
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
+"""'full'"""
 NAMING_DEFAULT = NAMING_FLAGS_DEFAULT
+"""0x0F"""
 LOGGING_DEFAULT = LOGGING_FLAGS_DEFAULT
+"""0x004"""
 
 PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
@@ -38,7 +42,10 @@ parser = None  # type: Optional[ArgumentParser]
 
 
 def read_cmdfile(cmdfile_path: str) -> List[str]:
-    with open(cmdfile_path, 'r', encoding=UTF8) as cmdfile:
+    """
+    Read cmd args from a text file
+    """
+    with open(cmdfile_path, 'rt', encoding=UTF8) as cmdfile:
         args = []  # type: List[str]
         for line in cmdfile.readlines():
             rline = re_sub(r'^ *(.+)$', r'\1', line.strip(' \n\ufeff'))
@@ -48,6 +55,9 @@ def read_cmdfile(cmdfile_path: str) -> List[str]:
 
 
 def is_parsed_cmdfile(parse_result: Namespace) -> bool:
+    """
+    Determines if parsed cmdline points to a text file
+    """
     return hasattr(parse_result, 'path') and not hasattr(parse_result, 'extra_tags')
 
 

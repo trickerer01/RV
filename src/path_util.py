@@ -19,6 +19,15 @@ found_filenames_all = set()  # type: Set[str]
 
 
 def scan_dest_folder() -> None:
+    """
+    Scans base destination folder plus one level of subfolders and
+    stores found files in two lists: one for base folder and another for all scanned folders\n\n
+    |folder1:\n\n
+    |__subfolder1:\n\n
+    |____file2\n\n
+    |__file1\n\n
+    => files1 = ['file1'], files2 = ['file1','file2']
+    """
     global found_filenames_base
     global found_filenames_all
 
