@@ -59,6 +59,12 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfol
 
 
 def prefilter_existing_items(id_sequence: list) -> None:
+    """
+    This function scans dest folder saving existing files in it and 1 level below to a list for later checks
+    but only filters out existing items with desired quality\n\n
+    (which may sometimes be inaccessible).\n\n
+    This function may only be called once!
+    """
     assert len(found_filenames_all) == 0
     scan_dest_folder()
     for idx in reversed(range(len(id_sequence))):  # type: int
