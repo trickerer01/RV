@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from base64 import b64decode
 from json import loads
 from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
-from typing import List, Dict, Optional, Set
+from typing import List, Dict, Optional, FrozenSet
 
 from defs import TAGS_CONCAT_CHAR, UTF8, Log, normalize_path, prefixp, ExtraConfig
 
@@ -2764,8 +2764,8 @@ ART_NAMES_ENCODED = (
 )
 
 TAG_NUMS_DECODED = {k.replace(' ', '_'): v for k, v in loads(b64decode(TAG_NUMS_ENCODED)).items()}  # type: Dict[str, str]
-CAT_NAMES_DECODED = set(loads(b64decode(CAT_NAMES_ENCODED)).keys())  # type: Set[str]
-ART_NAMES_DECODED = set(loads(b64decode(ART_NAMES_ENCODED)).keys())  # type: Set[str]
+CAT_NAMES_DECODED = frozenset({k.replace(' ', '_')for k in loads(b64decode(CAT_NAMES_ENCODED)).keys()})  # type: FrozenSet[str]
+ART_NAMES_DECODED = frozenset({k.replace(' ', '_')for k in loads(b64decode(ART_NAMES_ENCODED)).keys()})  # type: FrozenSet[str]
 
 re_replace_symbols = re_compile(
     r'[^0-9a-zA-Z_+()\[\]]+'
