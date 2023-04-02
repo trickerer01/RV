@@ -14,7 +14,10 @@ from typing import List, Tuple, Optional
 from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
-from defs import Log, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, SITE_AJAX_REQUEST_BASE, QUALITIES, has_naming_flag, prefixp, NamingFlags
+from defs import (
+    Log, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, SITE_AJAX_REQUEST_BASE, QUALITIES, has_naming_flag, prefixp, NamingFlags,
+    HelpPrintExitException,
+)
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items
 from fetch_html import fetch_html
@@ -64,6 +67,8 @@ async def main() -> None:
         arglist = prepare_arglist_pages(sys.argv[1:])
         while is_parsed_cmdfile(arglist):
             arglist = prepare_arglist_pages(read_cmdfile(arglist.path))
+    except HelpPrintExitException:
+        return
     except Exception:
         Log.fatal(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
         return

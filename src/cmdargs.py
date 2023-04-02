@@ -15,8 +15,8 @@ from defs import (
     Log, HELP_PATH, HELP_PAGES, HELP_STOP_ID, HELP_SEARCH, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY, HELP_ARG_PROXY, HELP_BEGIN_ID,
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE,
-    HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_NO_VALIDATION,
-    ACTION_STORE_TRUE, UTF8,
+    HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_NO_VALIDATION, HELP_ARG_IDSEQUENCE,
+    ACTION_STORE_TRUE, UTF8, HelpPrintExitException,
 )
 from scenario import DownloadScenario
 from tagger import extra_tag
@@ -90,7 +90,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', default=None, help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
-    parser_or_group.add_argument('-tdump', '--dump-tags', action=ACTION_STORE_TRUE, help='Save tags (full download only)')
+    parser_or_group.add_argument('-tdump', '--dump-tags', action=ACTION_STORE_TRUE, help='Save tags. Default is \'false\'')
     parser_or_group.add_argument('-script', '--download-scenario', default=None, help=HELP_ARG_DWN_SCENARIO, type=DownloadScenario)
     parser_or_group.add_argument('--no-validation', action=ACTION_STORE_TRUE, help=HELP_ARG_NO_VALIDATION)
     parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=extra_tag)
@@ -107,15 +107,15 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     arggr_start_or_seq = par_cmd.add_mutually_exclusive_group(required=True)
+    arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
     arggr_start_or_seq.add_argument('-start', metavar='#number', help='Start video id. Required', type=valid_positive_nonzero_int)
-    arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help='Use id sequence instead (in tags)')
     arggr_ids = par_cmd.add_mutually_exclusive_group()
     arggr_ids.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=valid_positive_nonzero_int)
     arggr_ids.add_argument('-end', metavar='#number', default=1, help='End video id', type=valid_positive_nonzero_int)
 
     add_common_args(par_cmd)
 
-    [p.add_argument('--help', action='help') for p in [parser, par_file, par_cmd]]
+    [p.add_argument('--help', action='help', help='Print this message') for p in [parser, par_file, par_cmd]]
 
     def finalize_ex_groups(parsed: Namespace) -> Namespace:
         if parsed.use_id_sequence:
@@ -130,6 +130,8 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
         if not is_parsed_cmdfile(pparsed):
             pparsed = finalize_ex_groups(pparsed)
         return pparsed
+    except SystemExit:
+        raise HelpPrintExitException
     except (ArgumentError, TypeError, Exception):
         raise
 
@@ -152,11 +154,13 @@ def prepare_arglist_pages(args: List[str]) -> Namespace:
 
     add_common_args(par_cmd)
 
-    [p.add_argument('--help', action='help') for p in [parser, par_file, par_cmd]]
+    [p.add_argument('--help', action='help', help='Print this message') for p in [parser, par_file, par_cmd]]
 
     try:
         pparsed = validate_parsed(args, par_cmd)
         return pparsed
+    except SystemExit:
+        raise HelpPrintExitException
     except (ArgumentError, TypeError, Exception):
         raise
 

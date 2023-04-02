@@ -11,7 +11,7 @@ from asyncio import run as run_async, sleep
 from typing import Optional
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
-from defs import Log, ExtraConfig
+from defs import Log, ExtraConfig, HelpPrintExitException
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items
 from scenario import DownloadScenario
@@ -26,6 +26,8 @@ async def main() -> None:
         arglist = prepare_arglist_ids(sys.argv[1:])
         while is_parsed_cmdfile(arglist):
             arglist = prepare_arglist_ids(read_cmdfile(arglist.path))
+    except HelpPrintExitException:
+        return
     except Exception:
         Log.fatal(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
         return
