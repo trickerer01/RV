@@ -6,18 +6,18 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import sleep, as_completed, Queue as AsyncQueue
+from asyncio import sleep, as_completed, get_running_loop, Queue as AsyncQueue
 from os import path, stat, remove, makedirs
 from random import uniform as frand
 from re import match, search
 from typing import List, Optional, Union, Coroutine, Tuple
 
 from aiofile import async_open
-from aiohttp import ClientSession, TCPConnector, ClientTimeout
+from aiohttp import ClientSession, TCPConnector, ClientTimeout, ClientResponse
 
 from defs import (
     CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, TAGS_CONCAT_CHAR, SITE_AJAX_REQUEST_VIDEO,
-    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, NamingFlags, calc_sleep_time,
+    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER, NamingFlags, calc_sleep_time,
     Log, ExtraConfig, normalize_path, normalize_filename, get_elapsed_time_s, has_naming_flag, prefixp, LoggingFlags, extract_ext,
     re_rvfile,
 )
@@ -312,6 +312,15 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
     await download_file(idi, filename, my_dest_base, link, my_subfolder)
 
 
+def check_download_status(dest: str, resp: ClientResponse):
+    if dest in download_worker.writes_active:
+        if path.isfile(dest):
+            dest_stats = stat(dest)
+            if dest_stats.st_size == 0:
+                Log.error(f'{path.basename(dest)} status check failed (nothing downloaded)! Interrupting current try...')
+                resp.connection.transport.abort()  # abort download task (forcefully - close connection)
+
+
 async def download_file(idi: int, filename: str, my_dest_base: str, link: str, subfolder='') -> int:
     dest = normalize_filename(filename, my_dest_base)
     sfilename = f'{f"{subfolder}/" if len(subfolder) > 0 else ""}{filename}'
@@ -355,11 +364,13 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 expected_size = r.content_length
                 Log.info(f'Saving {(r.content_length / (1024.0 * 1024.0)) if r.content_length else 0.0:.2f} Mb to {sfilename}')
 
+                status_checker = get_running_loop().call_later(DOWNLOAD_STATUS_CHECK_TIMER, check_download_status, dest, r)
                 download_worker.writes_active.append(dest)
                 async with async_open(dest, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**22):
                         await outf.write(chunk)
                 download_worker.writes_active.remove(dest)
+                status_checker.cancel()
 
                 file_size = stat(dest).st_size
                 if expected_size and file_size != expected_size:

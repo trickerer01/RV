@@ -161,13 +161,13 @@ ACTION_STORE_FALSE = 'store_false'
 HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
 HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
-HELP_BEGIN_ID = 'If you want to download only videos above or equal to this id'
+HELP_BEGIN_ID = 'If you want to download only videos below or equal to this id'
 HELP_ARG_IDSEQUENCE = (
     'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequesnce instead of'
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
 HELP_PATH = 'Download destination. Default is current folder'
-HELP_SEARCH = 'If you want to only traverse pages matching some search query'
+HELP_SEARCH = 'If you want to only traverse pages matching some search query. Spaces must be replced with \'-\', ex. \'side-view\''
 HELP_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
 HELP_ARG_UVPOLICY = (
@@ -212,6 +212,7 @@ CONNECT_RETRIES_ITEM = 50
 CONNECT_REQUEST_DELAY = 1.0
 
 MAX_VIDEOS_QUEUE_SIZE = 8
+DOWNLOAD_STATUS_CHECK_TIMER = 120.0
 
 TAGS_CONCAT_CHAR = ','
 START_TIME = datetime.now()
