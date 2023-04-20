@@ -63,7 +63,19 @@ async def main() -> None:
     else:
         ExtraConfig.extra_tags.clear()
 
+    orig_count = len(id_sequence)
     prefilter_existing_items(id_sequence)
+
+    removed_count = orig_count - len(id_sequence)
+
+    if len(id_sequence) == 0:
+        if 0 < orig_count == removed_count:
+            Log.fatal(f'\nAll {orig_count:d} videos already exist. Aborted.')
+        else:
+            Log.fatal('\nNo videos found. Aborted.')
+        return
+
+    Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered). Working...\n')
 
     await DownloadWorker(((idi, '', ds) for idi in id_sequence), True).run()
 

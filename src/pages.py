@@ -171,7 +171,7 @@ async def main() -> None:
         removed_count = orig_count - len(v_entries)
 
         if len(v_entries) == 0:
-            if removed_count == orig_count:
+            if 0 < orig_count == removed_count:
                 Log.fatal(f'\nAll {orig_count:d} videos already exist. Aborted.')
             else:
                 Log.fatal('\nNo videos found. Aborted.')
