@@ -50,6 +50,7 @@ class BaseConfig(object):
     def uvp(self) -> Optional[str]:
         return self.un_video_policy
 
+    # noinspection PyUnresolvedReferences
     @uvp.setter
     def uvp(self, value: str) -> None:
         self.un_video_policy = value
@@ -266,6 +267,11 @@ class Log:
 
 def prefixp() -> str:
     return 'rv_'
+
+
+def get_elapsed_time_i() -> int:
+    """Returns time since launch in **seconds**"""
+    return (datetime.now() - START_TIME).seconds
 
 
 def get_elapsed_time_s() -> str:

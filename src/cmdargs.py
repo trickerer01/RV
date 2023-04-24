@@ -37,6 +37,7 @@ LOGGING_DEFAULT = LOGGING_FLAGS_DEFAULT
 
 PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
+EXISTING_PARSERS = {PARSER_TITLE_CMD, PARSER_TITLE_FILE}
 
 parser = None  # type: Optional[ArgumentParser]
 
@@ -67,7 +68,7 @@ def validate_parsed(args: List[str], default_sub: ArgumentParser) -> Namespace:
     error_to_print = ''
     try:
         parsed, unks = (
-            parser.parse_known_args(args) if args[0] in [PARSER_TITLE_CMD, PARSER_TITLE_FILE] else default_sub.parse_known_args(args))
+            parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args))
         if not is_parsed_cmdfile(parsed):
             parsed.extra_tags += [tag.lower().replace(' ', '_') for tag in unks]
         # Log('parsed:', parsed)

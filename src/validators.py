@@ -73,7 +73,7 @@ def valid_int(val: str) -> int:
 def valid_positive_nonzero_int(val: str) -> int:
     try:
         val = int(val)
-        assert(val > 0)
+        assert val > 0
     except Exception:
         raise ArgumentError
 

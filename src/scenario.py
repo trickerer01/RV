@@ -45,7 +45,7 @@ class SubQueryParams(object):
 
 
 class DownloadScenario(object):
-    def __init__(self, fmt_str: str = None) -> None:
+    def __init__(self, fmt_str: str) -> None:
         self.queries = []  # type: List[SubQueryParams]
         if fmt_str is None:
             return
@@ -91,6 +91,12 @@ class DownloadScenario(object):
             if all_matched is True:
                 return True
         return False
+
+    def get_uvp_always_subquery_idx(self) -> int:
+        for idx, sq in enumerate(self.queries):
+            if sq.uvp == DOWNLOAD_POLICY_ALWAYS:
+                return idx
+        return -1
 
 #
 #
