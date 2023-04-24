@@ -47,7 +47,7 @@ async def main() -> None:
                 Log.fatal(f'\nInvalid ID \'or\' group \'{ExtraConfig.extra_tags[0] if len(ExtraConfig.extra_tags) > 0 else ""}\'!')
                 raise ValueError
         else:
-            id_sequence = None
+            id_sequence = []
             if start_id > end_id:
                 Log.fatal(f'\nError: start ({start_id:d}) > end ({end_id:d})')
                 raise ValueError
@@ -58,7 +58,7 @@ async def main() -> None:
         Log.fatal('\nError reading parsed arglist!')
         return
 
-    if id_sequence is None:
+    if len(id_sequence) == 0:
         id_sequence = list(range(start_id, end_id + 1))
     else:
         ExtraConfig.extra_tags.clear()
@@ -67,6 +67,7 @@ async def main() -> None:
     prefilter_existing_items(id_sequence)
 
     removed_count = orig_count - len(id_sequence)
+    minid, maxid = min(id_sequence), max(id_sequence)
 
     if len(id_sequence) == 0:
         if 0 < orig_count == removed_count:
@@ -75,7 +76,7 @@ async def main() -> None:
             Log.fatal('\nNo videos found. Aborted.')
         return
 
-    Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered). Working...\n')
+    Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
     await DownloadWorker(((idi, '', ds) for idi in id_sequence), True).run()
 
