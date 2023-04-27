@@ -67,7 +67,6 @@ async def main() -> None:
     prefilter_existing_items(id_sequence)
 
     removed_count = orig_count - len(id_sequence)
-    minid, maxid = min(id_sequence), max(id_sequence)
 
     if len(id_sequence) == 0:
         if 0 < orig_count == removed_count:
@@ -75,6 +74,8 @@ async def main() -> None:
         else:
             Log.fatal('\nNo videos found. Aborted.')
         return
+
+    minid, maxid = min(id_sequence), max(id_sequence)
 
     Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 

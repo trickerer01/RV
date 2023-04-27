@@ -155,7 +155,6 @@ async def main() -> None:
         prefilter_existing_items(v_entries)
 
         removed_count = orig_count - len(v_entries)
-        minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
 
         if len(v_entries) == 0:
             if 0 < orig_count == removed_count:
@@ -163,6 +162,8 @@ async def main() -> None:
             else:
                 Log.fatal('\nNo videos found. Aborted.')
             return
+
+        minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
 
         Log.info(f'\nOk! {len(v_entries):d} videos found (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
