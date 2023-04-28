@@ -15,7 +15,7 @@ from defs import Log, ExtraConfig, HelpPrintExitException
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items
 from scenario import DownloadScenario
-from tagger import try_parse_id_or_group, validate_tags
+from tagger import try_parse_id_or_group
 from validators import find_and_resolve_config_conflicts
 
 __all__ = ()
@@ -37,9 +37,6 @@ async def main() -> None:
         start_id = arglist.start  # type: int
         end_id = arglist.end  # type: int
         ds = arglist.download_scenario  # type: Optional[DownloadScenario]
-
-        if ExtraConfig.validate_tags is True:
-            validate_tags(ExtraConfig.extra_tags)
 
         if arglist.use_id_sequence is True:
             id_sequence = try_parse_id_or_group(ExtraConfig.extra_tags)

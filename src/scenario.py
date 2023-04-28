@@ -13,7 +13,7 @@ from defs import (
     Log, DEFAULT_QUALITY, HELP_QUALITY, QUALITIES, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, HELP_ARG_EXTRA_TAGS, DOWNLOAD_POLICY_DEFAULT,
     DOWNLOAD_POLICY_ALWAYS, HELP_ARG_MINSCORE
 )
-from tagger import extra_tag
+from tagger import valid_extra_tag
 from validators import valid_int
 
 __all__ = ('DownloadScenario')
@@ -54,7 +54,7 @@ class DownloadScenario(object):
         parser.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_QUALITY, choices=QUALITIES)
         parser.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
         parser.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)
-        parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=extra_tag)
+        parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=valid_extra_tag)
 
         for query_raw in fmt_str.split('; '):
             error_to_print = ''

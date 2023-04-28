@@ -31,7 +31,6 @@ class BaseConfig(object):
         self.extra_tags = None  # type: Optional[List[str]]
         self.naming_flags = 0
         self.logging_flags = 0
-        self.validate_tags = True
 
     def read_params(self, params: Namespace) -> None:
         self.dest_base = params.path
@@ -44,7 +43,6 @@ class BaseConfig(object):
         self.extra_tags = params.extra_tags
         self.naming_flags = params.naming
         self.logging_flags = params.log_level
-        self.validate_tags = (not getattr(params, 'no_validation')) if hasattr(params, 'no_validation') else self.validate_tags
 
     @property
     def uvp(self) -> Optional[str]:
@@ -63,10 +61,11 @@ class BaseConfig(object):
 ExtraConfig = BaseConfig()
 
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS8=').decode()
-SITE_AJAX_REQUEST_BASE = b64decode(
-    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9zZWFyY2gvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc192aWRlb3Nf'
-    'bGlzdF9zZWFyY2gmcT0lcyZzb3J0X2J5PXBvc3RfZGF0ZSZmcm9tX3ZpZGVvcz0lZA==').decode()
-"""Params required: str, int. Ex. SITE_AJAX_REQUEST_BASE % ('sfw', 1)"""
+SITE_AJAX_REQUEST_PAGE = b64decode(
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9zZWFyY2gvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc192aWRlb3NfbG'
+    'lzdF9zZWFyY2gmc29ydF9ieT1wb3N0X2RhdGUmdGFnX2lkcz0lcyZtb2RlbF9pZHM9JXMmY2F0ZWdvcnlfaWRzPSVzJnE9JXMmZnJvbV92aWRlb3M9JWQ=').decode()
+"""Params required: **tags**, **artists**, **categories**, **search**, **page** - **str**, **str**, **str**, **str**, **int**.\n
+Ex. SITE_AJAX_REQUEST_PAGE % ('1,2', '3,4,5', '6', 'sfw', 1)"""
 SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wb3B1cC12aWRlby8lZC8=').decode()
 """Params required: int. Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)"""
 
@@ -102,6 +101,14 @@ DOWNLOAD_MODES = [DOWNLOAD_MODE_FULL, DOWNLOAD_MODE_TOUCH]
 """['full','touch']"""
 DOWNLOAD_MODE_DEFAULT = DOWNLOAD_MODE_FULL
 """'full'"""
+
+# search args combination logic rules
+SEARCH_RULE_ALL = 'all'
+SEARCH_RULE_ANY = 'any'
+SEARCH_RULES = [SEARCH_RULE_ALL, SEARCH_RULE_ANY]
+"""['all','any']"""
+SEARCH_RULE_DEFAULT = SEARCH_RULE_ALL
+"""'all'"""
 
 
 class NamingFlags:
@@ -159,7 +166,6 @@ LOGGING_FLAGS_DEFAULT = LoggingFlags.LOGGING_INFO
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
-HELP_ARG_NO_VALIDATION = 'Skip extra tags validation. Useful when you want to filter by author or category'
 HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
 HELP_BEGIN_ID = 'If you want to download only videos below or equal to this id'
@@ -168,7 +174,24 @@ HELP_ARG_IDSEQUENCE = (
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
 HELP_PATH = 'Download destination. Default is current folder'
-HELP_SEARCH = 'If you want to only traverse pages matching some search query. Spaces must be replced with \'-\', ex. \'side-view\''
+HELP_SEARCH_RULE = (
+    f'Multiple search args of the same type combine logic: {str(SEARCH_RULES)}. Default is \'{SEARCH_RULE_DEFAULT}\'.'
+    f' Example: while searching for tags \'sfw,side_view\','
+    f' \'{SEARCH_RULE_ANY}\' will search for any of those tags, \'{SEARCH_RULE_ALL}\' will only return results matching both'
+)
+HELP_SEARCH_TAGS = (
+    'Native search by tags (matching any tag). Spaces must be replced with \'_\', concatenate with \',\'.'
+    ' Ex. \'1girl,side_view\''
+)
+HELP_SEARCH_ARTISTS = (
+    'Native search by artists (matching any artist). Spaces must be replced with \'_\', concatenate with \',\'.'
+    ' Ex. \'artist1,artist_sfw2\''
+)
+HELP_SEARCH_CATEGORIES = (
+    'Native search by categories (matching any category). Spaces must be replced with \'_\', concatenate with \',\'.'
+    ' Ex. \'category1,category_sfw2\''
+)
+HELP_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'back-view\''
 HELP_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
 HELP_ARG_UVPOLICY = (
@@ -177,9 +200,9 @@ HELP_ARG_UVPOLICY = (
 )
 HELP_ARG_DMMODE = 'Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (
-    'All remaining \'args\' and \'-args\' count as tags to exclude / require.'
-    ' Videos containing any of \'-tags\', or not containing all of \'tags\' will be skipped.'
-    ' Only existing tags are allowed. Use can skip validity checks with \'--no-validation\' option'
+    'All remaining \'args\' and \'-args\' count as tags to exclude / require. All spaces must be replaced with \'_\'.'
+    ' Videos containing any of \'-tags\', or not containing all of \'tags\' will be skipped. Wildcards are supported.'
+    ' Only existing tags are allowed unless wildcards are used'
 )
 HELP_ARG_DWN_SCENARIO = (
     'Download scenario. This allows to scan for tags and sort videos accordingly in a single pass.'

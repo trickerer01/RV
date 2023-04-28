@@ -15,14 +15,13 @@ from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    Log, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, SITE_AJAX_REQUEST_BASE, QUALITIES, has_naming_flag, prefixp, NamingFlags,
+    Log, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, has_naming_flag, prefixp, NamingFlags,
     HelpPrintExitException,
 )
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items
 from fetch_html import fetch_html
 from scenario import DownloadScenario
-from tagger import validate_tags
 from validators import find_and_resolve_config_conflicts
 
 __all__ = ()
@@ -67,12 +66,21 @@ async def main() -> None:
         stop_id = arglist.stop_id  # type: int
         begin_id = arglist.begin_id  # type: int
         search_str = arglist.search  # type: str
+        search_tags = arglist.search_tag  # type: str
+        search_arts = arglist.search_art  # type: str
+        search_cats = arglist.search_cat  # type: str
+        search_rule_tag = arglist.search_rule_tag  # type: str
+        search_rule_art = arglist.search_rule_art  # type: str
+        search_rule_cat = arglist.search_rule_cat  # type: str
         ds = arglist.download_scenario  # type: Optional[DownloadScenario]
 
-        if ExtraConfig.validate_tags is True:
-            validate_tags(ExtraConfig.extra_tags)
-
         full_download = ExtraConfig.quality != QUALITIES[-1]
+        if search_tags.find(',') != -1:
+            search_tags = f'{search_rule_tag},{search_tags}'
+        if search_arts.find(',') != -1:
+            search_arts = f'{search_rule_art},{search_arts}'
+        if search_cats.find(',') != -1:
+            search_cats = f'{search_rule_cat},{search_cats}'
 
         if find_and_resolve_config_conflicts(True, ds is not None, full_download) is True:
             await sleep(3.0)
@@ -91,7 +99,7 @@ async def main() -> None:
                 break
             Log.info(f'page {pi:d}...{" (this is the last page!)" if 0 < maxpage == pi else ""}')
 
-            a_html = await fetch_html(SITE_AJAX_REQUEST_BASE % (search_str, pi), session=s)
+            a_html = await fetch_html(SITE_AJAX_REQUEST_PAGE % (search_tags, search_arts, search_cats, search_str, pi), session=s)
             if not a_html:
                 Log.error(f'Error: cannot get html for page {pi:d}')
                 continue

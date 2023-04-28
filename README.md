@@ -6,14 +6,19 @@ RV is a video downloader with a lot of features, most of which are filters for f
 ### How to use
 ##### Python 3.7 or later required
 - RV is a cmdline tool, no GUI
-- It consists of 2 main download modules: `pages.py` for pages scanning, `ids.py` - for video ids traverse
+- It consists of 2 main download modules: `pages.py` for pages scanning, `ids.py` - for video ids traversal
 - Invoke `python pages.py --help` or `python ids.py --help` for possible arguments for each module (the differences are minimal)
 - See `requirements.txt` for additional module dependencies
+
+#### Search & filters
+- RV provides advanced searching and filtering functionality
+- Search (pages only) is performed using extended website native API (see help for possible search args)
+- Initial search results / ids list can be then filtered further by using *extra tags* (see help for additional info)
 
 #### Tags
 - Refer to `rv_tags.list` file for list of existing tags. Any tag you use must be a valid tag. That is, unless you also utilize...
 - Wildcards. In any kind of tag you can use symbols `?` and `*` for 'any symbol' and 'any number of any symbols' repectively. Tags containing wildcards are not being validated, they can be anything
-- Keep in mind that in tags all spaces must be replaced with underscores - tag names are all unified this way for convenience
+- Keep in mind that in tags all spaces must be **replaced_with_underscores** - tag names are all unified this way for convenience
 
 #### Additional info
 1. `OR` / `AND` groups:
@@ -48,3 +53,18 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - Base template: ***rv\_\<video_id>\_\<title>\_(\<tag1,tag2,...,tagN>).\<ext>***
   - Non-descriptive or way-too-long tags will be dropped
   - If resulting file total path is too long to fit into 240 symbols, first the tags will be gradually dropped; if not enough, title will be shrunk to fit; general advice: do not download to folders way too deep down the folder tree
+
+#### Examples
+1. Pages
+  - Minimal example - all videos by a single tag:
+    - `python pages.py -pages 9999 -search_tag TAG1`
+  - Up to 48 videos with both tags present from a single author in 1080p, save to a custom location:
+    - `python pages.py -pages 2 -path PATH -quality 1080p -search_art ARTIST -search_tag TAG1,TAG2`
+  - Up to 24 videos on page 3 with any of 3 tags from any of 2 authors under any of 2 categories, no `gore` or `guro`, in best quality, with minimum score of 100, use proxy, save to a custom location, save tags, log everything, use shortest name for files:
+    - `python pages.py -log trace -start 3 -pages 1 -path PATH -proxy https://127.0.0.1:222 -tdump -quality 2160p -minscore 100 -search_cat CATEGORY1,CAT_EGORY2 -search_art ART_IST1,ARTIST2 -search_tag TAG1,TAG2,TAG3 -search_rule_cat any -search_rule_art any -search_rule_tag any -naming 0 -gore -guro`
+
+2. Ids
+  - Minimal example - all existing videos in range:
+    - `python ids.py -start 300000 -count 100`
+    - `python ids.py -start 300000 -end 300099`
+  - You can use the majority of arguments from `pages` examples. The only argument that is unique to `ids` is `--use-id-sequence` (`-seq`), see above where it's explained in detail

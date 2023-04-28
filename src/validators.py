@@ -29,8 +29,8 @@ def find_and_resolve_config_conflicts(pages: bool, has_scenario: bool, full_down
                 Log.info(f'Info: running download script: outer extra tags: {str(ExtraConfig.extra_tags)}')
                 delay_for_message = True
         if full_download is False:
-            if len(ExtraConfig.extra_tags) > 0 or ExtraConfig.validate_tags is True:
-                Log.info('Info: tags are ignored for previews!')
+            if len(ExtraConfig.extra_tags) > 0:
+                Log.info('Info: extra tags are ignored for previews!')
                 delay_for_message = True
             if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
                 Log.info('Info: untagged videos download policy is ignored for previews!')
