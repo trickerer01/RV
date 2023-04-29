@@ -61,6 +61,12 @@ class DownloadScenario(object):
             try:
                 subfolder, args = query_raw.split(': ')
                 parsed, unks = parser.parse_known_args(args.split())
+                for tag in unks:
+                    try:
+                        assert valid_extra_tag(tag)
+                    except Exception:
+                        error_to_print = f'\nInvalid extra tag: \'{tag}\'\n'
+                        raise
                 parsed.extra_tags += [tag.lower().replace(' ', '_') for tag in unks]
                 if parsed.untag_video_policy == DOWNLOAD_POLICY_ALWAYS and self.has_subquery(untag_video_policy=DOWNLOAD_POLICY_ALWAYS):
                     error_to_print = f'Scenario can only have one subquery with untagged video policy \'{DOWNLOAD_POLICY_ALWAYS}\'!'

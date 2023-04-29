@@ -43,9 +43,7 @@ parser = None  # type: Optional[ArgumentParser]
 
 
 def read_cmdfile(cmdfile_path: str) -> List[str]:
-    """
-    Read cmd args from a text file
-    """
+    """Read cmd args from a text file"""
     with open(cmdfile_path, 'rt', encoding=UTF8) as cmdfile:
         args = []  # type: List[str]
         for line in cmdfile.readlines():
