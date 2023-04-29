@@ -15,7 +15,7 @@ from aiohttp import ClientSession, TCPConnector
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    Log, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, has_naming_flag, prefixp, NamingFlags,
+    Log, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
     HelpPrintExitException,
 )
 from download import DownloadWorker, at_interrupt
@@ -75,12 +75,13 @@ async def main() -> None:
         ds = arglist.download_scenario  # type: Optional[DownloadScenario]
 
         full_download = ExtraConfig.quality != QUALITIES[-1]
-        if search_tags.find(',') != -1:
-            search_tags = f'{search_rule_tag},{search_tags}'
-        if search_arts.find(',') != -1:
-            search_arts = f'{search_rule_art},{search_arts}'
-        if search_cats.find(',') != -1:
-            search_cats = f'{search_rule_cat},{search_cats}'
+
+        if search_tags.find(',') != -1 and search_rule_tag == SEARCH_RULE_ALL:
+            search_tags = f'{SEARCH_RULE_ALL},{search_tags}'
+        if search_arts.find(',') != -1 and search_rule_art == SEARCH_RULE_ALL:
+            search_arts = f'{SEARCH_RULE_ALL},{search_arts}'
+        if search_cats.find(',') != -1 and search_rule_cat == SEARCH_RULE_ALL:
+            search_cats = f'{SEARCH_RULE_ALL},{search_cats}'
 
         if find_and_resolve_config_conflicts(True, ds is not None, full_download) is True:
             await sleep(3.0)
