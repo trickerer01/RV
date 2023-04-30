@@ -13,7 +13,7 @@ from typing import Optional, List
 from bs4 import BeautifulSoup
 from aiohttp import ClientSession, ClientResponse, http_parser
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, HOST, CONNECT_REQUEST_DELAY, ExtraConfig
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, ExtraConfig, HOST
 
 __all__ = ('wrap_request', 'fetch_html')
 
@@ -49,7 +49,8 @@ async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> Cli
     s.headers.update(DEFAULT_HEADERS.copy())
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'}, http_parser.URL(HOST))
     kwargs.update(proxy=ExtraConfig.proxy)
-    return await s.request(method, url, **kwargs)
+    r = await s.request(method, url, **kwargs)
+    return r
 
 
 async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> Optional[BeautifulSoup]:
@@ -76,7 +77,6 @@ async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> 
                 assert False
             elif r is not None:
                 Log.error(f'fetch_html exception: status {r.status:d}')
-            # do not count tries if blocked by ddg
             if r is None or r.status != 403:
                 retries += 1
             elif r is not None and r.status == 403:

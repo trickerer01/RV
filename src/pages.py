@@ -155,13 +155,13 @@ async def main() -> None:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                     else:
                         v_entries.append(
-                            VideoEntryPrev(cur_id,
-                                           f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
-                                           f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_pypv.{cur_ext}', link))
+                            VideoEntryPrev(
+                                cur_id, f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
+                                f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_preview.{cur_ext}', link))
 
         orig_count = len(v_entries)
         v_entries.reverse()
-        prefilter_existing_items(v_entries)
+        prefilter_existing_items([v.my_id for v in v_entries])
 
         removed_count = orig_count - len(v_entries)
 

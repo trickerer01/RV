@@ -26,6 +26,7 @@ from path_util import file_exists_in_folder
 from scenario import DownloadScenario
 from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags, dump_item_tags,
+
 )
 
 __all__ = ('DownloadWorker', 'at_interrupt')
@@ -136,23 +137,23 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
             if extag[0] == '(':
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
-                    Log.trace(f'[{subfolder}] Video \'{sname}\' misses required tag matching \'{extag}\'!',
+                    Log.trace(f'[{subfolder}] Video \'{sname}\' misses required tag matching \'{extag}\'. Skipped!',
                               LoggingFlags.LOGGING_EX_MISSING_TAGS)
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
-                    Log.info(f'[{subfolder}] Video \'{sname}\' contains excluded tags combination \'{extag[1:]}\'!',
+                    Log.info(f'[{subfolder}] Video \'{sname}\' contains excluded tags combination \'{extag[1:]}\'. Skipped!',
                              LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
-                    Log.info(f'[{subfolder}] Video \'{sname}\' contains excluded tag \'{mtag}\'!',
+                    Log.info(f'[{subfolder}] Video \'{sname}\' contains excluded tag \'{mtag}\'. Skipped!',
                              LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
                 elif mtag is None and extag[0] != '-':
                     suc = False
-                    Log.trace(f'[{subfolder}] Video \'{sname}\' misses required tag matching \'{my_extag}\'!',
+                    Log.trace(f'[{subfolder}] Video \'{sname}\' misses required tag matching \'{my_extag}\'. Skipped!',
                               LoggingFlags.LOGGING_EX_MISSING_TAGS)
     return not suc
 
@@ -214,7 +215,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
                 if add_tag not in tags_raw:
                     tags_raw.append(add_tag)
             if is_filtered_out_by_extra_tags(idi, tags_raw, ExtraConfig.extra_tags, my_subfolder):
-                Log.info(f'Info: video {sname} is filtered out by outer extra tags, skipping...')
+                Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
                 return
             if len(likes) > 0:
                 try:
@@ -290,8 +291,8 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
 
     my_dest_base = normalize_path(f'{ExtraConfig.dest_base}{my_subfolder}')
     my_score = f'+{likes}' if len(likes) > 0 else 'unk'
-    extra_len = 5 + 2 + 2  # 2 underscores + 2 brackets + len('2160p') - max len of all qualities
-    fname_part2 = f'{my_quality}_pydw{extract_ext(link)}'
+    extra_len = 5 + 2 + 1  # 1 underscore + 2 brackets + len('2160p') - max len of all qualities
+    fname_part2 = extract_ext(link)
     fname_part1 = (
         f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
         f'{idi:d}'
@@ -305,7 +306,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
 
     if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len)):
         fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
-    filename = f'{fname_part1}_{fname_part2}'
+    filename = f'{fname_part1}_{my_quality}.{fname_part2}'
 
     await download_file(idi, filename, my_dest_base, link, my_subfolder)
 

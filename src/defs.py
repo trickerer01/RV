@@ -144,8 +144,11 @@ class LoggingFlags(IntEnum):
     LOGGING_FATAL = 0x800
     # some extra logging flags are merged into normal flags for now
     LOGGING_EX_MISSING_TAGS = LOGGING_TRACE
+    """0x001"""
     LOGGING_EX_EXCLUDED_TAGS = LOGGING_INFO
+    """0x004"""
     LOGGING_EX_LOW_SCORE = LOGGING_INFO
+    """0x004"""
     LOGGING_ALL = LOGGING_FATAL | LOGGING_ERROR | LOGGING_WARN | LOGGING_INFO | LOGGING_DEBUG | LOGGING_TRACE
     """0x81F"""
 
@@ -337,9 +340,9 @@ def normalize_filename(filename: str, base_path: str) -> str:
 
 def extract_ext(href: str) -> str:
     try:
-        return search(r'(\.[^&]{3,5})&', href).group(1)
+        return search(r'\.([^&]{3,5})&', href).group(1)
     except Exception:
-        return '.mp4'
+        return 'mp4'
 
 
 def has_naming_flag(flag: int) -> bool:
@@ -362,7 +365,7 @@ class HelpPrintExitException(Exception):
     pass
 
 
-re_rvfile = re_compile(r'^(?:rv_)?(\d+)_.*?(\d{3,4}p)?_py(?:dw|pv)\..+?$')
+re_rvfile = re_compile(fr'^(?:{prefixp()})?(\d+)_.*?({"|".join(QUALITIES)})?(?:_py(?:dw|pv))?\..+?$')
 
 #
 #
