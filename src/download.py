@@ -197,12 +197,12 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
         except Exception:
             pass
         try:
-            my_author = str(i_html.find('div', string='Artist:').parent.find('span').string).lower()
+            my_authors = [str(a.string).lower() for a in i_html.find('div', string='Artist:').parent.find_all('span')]
         except Exception:
-            Log.warn(f'Warning: cannot extract author for {sname}.')
-            my_author = ''
+            Log.warn(f'Warning: cannot extract authors for {sname}.')
+            my_authors = []
         try:
-            my_categories = [str(a.string).lower() for a in i_html.find('div', string='Categories:').parent.find_all('span')]
+            my_categories = [str(c.string).lower() for c in i_html.find('div', string='Categories:').parent.find_all('span')]
         except Exception:
             Log.warn(f'Warning: cannot extract categories for {sname}.')
             my_categories = []
@@ -210,7 +210,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
             tdiv = i_html.find('div', string='Tags:')
             tags = tdiv.parent.find_all('a', class_='tag_item')
             tags_raw = [str(tag.string).replace(' ', '_').lower() for tag in tags]
-            for add_tag in [ca.replace(' ', '_') for ca in my_categories + [my_author] if len(ca) > 0]:
+            for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
                 if add_tag not in tags_raw:
                     tags_raw.append(add_tag)
             if is_filtered_out_by_extra_tags(idi, tags_raw, ExtraConfig.extra_tags, my_subfolder):
