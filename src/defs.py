@@ -116,8 +116,9 @@ class NamingFlags:
     NAMING_FLAG_SCORE = 0x02
     NAMING_FLAG_TITLE = 0x04
     NAMING_FLAG_TAGS = 0x08
-    NAMING_FLAGS_ALL = NAMING_FLAG_PREFIX | NAMING_FLAG_SCORE | NAMING_FLAG_TITLE | NAMING_FLAG_TAGS
-    """0x0F"""
+    NAMING_FLAG_QUALITY = 0x10
+    NAMING_FLAGS_ALL = NAMING_FLAG_PREFIX | NAMING_FLAG_SCORE | NAMING_FLAG_TITLE | NAMING_FLAG_TAGS | NAMING_FLAG_QUALITY
+    """0x1F"""
 
 
 NAMING_FLAGS = {
@@ -125,13 +126,14 @@ NAMING_FLAGS = {
     'score': f'0x{NamingFlags.NAMING_FLAG_SCORE:02X}',
     'title': f'0x{NamingFlags.NAMING_FLAG_TITLE:02X}',
     'tags': f'0x{NamingFlags.NAMING_FLAG_TAGS:02X}',
+    'quality': f'0x{NamingFlags.NAMING_FLAG_QUALITY:02X}',
     'full': f'0x{NamingFlags.NAMING_FLAGS_ALL:02X}'
 }
 """
 {\n\n'prefix': '0x01',\n\n'score': '0x02',\n\n'title': '0x04',\n\n'tags': '0x08',\n\n'full': '0x0F',\n\n}
 """
 NAMING_FLAGS_DEFAULT = NamingFlags.NAMING_FLAGS_ALL
-"""0x0F"""
+"""0x1F"""
 
 
 class LoggingFlags(IntEnum):
@@ -365,7 +367,7 @@ class HelpPrintExitException(Exception):
     pass
 
 
-re_rvfile = re_compile(fr'^(?:{prefixp()})?(\d+)_.*?({"|".join(QUALITIES)})?(?:_py(?:dw|pv))?\..+?$')
+re_rvfile = re_compile(fr'^(?:{prefixp()})?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\..+?$')
 
 #
 #

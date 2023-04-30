@@ -291,7 +291,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
 
     my_dest_base = normalize_path(f'{ExtraConfig.dest_base}{my_subfolder}')
     my_score = f'+{likes}' if len(likes) > 0 else 'unk'
-    extra_len = 5 + 2 + 1  # 1 underscore + 2 brackets + len('2160p') - max len of all qualities
+    extra_len = 5 + 2 + 3  # 3 underscores + 2 brackets + len('2160p') - max len of all qualities
     fname_part2 = extract_ext(link)
     fname_part1 = (
         f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
@@ -306,7 +306,9 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
 
     if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len)):
         fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
-    filename = f'{fname_part1}_{my_quality}.{fname_part2}'
+
+    my_quality = f'_{my_quality}' if has_naming_flag(NamingFlags.NAMING_FLAG_QUALITY) else ''
+    filename = f'{fname_part1}{my_quality}.{fname_part2}'
 
     await download_file(idi, filename, my_dest_base, link, my_subfolder)
 
