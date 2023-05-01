@@ -342,9 +342,9 @@ def normalize_filename(filename: str, base_path: str) -> str:
 
 def extract_ext(href: str) -> str:
     try:
-        return search(r'\.([^&]{3,5})&', href).group(1)
+        return search(r'(\.[^&]{3,5})&', href).group(1)
     except Exception:
-        return 'mp4'
+        return '.mp4'
 
 
 def has_naming_flag(flag: int) -> bool:

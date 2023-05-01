@@ -308,7 +308,7 @@ async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenar
         fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
 
     my_quality = f'_{my_quality}' if has_naming_flag(NamingFlags.NAMING_FLAG_QUALITY) else ''
-    filename = f'{fname_part1}{my_quality}.{fname_part2}'
+    filename = f'{fname_part1}{my_quality}{fname_part2}'
 
     await download_file(idi, filename, my_dest_base, link, my_subfolder)
 
