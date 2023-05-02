@@ -19,7 +19,7 @@ from defs import (
     HelpPrintExitException,
 )
 from download import DownloadWorker, at_interrupt
-from path_util import prefilter_existing_items
+from path_util import prefilter_existing_items, scan_dest_folder
 from fetch_html import fetch_html
 from scenario import DownloadScenario
 from validators import find_and_resolve_config_conflicts
@@ -161,7 +161,14 @@ async def main() -> None:
 
         orig_count = len(v_entries)
         v_entries.reverse()
-        prefilter_existing_items([v.my_id for v in v_entries])
+
+        if len(v_entries) > 0:
+            scan_dest_folder()
+            if ds is None:
+                removed_ids = prefilter_existing_items([v.my_id for v in v_entries])
+                for i in reversed(range(len(v_entries))):
+                    if v_entries[i].my_id in removed_ids:
+                        del v_entries[i]
 
         removed_count = orig_count - len(v_entries)
 
@@ -173,12 +180,11 @@ async def main() -> None:
             return
 
         minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
-
         Log.info(f'\nOk! {len(v_entries):d} videos found (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-        await DownloadWorker(
-            ((v.my_id, v.my_title, ds) if full_download else (v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link) for v in v_entries),
-            full_download, s).run()
+        params = tuple((v.my_id, v.my_title, ds) if full_download else (v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link)
+                       for v in v_entries)
+        await DownloadWorker(params, full_download, removed_count, s).run()
 
 
 async def run_main() -> None:

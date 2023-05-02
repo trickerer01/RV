@@ -356,11 +356,15 @@ def calc_sleep_time(base_time: float) -> float:
     return base_time if ExtraConfig.download_mode == DOWNLOAD_MODE_FULL else max(1.0, base_time / 3.0)
 
 
-class DownloadResult:
+class DownloadResult(IntEnum):
     DOWNLOAD_SUCCESS = 0
     DOWNLOAD_FAIL_NOT_FOUND = 1
     DOWNLOAD_FAIL_RETRIES = 2
     DOWNLOAD_FAIL_ALREADY_EXISTS = 3
+    DOWNLOAD_FAIL_SKIPPED = 4
+
+    def __str__(self) -> str:
+        return f'{self._name_} ({self.value:03X})'
 
 
 class HelpPrintExitException(Exception):

@@ -13,7 +13,7 @@ from typing import Optional
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, ExtraConfig, HelpPrintExitException
 from download import DownloadWorker, at_interrupt
-from path_util import prefilter_existing_items
+from path_util import prefilter_existing_items, scan_dest_folder
 from scenario import DownloadScenario
 from tagger import try_parse_id_or_group
 from validators import find_and_resolve_config_conflicts
@@ -61,7 +61,14 @@ async def main() -> None:
         ExtraConfig.extra_tags.clear()
 
     orig_count = len(id_sequence)
-    prefilter_existing_items(id_sequence)
+
+    if len(id_sequence) > 0:
+        scan_dest_folder()
+        if ds is None:
+            removed_ids = prefilter_existing_items(id_sequence)
+            for i in reversed(range(len(id_sequence))):
+                if id_sequence[i] in removed_ids:
+                    del id_sequence[i]
 
     removed_count = orig_count - len(id_sequence)
 
@@ -73,10 +80,10 @@ async def main() -> None:
         return
 
     minid, maxid = min(id_sequence), max(id_sequence)
-
     Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-    await DownloadWorker(((idi, '', ds) for idi in id_sequence), True).run()
+    params = tuple((idi, '', ds) for idi in id_sequence)
+    await DownloadWorker(params, True, removed_count).run()
 
 
 async def run_main() -> None:

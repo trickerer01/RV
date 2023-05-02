@@ -12,7 +12,7 @@ from typing import Set, List
 
 from defs import ExtraConfig, Log, normalize_path, re_rvfile, prefixp
 
-__all__ = ('file_exists_in_folder', 'prefilter_existing_items')
+__all__ = ('file_exists_in_folder', 'prefilter_existing_items', 'scan_dest_folder')
 
 found_filenames_base = set()  # type: Set[str]
 found_filenames_all = set()  # type: Set[str]
@@ -67,19 +67,19 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfol
     return False
 
 
-def prefilter_existing_items(id_sequence: List[int]) -> None:
+def prefilter_existing_items(id_sequence: List[int]) -> List[int]:
     """
-    This function scans dest folder saving existing files in it and 1 level below to a list for later checks
-    but only filters out existing items with desired quality\n\n
+    This function filters out existing items with desired quality\n\n
     (which may sometimes be inaccessible).\n\n
-    This function must be called exactly once!
+    This function may only be called once!
     """
     assert len(found_filenames_all) == 0
-    scan_dest_folder()
-    for idx in reversed(range(len(id_sequence))):  # type: int
-        if file_exists_in_folder(ExtraConfig.dest_base, id_sequence[idx], ExtraConfig.quality, True):
-            Log.info(f'Info: {prefixp()}{id_sequence[idx]:d}.mp4 found in {ExtraConfig.dest_base} (or subfolder). Skipped.')
-            del id_sequence[idx]
+    removed_ids = list()
+    for id_ in id_sequence:
+        if file_exists_in_folder(ExtraConfig.dest_base, id_, ExtraConfig.quality, True):
+            Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in {ExtraConfig.dest_base} (or subfolder). Skipped.')
+            removed_ids.append(id_)
+    return removed_ids
 
 #
 #
