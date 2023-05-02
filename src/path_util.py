@@ -8,9 +8,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from os import path, listdir
 from re import match
-from typing import Set, List
+from typing import Set, List, Optional
 
 from defs import ExtraConfig, Log, normalize_path, re_rvfile, prefixp
+from scenario import DownloadScenario
 
 __all__ = ('file_exists_in_folder', 'prefilter_existing_items', 'scan_dest_folder')
 
@@ -26,11 +27,13 @@ def scan_dest_folder() -> None:
     |__subfolder1:\n\n
     |____file2\n\n
     |__file1\n\n
-    => files1 = ['file1'], files2 = ['file1','file2']
+    => files1 = ['file1'], files2 = ['file1','file2']\n\n
+    This function may only be called once!
     """
     global found_filenames_base
     global found_filenames_all
 
+    assert len(found_filenames_all) == 0
     if path.isdir(ExtraConfig.dest_base):
         Log.info('Scanning dest folder...')
         subfolders = list()
@@ -67,18 +70,29 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfol
     return False
 
 
-def prefilter_existing_items(id_sequence: List[int]) -> List[int]:
+def prefilter_existing_items(id_sequence: List[int], scenario: Optional[DownloadScenario]) -> List[int]:
     """
     This function filters out existing items with desired quality\n\n
     (which may sometimes be inaccessible).\n\n
     This function may only be called once!
     """
-    assert len(found_filenames_all) == 0
     removed_ids = list()
     for id_ in id_sequence:
-        if file_exists_in_folder(ExtraConfig.dest_base, id_, ExtraConfig.quality, True):
+        file_exists = False
+        if scenario:
+            for sc in scenario.queries:
+                quality = sc.quality
+                subfolder = sc.subfolder
+                file_exists = file_exists_in_folder(f'{ExtraConfig.dest_base}{subfolder}', id_, quality, True)
+                if file_exists:
+                    break
+        else:
+            file_exists = file_exists_in_folder(ExtraConfig.dest_base, id_, ExtraConfig.quality, True)
+
+        if file_exists:
             Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in {ExtraConfig.dest_base} (or subfolder). Skipped.')
             removed_ids.append(id_)
+
     return removed_ids
 
 #

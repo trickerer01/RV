@@ -64,11 +64,10 @@ async def main() -> None:
 
     if len(id_sequence) > 0:
         scan_dest_folder()
-        if ds is None:
-            removed_ids = prefilter_existing_items(id_sequence)
-            for i in reversed(range(len(id_sequence))):
-                if id_sequence[i] in removed_ids:
-                    del id_sequence[i]
+        removed_ids = prefilter_existing_items(id_sequence, ds)
+        for i in reversed(range(len(id_sequence))):
+            if id_sequence[i] in removed_ids:
+                del id_sequence[i]
 
     removed_count = orig_count - len(id_sequence)
 

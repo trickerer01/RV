@@ -164,11 +164,10 @@ async def main() -> None:
 
         if len(v_entries) > 0:
             scan_dest_folder()
-            if ds is None:
-                removed_ids = prefilter_existing_items([v.my_id for v in v_entries])
-                for i in reversed(range(len(v_entries))):
-                    if v_entries[i].my_id in removed_ids:
-                        del v_entries[i]
+            removed_ids = prefilter_existing_items([v.my_id for v in v_entries], ds)
+            for i in reversed(range(len(v_entries))):
+                if v_entries[i].my_id in removed_ids:
+                    del v_entries[i]
 
         removed_count = orig_count - len(v_entries)
 
