@@ -350,7 +350,7 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
     else:
         rv_match = match(re_rvfile, filename)
         rv_quality = rv_match.group(2)
-        if file_exists_in_folder(my_dest_base, idi, rv_quality, len(subfolder) > 0):
+        if file_exists_in_folder(my_dest_base, idi, rv_quality):
             Log.info(f'{filename} (or similar) already exists. Skipped.')
             return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
 

@@ -3092,8 +3092,7 @@ def dump_item_tags() -> None:
     for subfolder, tags_dict in saved_tags_dict.items():
         if len(tags_dict) == 0:
             continue
-        min_id = min(tags_dict.keys())
-        max_id = max(tags_dict.keys())
+        min_id, max_id = min(tags_dict.keys()), max(tags_dict.keys())
         fullpath = f'{normalize_path(f"{ExtraConfig.dest_base}{subfolder}")}{prefixp()}!tags_{min_id:d}-{max_id:d}.txt'
         with open(fullpath, 'wt', encoding=UTF8) as sfile:
             sfile.writelines(f'{prefixp()}{idi:d}: {tags.strip()}\n' for idi, tags in sorted(tags_dict.items(), key=lambda t: t[0]))

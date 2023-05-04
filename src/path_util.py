@@ -8,65 +8,66 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from os import path, listdir
 from re import match
-from typing import Set, List, Optional
+from typing import List, Optional, Dict
 
-from defs import ExtraConfig, Log, normalize_path, re_rvfile, prefixp
+from defs import ExtraConfig, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_rvfile, prefixp
 from scenario import DownloadScenario
 
 __all__ = ('file_exists_in_folder', 'prefilter_existing_items', 'scan_dest_folder')
 
-found_filenames_base = set()  # type: Set[str]
-found_filenames_all = set()  # type: Set[str]
+found_filenames_dict = dict()  # type: Dict[str, List[str]]
 
 
 def scan_dest_folder() -> None:
     """
-    Scans base destination folder plus one level of subfolders and
-    stores found files in two lists: one for base folder and another for all scanned folders\n\n
+    Scans base destination folder plus {MAX_DEST_SCAN_SUB_DEPTH} levels of subfolders and
+    stores found files in dict (key=folder_name)\n\n
     |folder1:\n\n
     |__subfolder1:\n\n
     |____file2\n\n
+    |____file3\n\n
     |__file1\n\n
-    => files1 = ['file1'], files2 = ['file1','file2']\n\n
+    => files{'folder1': ['file1'], 'subfolder1': ['file2','file3']}\n\n
     This function may only be called once!
     """
-    global found_filenames_base
-    global found_filenames_all
 
-    assert len(found_filenames_all) == 0
+    assert len(found_filenames_dict.keys()) == 0
     if path.isdir(ExtraConfig.dest_base):
         Log.info('Scanning dest folder...')
-        subfolders = list()
-        cur_names = listdir(ExtraConfig.dest_base)
-        for idx_c in reversed(range(len(cur_names))):
-            fullpath_c = f'{ExtraConfig.dest_base}{cur_names[idx_c]}'
-            if path.isdir(fullpath_c):
-                subfolders.append(normalize_path(fullpath_c))
-                del cur_names[idx_c]
-            elif path.isfile(fullpath_c):
-                found_filenames_all.add(cur_names[idx_c])
-        found_filenames_base = cur_names
-        for subfolder in subfolders:
-            for sub_name in listdir(subfolder):
-                fullpath_s = f'{subfolder}{sub_name}'
-                if path.isfile(fullpath_s):
-                    found_filenames_all.add(sub_name)
-        Log.info(f'Found {len(found_filenames_base):d} files in base and '
-                 f'{len(found_filenames_all) - len(found_filenames_base):d} files in {len(subfolders):d} subfolders '
-                 f'(total files: {len(found_filenames_all):d})')
+
+        def scan_folder(base_folder: str, level: int) -> None:
+            for cname in listdir(base_folder):
+                fullpath = f'{base_folder}{cname}'
+                if path.isdir(fullpath):
+                    fullpath = normalize_path(fullpath)
+                    if level < MAX_DEST_SCAN_SUB_DEPTH:
+                        found_filenames_dict[fullpath] = list()
+                        scan_folder(fullpath, level + 1)
+                elif path.isfile(fullpath):
+                    found_filenames_dict[base_folder].append(cname)
+
+        found_filenames_dict[ExtraConfig.dest_base] = list()
+        scan_folder(ExtraConfig.dest_base, 0)
+        base_files_count = len(found_filenames_dict.get(ExtraConfig.dest_base))
+        total_files_count = sum(len(li) for li in found_filenames_dict.values())
+        Log.info(f'Found {base_files_count:d} files in base and '
+                 f'{total_files_count - base_files_count:d} files in {len(found_filenames_dict.keys()) - 1:d} subfolders '
+                 f'(total files: {total_files_count:d}, scan depth: {MAX_DEST_SCAN_SUB_DEPTH:d})')
 
 
-def file_exists_in_folder(base_folder: str, idi: int, quality: str, check_subfolders: bool) -> bool:
+def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> bool:
     if path.isdir(base_folder):
-        for fname in sorted(found_filenames_all if check_subfolders else found_filenames_base):
-            try:
-                f_match = match(re_rvfile, fname)
-                f_id = f_match.group(1)
-                f_quality = f_match.group(2)
-                if str(idi) == f_id and (quality is None or quality == f_quality):
-                    return True
-            except Exception:
-                continue
+        orig_file_names = found_filenames_dict.get(normalize_path(base_folder))
+        if orig_file_names is not None:
+            for fname in orig_file_names:
+                try:
+                    f_match = match(re_rvfile, fname)
+                    f_id = f_match.group(1)
+                    f_quality = f_match.group(2)
+                    if str(idi) == f_id and (quality is None or quality == f_quality):
+                        return True
+                except Exception:
+                    continue
     return False
 
 
@@ -81,13 +82,14 @@ def prefilter_existing_items(id_sequence: List[int], scenario: Optional[Download
         file_exists = False
         if scenario:
             for sc in scenario.queries:
-                quality = sc.quality
-                subfolder = sc.subfolder
-                file_exists = file_exists_in_folder(f'{ExtraConfig.dest_base}{subfolder}', id_, quality, True)
+                file_exists = file_exists_in_folder(f'{ExtraConfig.dest_base}{sc.subfolder}', id_, sc.quality)
                 if file_exists:
                     break
         else:
-            file_exists = file_exists_in_folder(ExtraConfig.dest_base, id_, ExtraConfig.quality, True)
+            for fullpath in found_filenames_dict.keys():
+                file_exists = file_exists_in_folder(fullpath, id_, ExtraConfig.quality)
+                if file_exists:
+                    break
 
         if file_exists:
             Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in {ExtraConfig.dest_base} (or subfolder). Skipped.')
