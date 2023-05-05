@@ -8,13 +8,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
-from typing import Optional
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, ExtraConfig, HelpPrintExitException
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items, scan_dest_folder
-from scenario import DownloadScenario
 from tagger import try_parse_id_or_group
 from validators import find_and_resolve_config_conflicts
 
@@ -36,7 +34,6 @@ async def main() -> None:
         ExtraConfig.read_params(arglist)
         start_id = arglist.start  # type: int
         end_id = arglist.end  # type: int
-        ds = arglist.download_scenario  # type: Optional[DownloadScenario]
 
         if arglist.use_id_sequence is True:
             id_sequence = try_parse_id_or_group(ExtraConfig.extra_tags)
@@ -49,7 +46,7 @@ async def main() -> None:
                 Log.fatal(f'\nError: start ({start_id:d}) > end ({end_id:d})')
                 raise ValueError
 
-        if find_and_resolve_config_conflicts(False, ds is not None) is True:
+        if find_and_resolve_config_conflicts(False) is True:
             await sleep(3.0)
     except Exception:
         Log.fatal('\nError reading parsed arglist!')
@@ -64,7 +61,7 @@ async def main() -> None:
 
     if len(id_sequence) > 0:
         scan_dest_folder()
-        removed_ids = prefilter_existing_items(id_sequence, ds)
+        removed_ids = prefilter_existing_items(id_sequence)
         for i in reversed(range(len(id_sequence))):
             if id_sequence[i] in removed_ids:
                 del id_sequence[i]
@@ -81,7 +78,7 @@ async def main() -> None:
     minid, maxid = min(id_sequence), max(id_sequence)
     Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-    params = tuple((idi, '', ds) for idi in id_sequence)
+    params = tuple((idi, '') for idi in id_sequence)
     await DownloadWorker(params, True, removed_count).run()
 
 

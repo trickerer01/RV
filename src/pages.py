@@ -9,7 +9,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 import sys
 from asyncio import run as run_async, sleep
 from re import search as re_search
-from typing import Optional
 
 from aiohttp import ClientSession, TCPConnector
 
@@ -21,7 +20,6 @@ from defs import (
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items, scan_dest_folder
 from fetch_html import fetch_html
-from scenario import DownloadScenario
 from validators import find_and_resolve_config_conflicts
 
 __all__ = ()
@@ -72,7 +70,6 @@ async def main() -> None:
         search_rule_tag = arglist.search_rule_tag  # type: str
         search_rule_art = arglist.search_rule_art  # type: str
         search_rule_cat = arglist.search_rule_cat  # type: str
-        ds = arglist.download_scenario  # type: Optional[DownloadScenario]
 
         full_download = ExtraConfig.quality != QUALITIES[-1]
 
@@ -83,7 +80,7 @@ async def main() -> None:
         if search_cats.find(',') != -1 and search_rule_cat == SEARCH_RULE_ALL:
             search_cats = f'{SEARCH_RULE_ALL},{search_cats}'
 
-        if find_and_resolve_config_conflicts(True, ds is not None, full_download) is True:
+        if find_and_resolve_config_conflicts(True, full_download) is True:
             await sleep(3.0)
     except Exception:
         Log.fatal('\nError reading parsed arglist!')
@@ -164,7 +161,7 @@ async def main() -> None:
 
         if len(v_entries) > 0:
             scan_dest_folder()
-            removed_ids = prefilter_existing_items([v.my_id for v in v_entries], ds)
+            removed_ids = prefilter_existing_items([v.my_id for v in v_entries])
             for i in reversed(range(len(v_entries))):
                 if v_entries[i].my_id in removed_ids:
                     del v_entries[i]
@@ -181,7 +178,7 @@ async def main() -> None:
         minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
         Log.info(f'\nOk! {len(v_entries):d} videos found (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-        params = tuple((v.my_id, v.my_title, ds) if full_download else (v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link)
+        params = tuple((v.my_id, v.my_title) if full_download else (v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link)
                        for v in v_entries)
         await DownloadWorker(params, full_download, removed_count, s).run()
 

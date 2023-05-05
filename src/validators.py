@@ -17,10 +17,10 @@ from defs import (
 )
 
 
-def find_and_resolve_config_conflicts(pages: bool, has_scenario: bool, full_download=True) -> bool:
+def find_and_resolve_config_conflicts(pages: bool, full_download=True) -> bool:
     delay_for_message = False
     if pages:
-        if has_scenario is True:
+        if ExtraConfig.scenario is not None:
             if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
                 Log.info('Info: running download script, outer untagged policy will be ignored')
                 ExtraConfig.uvp = DOWNLOAD_POLICY_DEFAULT
@@ -29,6 +29,8 @@ def find_and_resolve_config_conflicts(pages: bool, has_scenario: bool, full_down
                 Log.info(f'Info: running download script: outer extra tags: {str(ExtraConfig.extra_tags)}')
                 delay_for_message = True
         if full_download is False:
+            Log.info('Info: scenarios are ignored for previews!')
+            delay_for_message = True
             if len(ExtraConfig.extra_tags) > 0:
                 Log.info('Info: extra tags are ignored for previews!')
                 delay_for_message = True
@@ -38,9 +40,6 @@ def find_and_resolve_config_conflicts(pages: bool, has_scenario: bool, full_down
             if ExtraConfig.save_tags is True:
                 Log.info('Info: tags are not saved for previews!')
                 delay_for_message = True
-            if has_scenario is True:
-                Log.info('Info: scenarios are ignored for previews!')
-                delay_for_message = True
             if ExtraConfig.min_score:
                 Log.info('Info: score is not extracted from previews!')
                 delay_for_message = True
@@ -49,7 +48,7 @@ def find_and_resolve_config_conflicts(pages: bool, has_scenario: bool, full_down
                     Log.info('Info: can only use prefix and title naming flags for previews, other flags will be ignored!')
                     delay_for_message = True
     else:
-        if has_scenario:
+        if ExtraConfig.scenario is not None:
             if ExtraConfig.uvp != DOWNLOAD_POLICY_DEFAULT:
                 Log.info('Info: running download script, outer untagged policy will be ignored')
                 ExtraConfig.uvp = DOWNLOAD_POLICY_DEFAULT

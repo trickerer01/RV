@@ -22,7 +22,7 @@ from defs import (
     re_rvfile,
 )
 from fetch_html import fetch_html, wrap_request
-from path_util import file_exists_in_folder
+from path_util import file_already_exists
 from scenario import DownloadScenario
 from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags, dump_item_tags,
@@ -42,7 +42,7 @@ class DownloadWorker:
     Async queue wrapper which binds list of lists of arguments to a download function call and processes them
     asynchronously with a limit of simulteneous downloads defined by MAX_VIDEOS_QUEUE_SIZE
     """
-    params_first_type = Tuple[int, str, Optional[DownloadScenario]]  # download_id
+    params_first_type = Tuple[int, str]  # download_id
     params_second_type = Tuple[int, str, str, str, Optional[str]]  # download_file
     sequence_type = Tuple[Union[params_first_type, params_second_type]]  # Tuple here makes sure argument is not an empty list
 
@@ -190,7 +190,8 @@ def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], likes: str
     return -1
 
 
-async def download_id(idi: int, my_title: str, scenario: Optional[DownloadScenario]) -> DownloadResult:
+async def download_id(idi: int, my_title: str) -> DownloadResult:
+    scenario = ExtraConfig.scenario  # type: Optional[DownloadScenario]
     sname = f'{prefixp()}{idi:d}.mp4'
     my_subfolder = ''
     my_quality = ExtraConfig.quality
@@ -350,7 +351,7 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
     else:
         rv_match = match(re_rvfile, filename)
         rv_quality = rv_match.group(2)
-        if file_exists_in_folder(my_dest_base, idi, rv_quality):
+        if file_already_exists(idi, rv_quality):
             Log.info(f'{filename} (or similar) already exists. Skipped.')
             return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
 

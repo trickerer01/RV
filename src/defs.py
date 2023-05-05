@@ -16,6 +16,10 @@ from typing import Optional, List
 from urllib.parse import urlparse
 
 
+class DownloadScenario:
+    ...
+
+
 class BaseConfig(object):
     """
     Parameters container for params used in both **pages** and **ids** modes
@@ -29,6 +33,7 @@ class BaseConfig(object):
         self.download_mode = None  # type: Optional[str]
         self.save_tags = None  # type: Optional[bool]
         self.extra_tags = None  # type: Optional[List[str]]
+        self.scenario = None  # type: Optional[DownloadScenario]
         self.naming_flags = 0
         self.logging_flags = 0
 
@@ -41,6 +46,7 @@ class BaseConfig(object):
         self.download_mode = params.download_mode
         self.save_tags = params.dump_tags
         self.extra_tags = params.extra_tags
+        self.scenario = params.download_scenario
         self.naming_flags = params.naming
         self.logging_flags = params.log_level
 

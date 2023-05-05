@@ -13,7 +13,7 @@ from typing import List, Optional, Dict
 from defs import ExtraConfig, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_rvfile, prefixp
 from scenario import DownloadScenario
 
-__all__ = ('file_exists_in_folder', 'prefilter_existing_items', 'scan_dest_folder')
+__all__ = ('file_already_exists', 'prefilter_existing_items', 'scan_dest_folder')
 
 found_filenames_dict = dict()  # type: Dict[str, List[str]]
 
@@ -55,23 +55,37 @@ def scan_dest_folder() -> None:
                  f'(total files: {total_files_count:d}, scan depth: {MAX_DEST_SCAN_SUB_DEPTH:d})')
 
 
-def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> bool:
-    if path.isdir(base_folder):
-        orig_file_names = found_filenames_dict.get(normalize_path(base_folder))
-        if orig_file_names is not None:
-            for fname in orig_file_names:
-                try:
-                    f_match = match(re_rvfile, fname)
-                    f_id = f_match.group(1)
-                    f_quality = f_match.group(2)
-                    if str(idi) == f_id and (quality is None or quality == f_quality):
-                        return True
-                except Exception:
-                    continue
-    return False
+def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> str:
+    orig_file_names = found_filenames_dict.get(normalize_path(base_folder))
+    if path.isdir(base_folder) and orig_file_names is not None:
+        for fname in orig_file_names:
+            try:
+                f_match = match(re_rvfile, fname)
+                f_id = f_match.group(1)
+                f_quality = f_match.group(2)
+                if str(idi) == f_id and (quality is None or quality == f_quality):
+                    return f'{normalize_path(base_folder)}{fname}'
+            except Exception:
+                continue
+    return ''
 
 
-def prefilter_existing_items(id_sequence: List[int], scenario: Optional[DownloadScenario]) -> List[int]:
+def file_already_exists(idi: int, quality: str) -> str:
+    scenario = ExtraConfig.scenario  # type: Optional[DownloadScenario]
+    if scenario:
+        for q in scenario.queries:
+            fullpath = file_exists_in_folder(f'{ExtraConfig.dest_base}{q.subfolder}', idi, quality or q.quality)
+            if len(fullpath) > 0:
+                return fullpath
+    else:
+        for fullpath in found_filenames_dict.keys():
+            fullpath = file_exists_in_folder(fullpath, idi, quality or ExtraConfig.quality)
+            if len(fullpath) > 0:
+                return fullpath
+    return ''
+
+
+def prefilter_existing_items(id_sequence: List[int]) -> List[int]:
     """
     This function filters out existing items with desired quality\n\n
     (which may sometimes be inaccessible).\n\n
@@ -79,20 +93,9 @@ def prefilter_existing_items(id_sequence: List[int], scenario: Optional[Download
     """
     removed_ids = list()
     for id_ in id_sequence:
-        found_folder = ''
-        if scenario:
-            for sc in scenario.queries:
-                if file_exists_in_folder(f'{ExtraConfig.dest_base}{sc.subfolder}', id_, sc.quality):
-                    found_folder = f'{ExtraConfig.dest_base}{sc.subfolder}'
-                    break
-        else:
-            for fullpath in found_filenames_dict.keys():
-                if file_exists_in_folder(fullpath, id_, ExtraConfig.quality):
-                    found_folder = fullpath
-                    break
-
-        if len(found_folder) > 0:
-            Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in \'{normalize_path(found_folder)}\'. Skipped.')
+        fullpath = file_already_exists(id_, '')
+        if len(fullpath) > 0:
+            Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in \'{path.split(fullpath)[0]}/\'. Skipped.')
             removed_ids.append(id_)
 
     return removed_ids
