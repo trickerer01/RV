@@ -79,20 +79,20 @@ def prefilter_existing_items(id_sequence: List[int], scenario: Optional[Download
     """
     removed_ids = list()
     for id_ in id_sequence:
-        file_exists = False
+        found_folder = ''
         if scenario:
             for sc in scenario.queries:
-                file_exists = file_exists_in_folder(f'{ExtraConfig.dest_base}{sc.subfolder}', id_, sc.quality)
-                if file_exists:
+                if file_exists_in_folder(f'{ExtraConfig.dest_base}{sc.subfolder}', id_, sc.quality):
+                    found_folder = f'{ExtraConfig.dest_base}{sc.subfolder}'
                     break
         else:
             for fullpath in found_filenames_dict.keys():
-                file_exists = file_exists_in_folder(fullpath, id_, ExtraConfig.quality)
-                if file_exists:
+                if file_exists_in_folder(fullpath, id_, ExtraConfig.quality):
+                    found_folder = fullpath
                     break
 
-        if file_exists:
-            Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in {ExtraConfig.dest_base} (or subfolder). Skipped.')
+        if len(found_folder) > 0:
+            Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in \'{normalize_path(found_folder)}\'. Skipped.')
             removed_ids.append(id_)
 
     return removed_ids
