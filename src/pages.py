@@ -178,8 +178,7 @@ async def main() -> None:
         minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
         Log.info(f'\nOk! {len(v_entries):d} videos found (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-        params = tuple((v.my_id, v.my_title) if full_download else (v.my_id, v.my_filename, ExtraConfig.dest_base, v.my_link)
-                       for v in v_entries)
+        params = tuple((v.my_id, v.my_title) if full_download else (v.my_id, v.my_filename, '', v.my_link) for v in v_entries)
         await DownloadWorker(params, full_download, removed_count, s).run()
 
 

@@ -337,6 +337,7 @@ def check_item_download_status(dest: str, resp: ClientResponse) -> None:
 
 
 async def download_file(idi: int, filename: str, my_dest_base: str, link: str, subfolder='') -> DownloadResult:
+    my_dest_base = my_dest_base or ExtraConfig.dest_base
     dest = normalize_filename(filename, my_dest_base)
     sfilename = f'{f"{subfolder}/" if len(subfolder) > 0 else ""}{filename}'
     file_size = 0

@@ -97,7 +97,6 @@ def prefilter_existing_items(id_sequence: List[int]) -> List[int]:
         if len(fullpath) > 0:
             Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in \'{path.split(fullpath)[0]}/\'. Skipped.')
             removed_ids.append(id_)
-
     return removed_ids
 
 #
