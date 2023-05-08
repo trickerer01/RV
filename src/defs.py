@@ -16,14 +16,8 @@ from typing import Optional, List
 from urllib.parse import urlparse
 
 
-class DownloadScenario:
-    ...
-
-
 class BaseConfig(object):
-    """
-    Parameters container for params used in both **pages** and **ids** modes
-    """
+    """Parameters container for params used in both **pages** and **ids** modes"""
     def __init__(self) -> None:
         self.dest_base = None  # type: Optional[str]
         self.proxy = None  # type: Optional[str]
@@ -33,7 +27,7 @@ class BaseConfig(object):
         self.download_mode = None  # type: Optional[str]
         self.save_tags = None  # type: Optional[bool]
         self.extra_tags = None  # type: Optional[List[str]]
-        self.scenario = None  # type: Optional[DownloadScenario]
+        self.scenario = None  # type: Optional['DownloadScenario']
         self.naming_flags = 0
         self.logging_flags = 0
 
@@ -54,7 +48,6 @@ class BaseConfig(object):
     def uvp(self) -> Optional[str]:
         return self.un_video_policy
 
-    # noinspection PyUnresolvedReferences
     @uvp.setter
     def uvp(self, value: str) -> None:
         self.un_video_policy = value
@@ -135,9 +128,7 @@ NAMING_FLAGS = {
     'quality': f'0x{NamingFlags.NAMING_FLAG_QUALITY:02X}',
     'full': f'0x{NamingFlags.NAMING_FLAGS_ALL:02X}'
 }
-"""
-{\n\n'prefix': '0x01',\n\n'score': '0x02',\n\n'title': '0x04',\n\n'tags': '0x08',\n\n'full': '0x0F',\n\n}
-"""
+"""{\n\n'prefix': '0x01',\n\n'score': '0x02',\n\n'title': '0x04',\n\n'tags': '0x08',\n\n'quality': '0x10',\n\n'full': '0x1F',\n\n}"""
 NAMING_FLAGS_DEFAULT = NamingFlags.NAMING_FLAGS_ALL
 """0x1F"""
 
