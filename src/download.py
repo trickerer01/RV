@@ -26,6 +26,7 @@ from path_util import file_already_exists
 from scenario import DownloadScenario
 from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags, dump_item_tags,
+    try_parse_id_or_group,
 
 )
 
@@ -145,10 +146,20 @@ class DownloadWorker:
         await self._after_download()
 
 
-def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], subfolder: str) -> bool:
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], is_extra_seq: bool, subfolder: str) -> bool:
     suc = True
     sname = f'{prefixp()}{idi:d}.mp4'
     if len(extra_tags) > 0:
+        if is_extra_seq:
+            assert len(extra_tags) == 1
+            id_sequence = try_parse_id_or_group(extra_tags)
+            assert id_sequence
+            if idi not in id_sequence:
+                suc = False
+                Log.trace(f'[{subfolder}] Video \'{sname}\' isn\'t contained in id list \'{str(id_sequence)}\'. Skipped!',
+                          LoggingFlags.LOGGING_EX_MISSING_TAGS)
+            return not suc
+
         for extag in extra_tags:
             if extag[0] == '(':
                 if get_or_group_matching_tag(extag, tags_raw) is None:
@@ -176,7 +187,7 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
 
 def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], likes: str, scenario: DownloadScenario) -> int:
     for idx, sq in enumerate(scenario.queries):
-        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.subfolder):
+        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.use_id_sequence, sq.subfolder):
             if len(likes) > 0:
                 try:
                     if int(likes) < sq.minscore:
@@ -231,7 +242,7 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
             for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
                 if add_tag not in tags_raw:
                     tags_raw.append(add_tag)
-            if is_filtered_out_by_extra_tags(idi, tags_raw, ExtraConfig.extra_tags, my_subfolder):
+            if is_filtered_out_by_extra_tags(idi, tags_raw, ExtraConfig.extra_tags, False, my_subfolder):
                 Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
                 return DownloadResult.DOWNLOAD_FAIL_SKIPPED
             if len(likes) > 0:

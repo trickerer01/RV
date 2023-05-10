@@ -211,7 +211,7 @@ HELP_ARG_DWN_SCENARIO = (
     ' Useful when you have several queries you need to process for same id range.'
     ' Format:'
     ' "{SUBDIR1}: tag1 tag2; {SUBDIR2}: tag3 tag4 -tag1 -tag2".'
-    ' You can also use following arguments in each subquery: -quality, -minscore, -uvp.'
+    ' You can also use following arguments in each subquery: -quality, -minscore, -uvp, -seq.'
     ' Example:'
     ' \'python ids.py -path ... -start ... -end ... --download-scenario'
     ' "1g: 1girl -1monster -quality 480p; 2g: 2girls -1girl -1monster -quality 720p -minscore 150 -uvp always"\''
