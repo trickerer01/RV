@@ -84,7 +84,7 @@ def validate_parsed(args: List[str], default_sub: ArgumentParser) -> Namespace:
 
 
 def add_common_args(parser_or_group: ArgumentParser) -> None:
-    parser_or_group.add_argument('-path', default=path.abspath(path.curdir), help=HELP_PATH, type=valid_path)
+    parser_or_group.add_argument('-path', default=valid_path(path.abspath(path.curdir)), help=HELP_PATH, type=valid_path)
     parser_or_group.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_QUALITY, choices=QUALITIES)
     parser_or_group.add_argument('-naming', metavar='#MASK', default=NAMING_DEFAULT, help=HELP_ARG_NAMING, type=naming_flags)
     parser_or_group.add_argument('-log', '--log-level', default=LOGGING_DEFAULT, help=HELP_ARG_LOGGING, type=log_level)
