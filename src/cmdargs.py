@@ -63,8 +63,7 @@ def validate_parsed(args: List[str], default_sub: ArgumentParser) -> Namespace:
 
     error_to_print = ''
     try:
-        parsed, unks = (
-            parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args))
+        parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
         if not is_parsed_cmdfile(parsed):
             for tag in unks:
                 try:

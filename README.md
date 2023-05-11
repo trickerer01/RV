@@ -51,11 +51,33 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - Id sequence is used **INSTEAD** of id range, you can't use both
     - python ids.py \<args>... -seq (id=1337\~id=9999\~id=1001)
 
-4. File Naming
+4. File naming
   - File names are generated based on video *title* and *tags*:
   - Base template: ***rv\_\<video_id>\_\<title>\_(\<tag1,tag2,...,tagN>).\<ext>***
   - Non-descriptive or way-too-long tags will be dropped
   - If resulting file total path is too long to fit into 240 symbols, first the tags will be gradually dropped; if not enough, title will be shrunk to fit; general advice: do not download to folders way too deep down the folder tree
+
+  5. Using 'file' mode
+  - Although not required as cmdline argument, there is a default mode app runs in which is a `cmd` mode
+  - `File` mode becomes useful when your cmdline string becomes **really long**. For example: Windows string buffer for console input is about 32767 characters long but standard `cmd.exe` buffer can only fit about 8192 characters, powershell - about 16384. File mode is avalible for both `pages` and `ids` modules, of course, and can be used with shorter cmdline string as well
+  - `File` mode is activated by providing 'file' as first argument and has a single option which is `-path` to a text file containing actual cmdline arguments for used module's cmd mode:
+    - `python pages.py file -path <FILEPATH>`
+  - Target file has to be structured as follows:
+    - all arguments and values must be separated: one argument *or* value per line
+    - quotes you would normally use in console window to escape argument value must be removed
+    - only current module arguments needed, no python executable or module name needed, `cmd` mode can be omitted
+      ```
+      -start
+      1
+      -end
+      20
+      -path
+      H:/long/folder name/with spaces (no quotes)/
+      --log-level
+      trace
+      -script
+      s1: (script~is~a~single~value); s2: -no_quotes_here_either
+      ```
 
 #### Examples
 1. Pages
