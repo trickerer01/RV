@@ -43,13 +43,10 @@ class DownloadWorker:
     Async queue wrapper which binds list of lists of arguments to a download function call and processes them
     asynchronously with a limit of simulteneous downloads defined by MAX_VIDEOS_QUEUE_SIZE
     """
-    params_first_type = Tuple[int, str]  # download_id
-    params_second_type = Tuple[int, str, str, str, Optional[str]]  # download_file
-    sequence_type = Tuple[Union[params_first_type, params_second_type]]  # Tuple here makes sure argument is not an empty list
-
-    def __init__(self, my_sequence: sequence_type, by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
+    def __init__(self, my_sequence: Union[List[Tuple[int, str]], List[Tuple[int, str, str, str, Optional[str]]]],
+                 by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
         self._func = download_id if by_id is True else download_file
-        self._seq = list(my_sequence)
+        self._seq = my_sequence
         self._queue = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)  # type: AsyncQueue[Tuple[int, Coroutine[Any, Any, DownloadResult]]]
         self.session = session
         self.orig_count = len(self._seq)

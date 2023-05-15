@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
+from typing import List, Tuple
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, ExtraConfig, HelpPrintExitException
@@ -78,7 +79,7 @@ async def main() -> None:
     minid, maxid = min(id_sequence), max(id_sequence)
     Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-    params = tuple((idi, '') for idi in id_sequence)
+    params = [(idi, '') for idi in id_sequence]
     await DownloadWorker(params, True, removed_count).run()
 
 

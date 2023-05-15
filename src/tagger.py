@@ -2905,7 +2905,7 @@ def is_valid_extra_tag(extag: str) -> bool:
     return (not is_non_wtag(extag)) or is_valid_tag(extag) or is_valid_artist(extag) or is_valid_category(extag)
 
 
-def get_tag_num(tag: str) -> str:
+def get_tag_num(tag: str) -> Optional[str]:
     return TAG_NUMS_DECODED.get(tag)
 
 
@@ -2917,7 +2917,7 @@ def assert_valid_tag(tag: str) -> None:
     assert is_valid_tag(tag)
 
 
-def get_artist_num(artist: str) -> str:
+def get_artist_num(artist: str) -> Optional[str]:
     return ART_NUMS_DECODED.get(artist)
 
 
@@ -2929,7 +2929,7 @@ def assert_valid_artist(artist: str) -> None:
     assert is_valid_artist(artist)
 
 
-def get_category_num(category: str) -> str:
+def get_category_num(category: str) -> Optional[str]:
     return CAT_NUMS_DECODED.get(category)
 
 
