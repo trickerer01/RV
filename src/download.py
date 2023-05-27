@@ -339,7 +339,7 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
 
 
 def check_item_download_status(dest: str, resp: ClientResponse) -> None:
-    if dest in download_worker.writes_active and path.isfile(dest) and stat(dest).st_size == 0:
+    if dest in download_worker.writes_active and ((not path.isfile(dest)) or stat(dest).st_size <= 64*1024):
         Log.error(f'{path.basename(dest)} status check failed (nothing downloaded)! Interrupting current try...')
         resp.connection.transport.abort()  # abort download task (forcefully - close connection)
 
