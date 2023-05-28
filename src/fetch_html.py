@@ -9,13 +9,16 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from asyncio import sleep, get_running_loop, Lock as AsyncLock
 from random import uniform as frand
 from typing import Optional, List
+from urllib.parse import urlparse
 
+from aiohttp import ClientSession, ClientResponse, TCPConnector, http_parser
+from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
-from aiohttp import ClientSession, ClientResponse, http_parser
+from python_socks import ProxyType
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, ExtraConfig, HOST
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, HOST
 
-__all__ = ('wrap_request', 'fetch_html')
+__all__ = ('make_session', 'wrap_request', 'fetch_html')
 
 
 class RequestQueue:
@@ -43,12 +46,21 @@ class RequestQueue:
             get_running_loop().create_task(RequestQueue._reset())
 
 
+async def make_session() -> ClientSession:
+    if ExtraConfig.proxy:
+        pp = urlparse(ExtraConfig.proxy)
+        ptype = ProxyType.SOCKS5 if pp.scheme in ['socks5', 'socks5h'] else ProxyType.HTTP
+        connector = ProxyConnector(limit=MAX_VIDEOS_QUEUE_SIZE, proxy_type=ptype, host=pp.hostname, port=pp.port)
+    else:
+        connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE)
+    return ClientSession(connector=connector, read_bufsize=2**20)
+
+
 async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> ClientResponse:
     """Queues request, updating headers/proxies beforehand, and returns the response"""
     await RequestQueue.until_ready(url)
     s.headers.update(DEFAULT_HEADERS.copy())
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'}, http_parser.URL(HOST))
-    kwargs.update(proxy=ExtraConfig.proxy)
     r = await s.request(method, url, **kwargs)
     return r
 
@@ -63,7 +75,7 @@ async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> 
     while retries < tries:
         try:
             async with await wrap_request(
-                    session, 'GET', url, timeout=5,
+                    session, 'GET', url, timeout=10,
                     headers={'X-fancyBox': 'true', 'X-Requested-With': 'XMLHttpRequest', 'Host': HOST, 'Referer': url}) as r:
                 if r.status != 404:
                     r.raise_for_status()

@@ -10,16 +10,14 @@ import sys
 from asyncio import run as run_async, sleep
 from re import search as re_search
 
-from aiohttp import ClientSession, TCPConnector
-
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    Log, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
+    Log, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
     HelpPrintExitException,
 )
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items, scan_dest_folder
-from fetch_html import fetch_html
+from fetch_html import make_session, fetch_html
 from validators import find_and_resolve_config_conflicts
 
 __all__ = ()
@@ -90,7 +88,7 @@ async def main() -> None:
     maxpage = 0
 
     pi = start_page
-    async with ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as s:
+    async with await make_session() as s:
         while pi < start_page + pages_count:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')

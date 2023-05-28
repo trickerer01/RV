@@ -13,7 +13,7 @@ from re import match, search
 from typing import Any, List, Optional, Union, Coroutine, Tuple
 
 from aiofile import async_open
-from aiohttp import ClientSession, TCPConnector, ClientTimeout, ClientResponse
+from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
     CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, TAGS_CONCAT_CHAR, SITE_AJAX_REQUEST_VIDEO,
@@ -21,7 +21,7 @@ from defs import (
     Log, ExtraConfig, normalize_path, normalize_filename, get_elapsed_time_s, get_elapsed_time_i, prefixp, LoggingFlags, extract_ext,
     re_rvfile,
 )
-from fetch_html import fetch_html, wrap_request
+from fetch_html import make_session, fetch_html, wrap_request
 from path_util import file_already_exists
 from scenario import DownloadScenario
 from tagger import (
@@ -135,7 +135,7 @@ class DownloadWorker:
             Log.fatal(f'Failed items:\n{newline.join(str(fi) for fi in sorted(self.failed_items))}')
 
     async def run(self) -> None:
-        async with self.session or ClientSession(connector=TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE), read_bufsize=2**20) as self.session:
+        async with self.session or await make_session() as self.session:
             for cv in as_completed([self._prod(), self._state_reporter()] + [self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE)]):
                 await cv
         if ExtraConfig.save_tags is True:
