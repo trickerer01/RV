@@ -153,7 +153,7 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
             assert id_sequence
             if idi not in id_sequence:
                 suc = False
-                Log.trace(f'[{subfolder}] Video \'{sname}\' isn\'t contained in id list \'{str(id_sequence)}\'. Skipped!',
+                Log.trace(f'[{subfolder}] Video {sname} isn\'t contained in id list \'{str(id_sequence)}\'. Skipped!',
                           LoggingFlags.LOGGING_EX_MISSING_TAGS)
             return not suc
 
@@ -161,35 +161,43 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
             if extag[0] == '(':
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
-                    Log.trace(f'[{subfolder}] Video \'{sname}\' misses required tag matching \'{extag}\'. Skipped!',
+                    Log.trace(f'[{subfolder}] Video {sname} misses required tag matching \'{extag}\'. Skipped!',
                               LoggingFlags.LOGGING_EX_MISSING_TAGS)
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
-                    Log.info(f'[{subfolder}] Video \'{sname}\' contains excluded tags combination \'{extag[1:]}\'. Skipped!',
+                    Log.info(f'[{subfolder}] Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
                              LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
-                    Log.info(f'[{subfolder}] Video \'{sname}\' contains excluded tag \'{mtag}\'. Skipped!',
+                    Log.info(f'[{subfolder}] Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
                              LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
                 elif mtag is None and extag[0] != '-':
                     suc = False
-                    Log.trace(f'[{subfolder}] Video \'{sname}\' misses required tag matching \'{my_extag}\'. Skipped!',
+                    Log.trace(f'[{subfolder}] Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
                               LoggingFlags.LOGGING_EX_MISSING_TAGS)
     return not suc
 
 
-def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], likes: str, scenario: DownloadScenario) -> int:
+def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], score: str, rating: str, scenario: DownloadScenario) -> int:
+    sname = f'{prefixp()}{idi:d}.mp4'
     for idx, sq in enumerate(scenario.queries):
         if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.use_id_sequence, sq.subfolder):
-            if len(likes) > 0:
+            if len(score) > 0:
                 try:
-                    if int(likes) < sq.minscore:
-                        Log.info(f'[{sq.subfolder}] Video \'{prefixp()}{idi:d}.mp4\''
-                                 f' has low score \'{int(likes):d}\' (required {sq.minscore:d})!',
+                    if int(score) < sq.minscore:
+                        Log.info(f'[{sq.subfolder}] Video {sname} has low score \'{score}\' (required {sq.minscore:d})!',
+                                 LoggingFlags.LOGGING_EX_LOW_SCORE)
+                        continue
+                except Exception:
+                    pass
+            if len(rating) > 0:
+                try:
+                    if int(rating) < sq.minrating:
+                        Log.info(f'[{sq.subfolder}] Video {sname} has low rating \'{rating}%\' (required {sq.minrating:d}%)!',
                                  LoggingFlags.LOGGING_EX_LOW_SCORE)
                         continue
                 except Exception:
@@ -204,7 +212,8 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
     my_subfolder = ''
     my_quality = ExtraConfig.quality
     my_tags = 'no_tags'
-    likes = ''
+    rating = ''
+    score = ''
     i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % idi}?popup_id={2 + idi % 10:d}', session=download_worker.session)
     if i_html:
         if i_html.find('title', string='404 Not Found'):
@@ -218,8 +227,10 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
             else:
                 my_title = ''
         try:
-            likespan = i_html.find('span', class_='voters count')
-            likes = str(likespan.text[:max(likespan.text.find(' '), 0)])
+            dislikes_int = 0
+            likes_int = int(match(r'^(\d+)', i_html.find('span', class_='voters count').text).group(1))
+            rating = f'{(likes_int * 100) // (dislikes_int + likes_int):d}' if (dislikes_int + likes_int) > 999999 else rating
+            score = f'{likes_int - dislikes_int:d}'
         except Exception:
             pass
         try:
@@ -242,15 +253,22 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
             if is_filtered_out_by_extra_tags(idi, tags_raw, ExtraConfig.extra_tags, False, my_subfolder):
                 Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
                 return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-            if len(likes) > 0:
+            if len(score) > 0 and ExtraConfig.min_score is not None:
                 try:
-                    if int(likes) < ExtraConfig.min_score:
-                        Log.info(f'Info: video {sname} has low score \'{int(likes):d}\' (required {ExtraConfig.min_score:d}), skipping...')
+                    if int(score) < ExtraConfig.min_score:
+                        Log.info(f'Info: video {sname} has low score \'{score}\' (required {ExtraConfig.min_score:d}), skipping...')
+                        return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+                except Exception:
+                    pass
+            if len(rating) > 0:
+                try:
+                    if int(rating) < ExtraConfig.min_rating:
+                        Log.info(f'Info: video {sname} has low rating \'{rating}%\' (required {ExtraConfig.min_rating:d}%), skipping...')
                         return DownloadResult.DOWNLOAD_FAIL_SKIPPED
                 except Exception:
                     pass
             if scenario is not None:
-                sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, likes, scenario)
+                sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, score, rating, scenario)
                 if sub_idx == -1:
                     Log.info(f'Info: unable to find matching scenario subquery for {sname}, skipping...')
                     return DownloadResult.DOWNLOAD_FAIL_SKIPPED
@@ -314,13 +332,14 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
         return DownloadResult.DOWNLOAD_FAIL_RETRIES
 
     my_dest_base = normalize_path(f'{ExtraConfig.dest_base}{my_subfolder}')
-    my_score = f'+{likes}' if len(likes) > 0 else 'unk'
+    my_score = f'{f"+" if score.isnumeric() else ""}{score}' if len(score) > 0 else 'unk'
+    my_rating = f'{rating}{"%" if rating.isnumeric() else ""}' if len(rating) > 0 else 'unk'
     extra_len = 5 + 2 + 3  # 3 underscores + 2 brackets + len('2160p') - max len of all qualities
     fname_part2 = extract_ext(link)
     fname_part1 = (
         f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
         f'{idi:d}'
-        f'{f"_score({my_score})" if has_naming_flag(NamingFlags.NAMING_FLAG_SCORE) else ""}'
+        f'{f"_score({my_score}, {my_rating})" if has_naming_flag(NamingFlags.NAMING_FLAG_SCORE) else ""}'
         f'{f"_{my_title}" if my_title != "" and has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
     )
     if has_naming_flag(NamingFlags.NAMING_FLAG_TAGS):

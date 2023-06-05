@@ -8,7 +8,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
-from typing import List, Tuple
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import Log, ExtraConfig, HelpPrintExitException
@@ -47,7 +46,7 @@ async def main() -> None:
                 Log.fatal(f'\nError: start ({start_id:d}) > end ({end_id:d})')
                 raise ValueError
 
-        if find_and_resolve_config_conflicts(False) is True:
+        if find_and_resolve_config_conflicts() is True:
             await sleep(3.0)
     except Exception:
         Log.fatal('\nError reading parsed arglist!')

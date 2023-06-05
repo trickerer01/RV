@@ -35,6 +35,10 @@ class VideoEntryFull(VideoEntryBase):
     def __init__(self, m_id: int, m_title: str) -> None:
         super().__init__(m_id)
         self.my_title = m_title or ''
+        # self.my_rating = m_rating or ''
+
+    def __repr__(self) -> str:
+        return f'{self.my_id:d}: {self.my_title}'
 
 
 class VideoEntryPrev(VideoEntryBase):
@@ -42,6 +46,9 @@ class VideoEntryPrev(VideoEntryBase):
         super().__init__(m_id)
         self.my_filename = m_filename or ''
         self.my_link = m_link or ''
+
+    def __repr__(self) -> str:
+        return f'{self.my_id:d}'
 
 
 async def main() -> None:
@@ -78,7 +85,7 @@ async def main() -> None:
         if search_cats.find(',') != -1 and search_rule_cat == SEARCH_RULE_ALL:
             search_cats = f'{SEARCH_RULE_ALL},{search_cats}'
 
-        if find_and_resolve_config_conflicts(True, full_download) is True:
+        if find_and_resolve_config_conflicts(full_download) is True:
             await sleep(3.0)
     except Exception:
         Log.fatal('\nError reading parsed arglist!')

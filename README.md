@@ -85,8 +85,8 @@ RV is a video downloader with a lot of features, most of which are filters for f
     - `python pages.py -pages 9999 -search_tag TAG1`
   - Up to 48 videos with both tags present from a single author in 1080p, save to a custom location:
     - `python pages.py -pages 2 -path PATH -quality 1080p -search_art ARTIST -search_tag TAG1,TAG2`
-  - Up to 24 videos on page 3 with any of 3 tags from any of 2 authors under any of 2 categories, no `gore` or `guro`, in best quality, with minimum score of 100, use proxy, save to a custom location, save tags, log everything, use shortest name for files:
-    - `python pages.py -log trace -start 3 -pages 1 -path PATH -proxy https://127.0.0.1:222 -tdump -quality 2160p -minscore 100 -search_cat CATEGORY1,CAT_EGORY2 -search_art ART_IST1,ARTIST2 -search_tag TAG1,TAG2,TAG3 -search_rule_cat any -search_rule_art any -search_rule_tag any -naming 0 -gore -guro`
+  - Up to 24 videos on page 3 with any of 3 tags from any of 2 authors under any of 2 categories, no `gore` or `guro`, in best quality, with minimum score of 100 and minimum rating of 90%, use proxy, save to a custom location, save tags, log everything, use shortest names for files:
+    - `python pages.py -log trace -start 3 -pages 1 -path PATH -proxy https://127.0.0.1:222 -tdump -quality 2160p -minscore 100 -minrating 90 -search_cat CATEGORY1,CAT_EGORY2 -search_art ART_IST1,ARTIST2 -search_tag TAG1,TAG2,TAG3 -search_rule_cat any -search_rule_art any -search_rule_tag any -naming 0 -gore -guro`
 
 2. Ids
   - Minimal example - all existing videos in range:
