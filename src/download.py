@@ -17,8 +17,9 @@ from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
     CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, TAGS_CONCAT_CHAR, SITE_AJAX_REQUEST_VIDEO,
-    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER, NamingFlags, calc_sleep_time, has_naming_flag,
-    Log, ExtraConfig, normalize_path, normalize_filename, get_elapsed_time_s, get_elapsed_time_i, prefixp, LoggingFlags, extract_ext,
+    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER, DOWNLOAD_STATUS_CHECK_SIZE,
+    NamingFlags, calc_sleep_time, has_naming_flag, Log, ExtraConfig, normalize_path, normalize_filename,
+    get_elapsed_time_s, get_elapsed_time_i, prefixp, LoggingFlags, extract_ext,
     re_rvfile,
 )
 from fetch_html import make_session, fetch_html, wrap_request
@@ -27,12 +28,11 @@ from scenario import DownloadScenario
 from tagger import (
     filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags, dump_item_tags,
     try_parse_id_or_group,
-
 )
 
 __all__ = ('DownloadWorker', 'at_interrupt')
 
-CTOD = ClientTimeout(total=7200, connect=5)
+CTOD = ClientTimeout(total=7200, connect=10)
 """Client timeout (download)"""
 
 download_worker = None  # type: Optional[DownloadWorker]
@@ -358,7 +358,7 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
 
 
 def check_item_download_status(dest: str, resp: ClientResponse) -> None:
-    if dest in download_worker.writes_active and ((not path.isfile(dest)) or stat(dest).st_size <= 64*1024):
+    if dest in download_worker.writes_active and ((not path.isfile(dest)) or stat(dest).st_size <= DOWNLOAD_STATUS_CHECK_SIZE):
         Log.error(f'{path.basename(dest)} status check failed (nothing downloaded)! Interrupting current try...')
         resp.connection.transport.abort()  # abort download task (forcefully - close connection)
 
