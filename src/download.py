@@ -89,7 +89,7 @@ class DownloadWorker:
                 await self._queue.put((int(self._seq[0][0]), self._func(*self._seq[0])))
                 del self._seq[0]
             else:
-                await sleep(0.2)
+                await sleep(0.1)
 
     async def _cons(self) -> None:
         while len(self._seq) + self._queue.qsize() > 0:
@@ -100,7 +100,7 @@ class DownloadWorker:
                 await self._at_task_finish(idi, result)
                 self._queue.task_done()
             else:
-                await sleep(0.25)
+                await sleep(0.35)
 
     async def _state_reporter(self) -> None:
         base_sleep_time = calc_sleep_time(3.0)
@@ -127,7 +127,7 @@ class DownloadWorker:
         Log.info(f'\nDone. {self.downloaded_count:d} / {self.orig_count:d}+{self.filtered_count_pre:d} files downloaded, '
                  f'{self.filtered_count_after:d}+{self.filtered_count_pre:d} already existed, '
                  f'{self.skipped_count:d} skipped')
-        if len(self._seq) != 0:
+        if len(self._seq) > 0:
             Log.fatal(f'total queue is still at {len(self._seq):d} != 0!')
         if len(self.writes_active) > 0:
             Log.fatal(f'active writes count is still at {len(self.writes_active):d} != 0!')
@@ -394,7 +394,6 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 break
 
             r = None
-            # timeout must be relatively long, this is a timeout for actual download, not just connection
             async with await wrap_request(download_worker.session, 'GET', link, timeout=CTOD, headers={'Referer': link}) as r:
                 if r.status == 404:
                     Log.error(f'Got 404 for {prefixp()}{idi:d}.mp4...!')
@@ -426,7 +425,7 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
             if r is None or r.status != 403:
                 retries += 1
                 Log.error(f'{sfilename}: error #{retries:d}...')
-            if r is not None:
+            if r is not None and r.closed is False:
                 r.close()
             if path.isfile(dest):
                 remove(dest)

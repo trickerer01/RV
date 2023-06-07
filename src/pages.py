@@ -6,9 +6,12 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from __future__ import annotations
+
 import sys
 from asyncio import run as run_async, sleep
 from re import search as re_search
+from typing import Union
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
@@ -27,7 +30,7 @@ class VideoEntryBase:
     def __init__(self, m_id: int) -> None:
         self.my_id = m_id or 0
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Union[VideoEntryBase, int]) -> bool:
         return self.my_id == other.my_id if isinstance(other, type(self)) else self.my_id == other if isinstance(other, int) else False
 
 
@@ -100,7 +103,7 @@ async def main() -> None:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')
                 break
-            Log.info(f'page {pi:d}...{" (this is the last page!)" if 0 < maxpage == pi else ""}')
+            Log.info(f'page {pi:d}...{" (this is the last page!)" if (0 < maxpage == pi) else ""}')
 
             a_html = await fetch_html(SITE_AJAX_REQUEST_PAGE % (search_tags, search_arts, search_cats, search_str, pi), session=s)
             if not a_html:
@@ -198,6 +201,8 @@ if __name__ == '__main__':
         run_async(run_main())
     except (KeyboardInterrupt, SystemExit):
         Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
+        at_interrupt()
+    except Exception:
         at_interrupt()
     exit(0)
 

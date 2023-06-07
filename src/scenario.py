@@ -25,7 +25,7 @@ UVP_ALWAYS = DOWNLOAD_POLICY_ALWAYS
 
 
 class SubQueryParams(object):
-    def __init__(self, subfolder: str, extra_tags: List[str], quality: str, minscore: int, minrating: int,
+    def __init__(self, subfolder: str, extra_tags: List[str], quality: str, minscore: Optional[int], minrating: int,
                  uvp: str, use_id_sequence: bool) -> None:
         self.subfolder = subfolder or ''  # type: str
         self.extra_tags = extra_tags or []  # type: List[str]
@@ -80,7 +80,7 @@ class DownloadScenario(object):
                         error_to_print = f'\nInvalid extra tag: \'{tag}\'\n'
                         raise
                 parsed.extra_tags += [tag.lower().replace(' ', '_') for tag in unks]
-                if parsed.untag_video_policy == UVP_ALWAYS and self.has_subquery(untag_video_policy=UVP_ALWAYS):
+                if parsed.untag_video_policy == UVP_ALWAYS and self.has_subquery(uvp=UVP_ALWAYS):
                     error_to_print = f'Scenario can only have one subquery with untagged video policy \'{UVP_ALWAYS}\'!'
                     raise ValueError
                 self.add_subquery(SubQueryParams(
@@ -104,7 +104,7 @@ class DownloadScenario(object):
         for sq in self.queries:
             all_matched = True
             for k, v in kwargs.items():
-                if not (k in sq.__dict__.keys() and sq.__getattribute__(k) == v):
+                if not (hasattr(sq, k) and getattr(sq, k) == v):
                     all_matched = False
                     break
             if all_matched is True:

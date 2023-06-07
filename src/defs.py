@@ -28,7 +28,7 @@ class BaseConfig(object):
         self.download_mode = None  # type: Optional[str]
         self.save_tags = None  # type: Optional[bool]
         self.extra_tags = None  # type: Optional[List[str]]
-        self.scenario = None  # type: Optional['DownloadScenario']
+        self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
         self.naming_flags = 0
         self.logging_flags = 0
 

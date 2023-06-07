@@ -2942,8 +2942,8 @@ def assert_valid_category(category: str) -> None:
 
 
 def is_valid_neg_and_group(andgr: str) -> bool:
-    return (len(andgr) >= len('-(.,.)') and andgr.startswith('-(') and andgr.endswith(')') and
-            andgr.find(',') != -1 and len(andgr[2:-1].split(',', 1)) == 2)
+    return (len(andgr) >= len('-(.,.)') and andgr.startswith('-(') and andgr.endswith(')')
+            and andgr.find(',') != -1 and len(andgr[2:-1].split(',', 1)) == 2)
 
 
 def validate_neg_and_group(andgr: str) -> None:
@@ -2995,12 +2995,12 @@ def is_valid_id_or_group(orgr: str) -> bool:
     return False
 
 
-def try_parse_id_or_group(ex_tags: List[str]) -> Optional[List[int]]:
+def try_parse_id_or_group(ex_tags: List[str]) -> List[int]:
     if len(ex_tags) == 1:
         orgr = ex_tags[0]
         if is_valid_id_or_group(orgr):
             return [int(tag.replace('id=', '')) for tag in orgr[1:-1].split('~')]
-    return None
+    return []
 
 
 def trim_undersores(base_str: str) -> str:
@@ -3088,7 +3088,7 @@ def register_item_tags(item_id: int, tags_str: str, subfolder: str) -> None:
 
 
 def dump_item_tags() -> None:
-    """Saves tags for each subfolder in scenario and base dest folder based of registered item tags dict"""
+    """Saves tags for each subfolder in scenario and base dest folder based on registered item tags dict"""
     for subfolder, tags_dict in saved_tags_dict.items():
         if len(tags_dict) == 0:
             continue

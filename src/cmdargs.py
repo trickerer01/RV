@@ -111,9 +111,9 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
     arggr_start_or_seq = par_cmd.add_mutually_exclusive_group(required=True)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
     arggr_start_or_seq.add_argument('-start', metavar='#number', help='Start video id. Required', type=valid_positive_nonzero_int)
-    arggr_ids = par_cmd.add_mutually_exclusive_group()
-    arggr_ids.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=valid_positive_nonzero_int)
-    arggr_ids.add_argument('-end', metavar='#number', default=1, help='End video id', type=valid_positive_nonzero_int)
+    arggr_count_or_end = par_cmd.add_mutually_exclusive_group()
+    arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=valid_positive_nonzero_int)
+    arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End video id', type=valid_positive_nonzero_int)
 
     add_common_args(par_cmd)
 

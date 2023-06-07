@@ -39,7 +39,7 @@ class RequestQueue:
         """Pauses request until base delay passes (since last request)"""
         RequestQueue._queue.append(url)
         while RequestQueue._ready is False or RequestQueue._queue[0] != url:
-            await sleep(0.1)
+            await sleep(0.2)
         async with RequestQueue._lock:
             del RequestQueue._queue[0]
             RequestQueue._ready = False

@@ -37,7 +37,7 @@ async def main() -> None:
 
         if arglist.use_id_sequence is True:
             id_sequence = try_parse_id_or_group(ExtraConfig.extra_tags)
-            if id_sequence is None:
+            if len(id_sequence) == 0:
                 Log.fatal(f'\nInvalid ID \'or\' group \'{ExtraConfig.extra_tags[0] if len(ExtraConfig.extra_tags) > 0 else ""}\'!')
                 raise ValueError
         else:
