@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import sleep, as_completed, get_running_loop, Queue as AsyncQueue
+from asyncio import sleep, as_completed, get_running_loop, Queue as AsyncQueue, Task, CancelledError
 from os import path, stat, remove, makedirs
 from random import uniform as frand
 from re import match, search
@@ -17,7 +17,7 @@ from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
     CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, TAGS_CONCAT_CHAR, SITE_AJAX_REQUEST_VIDEO,
-    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER, DOWNLOAD_STATUS_CHECK_SIZE,
+    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER,
     NamingFlags, calc_sleep_time, has_naming_flag, Log, ExtraConfig, normalize_path, normalize_filename,
     get_elapsed_time_s, get_elapsed_time_i, prefixp, LoggingFlags, extract_ext,
     re_rvfile,
@@ -359,19 +359,37 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
     return res
 
 
-def check_item_download_status(dest: str, resp: ClientResponse) -> None:
-    if dest in download_worker.writes_active and ((not path.isfile(dest)) or stat(dest).st_size <= DOWNLOAD_STATUS_CHECK_SIZE):
-        Log.error(f'{path.basename(dest)} status check failed (nothing downloaded)! Interrupting current try...')
-        resp.connection.transport.abort()  # abort download task (forcefully - close connection)
+async def check_item_download_status(idi: int, dest: str, resp: ClientResponse) -> None:
+    sname = f'{prefixp()}{idi:d}.mp4'
+    try:
+        # Log.trace(f'{sname} status check started...')
+        last_size = -1
+        while True:
+            await sleep(DOWNLOAD_STATUS_CHECK_TIMER)
+            if dest not in download_worker.writes_active:  # finished already
+                Log.error(f'{sname} status checker is still running for finished download!')
+                break
+            file_size = stat(dest).st_size if path.isfile(dest) else 0
+            if file_size in [0, last_size]:
+                Log.error(f'{sname} status check failed (download stalled at {file_size:d})! Interrupting current try...')
+                resp.connection.transport.abort()  # abort download task (forcefully - close connection)
+                break
+            # Log.trace(f'{sname} status check passed at {file_size:d}...')
+            last_size = file_size
+    except CancelledError:
+        # Log.trace(f'{sname} status check cancelled...')
+        pass
 
 
 async def download_file(idi: int, filename: str, my_dest_base: str, link: str, subfolder='') -> DownloadResult:
+    sname = f'{prefixp()}{idi:d}.mp4'
     my_dest_base = my_dest_base or ExtraConfig.dest_base
     dest = normalize_filename(filename, my_dest_base)
     sfilename = f'{f"{subfolder}/" if len(subfolder) > 0 else ""}{filename}'
     file_size = 0
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS
+    status_checker = None  # type: Optional[Task]
 
     if not path.isdir(my_dest_base):
         try:
@@ -398,7 +416,7 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
             r = None
             async with await wrap_request(download_worker.session, 'GET', link, timeout=CTOD, headers={'Referer': link}) as r:
                 if r.status == 404:
-                    Log.error(f'Got 404 for {prefixp()}{idi:d}.mp4...!')
+                    Log.error(f'Got 404 for {sname}...!')
                     retries = CONNECT_RETRIES_ITEM - 1
                     ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
                 if r.content_type and r.content_type.find('text') != -1:
@@ -408,13 +426,13 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 expected_size = r.content_length
                 Log.info(f'Saving {(r.content_length / 1024**2) if r.content_length else 0.0:.2f} Mb to {sfilename}')
 
-                status_checker = get_running_loop().call_later(DOWNLOAD_STATUS_CHECK_TIMER, check_item_download_status, dest, r)
                 download_worker.writes_active.append(dest)
+                status_checker = get_running_loop().create_task(check_item_download_status(idi, dest, r))
                 async with async_open(dest, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**22):
                         await outf.write(chunk)
-                download_worker.writes_active.remove(dest)
                 status_checker.cancel()
+                download_worker.writes_active.remove(dest)
 
                 file_size = stat(dest).st_size
                 if expected_size and file_size != expected_size:
@@ -434,6 +452,8 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
             # Network error may be thrown before item is added to active downloads
             if dest in download_worker.writes_active:
                 download_worker.writes_active.remove(dest)
+            if status_checker is not None:
+                status_checker.cancel()
             if retries < CONNECT_RETRIES_ITEM:
                 await sleep(frand(1.0, 7.0))
 
