@@ -332,14 +332,16 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
         return DownloadResult.DOWNLOAD_FAIL_RETRIES
 
     my_dest_base = normalize_path(f'{ExtraConfig.dest_base}{my_subfolder}')
-    my_score = f'{f"+" if score.isnumeric() else ""}{score}' if len(score) > 0 else 'unk'
-    my_rating = f'{rating}{"%" if rating.isnumeric() else ""}' if len(rating) > 0 else 'unk'
+    my_score = (f'{f"+" if score.isnumeric() else ""}{score}' if len(score) > 0
+                else '' if len(rating) > 0 else 'unk')
+    my_rating = (f'{", " if  len(my_score) > 0 else ""}{rating}{"%" if rating.isnumeric() else ""}' if len(rating) > 0
+                 else '' if len(my_score) > 0 else 'unk')
     extra_len = 5 + 2 + 3  # 3 underscores + 2 brackets + len('2160p') - max len of all qualities
     fname_part2 = extract_ext(link)
     fname_part1 = (
         f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
         f'{idi:d}'
-        f'{f"_score({my_score}, {my_rating})" if has_naming_flag(NamingFlags.NAMING_FLAG_SCORE) else ""}'
+        f'{f"_score({my_score}{my_rating})" if has_naming_flag(NamingFlags.NAMING_FLAG_SCORE) else ""}'
         f'{f"_{my_title}" if my_title != "" and has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
     )
     if has_naming_flag(NamingFlags.NAMING_FLAG_TAGS):
