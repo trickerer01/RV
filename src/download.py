@@ -245,7 +245,7 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
             my_categories = []
         try:
             tdiv = i_html.find('div', string='Tags:')
-            tags = tdiv.parent.find_all('a', class_='tag_item')
+            tags = tdiv.parent.find_all('a', class_='tag_item') if tdiv else []
             tags_raw = [str(tag.string).replace(' ', '_').lower() for tag in tags]
             for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
                 if add_tag not in tags_raw:
@@ -312,13 +312,13 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
             i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi, session=download_worker.session)
 
         links = ddiv.parent.find_all('a', class_='tag_item')
-        qualities = []
+        qualities = []  # type: List[str]
         for lin in links:
             q = search(r'(\d+p)', str(lin.text))
             if q:
                 qualities.append(q.group(1))
 
-        if not (my_quality in qualities):
+        if my_quality not in qualities:
             q_idx = 0
             Log.warn(f'Warning: cannot find quality \'{my_quality}\' for {sname}, using \'{qualities[q_idx]}\'')
             my_quality = qualities[q_idx]
