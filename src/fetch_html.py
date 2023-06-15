@@ -16,7 +16,7 @@ from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, HOST
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, HOST, UTF8
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
 
@@ -82,7 +82,7 @@ async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> 
                 content = await r.read()
                 if retries_403_local > 0:
                     Log.trace(f'fetch_html success: took {retries_403_local:d} tries...')
-                return BeautifulSoup(content, 'html.parser')
+                return BeautifulSoup(content, 'html.parser', from_encoding=UTF8)
         except Exception:
             if r is not None and str(r.url).find('404.') != -1:
                 Log.error('ERROR: 404')
