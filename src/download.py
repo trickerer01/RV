@@ -10,16 +10,15 @@ from asyncio import sleep, as_completed, get_running_loop, Queue as AsyncQueue, 
 from os import path, stat, remove, makedirs
 from random import uniform as frand
 from re import match, search
-from typing import Any, List, Optional, Union, Coroutine, Tuple
+from typing import Any, List, Optional, Coroutine, Tuple
 
 from aiofile import async_open
 from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
     CONNECT_RETRIES_ITEM, MAX_VIDEOS_QUEUE_SIZE, TAGS_CONCAT_CHAR, SITE_AJAX_REQUEST_VIDEO,
-    DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER,
-    NamingFlags, calc_sleep_time, has_naming_flag, Log, ExtraConfig, normalize_path, normalize_filename,
-    get_elapsed_time_s, get_elapsed_time_i, prefixp, LoggingFlags, extract_ext,
+    VideoInfo, Log, ExtraConfig, DownloadResult, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER,
+    NamingFlags, calc_sleep_time, has_naming_flag, get_elapsed_time_s, get_elapsed_time_i, prefixp, LoggingFlags, extract_ext,
     re_rvfile,
 )
 from fetch_html import make_session, fetch_html, wrap_request
@@ -43,8 +42,7 @@ class DownloadWorker:
     Async queue wrapper which binds list of lists of arguments to a download function call and processes them
     asynchronously with a limit of simulteneous downloads defined by MAX_VIDEOS_QUEUE_SIZE
     """
-    def __init__(self, my_sequence: Union[List[Tuple[int, str]], List[Tuple[int, str, str, str, Optional[str]]]],
-                 by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
+    def __init__(self, my_sequence: List[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
         self._func = download_id if by_id is True else download_file
         self._seq = my_sequence
         self._queue = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)  # type: AsyncQueue[Tuple[int, Coroutine[Any, Any, DownloadResult]]]
@@ -86,7 +84,7 @@ class DownloadWorker:
     async def _prod(self) -> None:
         while len(self._seq) > 0:
             if self._queue.full() is False:
-                await self._queue.put((int(self._seq[0][0]), self._func(*self._seq[0])))
+                await self._queue.put((self._seq[0].my_id, self._func(self._seq[0])))
                 del self._seq[0]
             else:
                 await sleep(0.1)
@@ -206,26 +204,24 @@ def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], score: str
     return -1
 
 
-async def download_id(idi: int, my_title: str) -> DownloadResult:
+async def download_id(vi: VideoInfo) -> DownloadResult:
     scenario = ExtraConfig.scenario  # type: Optional[DownloadScenario]
-    sname = f'{prefixp()}{idi:d}.mp4'
-    my_subfolder = ''
-    my_quality = ExtraConfig.quality
+    sname = f'{prefixp()}{vi.my_id:d}.mp4'
     my_tags = 'no_tags'
     rating = ''
     score = ''
-    i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % idi}?popup_id={2 + idi % 10:d}', session=download_worker.session)
+    i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.my_id}?popup_id={2 + vi.my_id % 10:d}', session=download_worker.session)
     if i_html:
         if i_html.find('title', string='404 Not Found'):
             Log.error(f'Got error 404 for {sname}, skipping...')
             return DownloadResult.DOWNLOAD_FAIL_SKIPPED
 
-        if my_title in [None, '']:
+        if vi.my_title in [None, '']:
             titleh1 = i_html.find('h1', class_='title_video')
             if titleh1:
-                my_title = titleh1.text
+                vi.my_title = titleh1.text
             else:
-                my_title = ''
+                vi.my_title = ''
         try:
             dislikes_int = 0
             likes_int = int(match(r'^(\d+)', i_html.find('span', class_='voters count').text).group(1))
@@ -251,7 +247,7 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
         for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
             if add_tag not in tags_raw:
                 tags_raw.append(add_tag)
-        if is_filtered_out_by_extra_tags(idi, tags_raw, ExtraConfig.extra_tags, False, my_subfolder):
+        if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, ExtraConfig.extra_tags, False, vi.my_subfolder):
             Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
             return DownloadResult.DOWNLOAD_FAIL_SKIPPED
         if len(score) > 0 and ExtraConfig.min_score is not None:
@@ -269,14 +265,14 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
             except Exception:
                 pass
         if scenario is not None:
-            sub_idx = get_matching_scenario_subquery_idx(idi, tags_raw, score, rating, scenario)
+            sub_idx = get_matching_scenario_subquery_idx(vi.my_id, tags_raw, score, rating, scenario)
             uvp_idx = scenario.get_uvp_always_subquery_idx() if tdiv is None else -1
             if sub_idx != -1:
-                my_subfolder = scenario.queries[sub_idx].subfolder
-                my_quality = scenario.queries[sub_idx].quality
+                vi.my_subfolder = scenario.queries[sub_idx].subfolder
+                vi.my_quality = scenario.queries[sub_idx].quality
             elif uvp_idx != -1:
-                my_subfolder = scenario.queries[uvp_idx].subfolder
-                my_quality = scenario.queries[uvp_idx].quality
+                vi.my_subfolder = scenario.queries[uvp_idx].subfolder
+                vi.my_quality = scenario.queries[uvp_idx].quality
             else:
                 Log.info(f'Info: unable to find matching or uvp scenario subquery for {sname}, skipping...')
                 return DownloadResult.DOWNLOAD_FAIL_SKIPPED
@@ -284,7 +280,7 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
             Log.warn(f'Warning: could not extract tags from {sname}, skipping due to untagged videos download policy...')
             return DownloadResult.DOWNLOAD_FAIL_SKIPPED
         if ExtraConfig.save_tags:
-            register_item_tags(idi, ' '.join(sorted(tags_raw)), my_subfolder)
+            register_item_tags(vi.my_id, ' '.join(sorted(tags_raw)), vi.my_subfolder)
         tags_str = filtered_tags(list(sorted(tags_raw)))
         if tags_str != '':
             my_tags = tags_str
@@ -301,54 +297,54 @@ async def download_id(idi: int, my_title: str) -> DownloadResult:
             Log.error(f'Cannot find download section for {sname}, {reason}, skipping...')
             tries += 1
             if tries >= 5:
-                download_worker.failed_items.append(idi)
+                download_worker.failed_items.append(vi.my_id)
                 return DownloadResult.DOWNLOAD_FAIL_SKIPPED
             elif reason != 'probably an error':
                 return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-            i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % idi, session=download_worker.session)
+            i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % vi.my_id, session=download_worker.session)
         links = ddiv.parent.find_all('a', class_='tag_item')
         qualities = []  # type: List[str]
         for lin in links:
             q = search(r'(\d+p)', str(lin.text))
             if q:
                 qualities.append(q.group(1))
-        if my_quality not in qualities:
+        if vi.my_quality not in qualities:
             q_idx = 0
-            Log.warn(f'Warning: cannot find quality \'{my_quality}\' for {sname}, using \'{qualities[q_idx]}\'')
-            my_quality = qualities[q_idx]
+            Log.warn(f'Warning: cannot find quality \'{vi.my_quality}\' for {sname}, using \'{qualities[q_idx]}\'')
+            vi.my_quality = qualities[q_idx]
             link_idx = q_idx
         else:
-            link_idx = qualities.index(my_quality)
-        link = links[link_idx].get('href')
+            link_idx = qualities.index(vi.my_quality)
+        vi.my_link = links[link_idx].get('href')
     else:
         Log.error(f'Error: unable to retreive html for {sname}! Aborted!')
         return DownloadResult.DOWNLOAD_FAIL_RETRIES
 
-    my_dest_base = normalize_path(f'{ExtraConfig.dest_base}{my_subfolder}')
     my_score = (f'{f"+" if score.isnumeric() else ""}{score}' if len(score) > 0
                 else '' if len(rating) > 0 else 'unk')
     my_rating = (f'{", " if  len(my_score) > 0 else ""}{rating}{"%" if rating.isnumeric() else ""}' if len(rating) > 0
                  else '' if len(my_score) > 0 else 'unk')
     extra_len = 5 + 2 + 3  # 3 underscores + 2 brackets + len('2160p') - max len of all qualities
-    fname_part2 = extract_ext(link)
+    fname_part2 = extract_ext(vi.my_link)
     fname_part1 = (
         f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
-        f'{idi:d}'
+        f'{vi.my_id:d}'
         f'{f"_score({my_score}{my_rating})" if has_naming_flag(NamingFlags.NAMING_FLAG_SCORE) else ""}'
-        f'{f"_{my_title}" if my_title != "" and has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
+        f'{f"_{vi.my_title}" if vi.my_title != "" and has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
     )
     if has_naming_flag(NamingFlags.NAMING_FLAG_TAGS):
-        while len(my_tags) > max(0, 240 - (len(my_dest_base) + len(fname_part1) + len(fname_part2) + extra_len)):
+        while len(my_tags) > max(0, 240 - (len(vi.my_folder) + len(fname_part1) + len(fname_part2) + extra_len)):
             my_tags = my_tags[:max(0, my_tags.rfind(TAGS_CONCAT_CHAR))]
         fname_part1 = f'{fname_part1}{f"_({my_tags})" if len(my_tags) > 0 else ""}'
 
-    if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len)):
-        fname_part1 = fname_part1[:max(0, 240 - (len(my_dest_base) + len(fname_part2) + extra_len))]
+    if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(vi.my_folder) + len(fname_part2) + extra_len)):
+        fname_part1 = fname_part1[:max(0, 240 - (len(vi.my_folder) + len(fname_part2) + extra_len))]
 
-    my_quality = f'_{my_quality}' if has_naming_flag(NamingFlags.NAMING_FLAG_QUALITY) else ''
-    filename = f'{fname_part1}{my_quality}{fname_part2}'
+    fname_mid = f'_{vi.my_quality}' if has_naming_flag(NamingFlags.NAMING_FLAG_QUALITY) else ''
 
-    res = await download_file(idi, filename, my_dest_base, link, my_subfolder)
+    vi.my_filename = f'{fname_part1}{fname_mid}{fname_part2}'
+
+    res = await download_file(vi)
     return res
 
 
@@ -374,63 +370,59 @@ async def check_item_download_status(idi: int, dest: str, resp: ClientResponse) 
         pass
 
 
-async def download_file(idi: int, filename: str, my_dest_base: str, link: str, subfolder='') -> DownloadResult:
-    sname = f'{prefixp()}{idi:d}.mp4'
-    my_dest_base = my_dest_base or ExtraConfig.dest_base
-    dest = normalize_filename(filename, my_dest_base)
-    sfilename = f'{f"{subfolder}/" if len(subfolder) > 0 else ""}{filename}'
+async def download_file(vi: VideoInfo) -> DownloadResult:
+    sname = f'{prefixp()}{vi.my_id:d}.mp4'
+    sfilename = f'{f"{vi.my_subfolder}/" if len(vi.my_subfolder) > 0 else ""}{vi.my_filename}'
     file_size = 0
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS
     status_checker = None  # type: Optional[Task]
 
-    if not path.isdir(my_dest_base):
+    if not path.isdir(vi.my_folder):
         try:
-            makedirs(my_dest_base)
+            makedirs(vi.my_folder)
         except Exception:
-            raise IOError(f'ERROR: Unable to create subfolder \'{my_dest_base}\'!')
+            raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
     else:
-        rv_match = match(re_rvfile, filename)
+        rv_match = match(re_rvfile, vi.my_filename)
         rv_quality = rv_match.group(2)
-        if file_already_exists(idi, rv_quality):
-            Log.info(f'{filename} (or similar) already exists. Skipped.')
+        if file_already_exists(vi.my_id, rv_quality):
+            Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
             return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
 
-    # filename_short = 'rv_' + str(idi)
-    # Log('Retrieving %s...' % filename_short)
-    while (not (path.isfile(dest) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
+    while (not (path.isfile(vi.my_fullpath) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
             if ExtraConfig.dm == DOWNLOAD_MODE_TOUCH:
                 Log.info(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
-                with open(dest, 'wb'):
+                with open(vi.my_fullpath, 'wb'):
                     pass
                 break
 
             r = None
-            async with await wrap_request(download_worker.session, 'GET', link, timeout=CTOD, headers={'Referer': link}) as r:
+            async with await wrap_request(download_worker.session, 'GET', vi.my_link, timeout=CTOD, headers={'Referer': vi.my_link}) as r:
                 if r.status == 404:
                     Log.error(f'Got 404 for {sname}...!')
                     retries = CONNECT_RETRIES_ITEM - 1
                     ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
                 if r.content_type and r.content_type.find('text') != -1:
-                    Log.error(f'File not found at {link}!')
-                    raise FileNotFoundError(link)
+                    Log.error(f'File not found at {vi.my_link}!')
+                    raise FileNotFoundError(vi.my_link)
 
                 expected_size = r.content_length
                 Log.info(f'Saving {(r.content_length / 1024**2) if r.content_length else 0.0:.2f} Mb to {sfilename}')
 
-                download_worker.writes_active.append(dest)
-                status_checker = get_running_loop().create_task(check_item_download_status(idi, dest, r))
-                async with async_open(dest, 'wb') as outf:
+                download_worker.writes_active.append(vi.my_fullpath)
+                status_checker = get_running_loop().create_task(check_item_download_status(vi.my_id, vi.my_fullpath, r))
+                async with async_open(vi.my_fullpath, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**22):
                         await outf.write(chunk)
                 status_checker.cancel()
-                download_worker.writes_active.remove(dest)
+                download_worker.writes_active.remove(vi.my_fullpath)
 
-                file_size = stat(dest).st_size
+                file_size = stat(vi.my_fullpath).st_size
                 if expected_size and file_size != expected_size:
                     Log.error(f'Error: file size mismatch for {sfilename}: {file_size:d} / {expected_size:d}')
-                    raise IOError(link)
+                    raise IOError(vi.my_link)
                 break
         except Exception:
             import sys
@@ -440,11 +432,11 @@ async def download_file(idi: int, filename: str, my_dest_base: str, link: str, s
                 Log.error(f'{sfilename}: error #{retries:d}...')
             if r is not None and r.closed is False:
                 r.close()
-            if path.isfile(dest):
-                remove(dest)
+            if path.isfile(vi.my_fullpath):
+                remove(vi.my_fullpath)
             # Network error may be thrown before item is added to active downloads
-            if dest in download_worker.writes_active:
-                download_worker.writes_active.remove(dest)
+            if vi.my_fullpath in download_worker.writes_active:
+                download_worker.writes_active.remove(vi.my_fullpath)
             if status_checker is not None:
                 status_checker.cancel()
             if retries < CONNECT_RETRIES_ITEM:

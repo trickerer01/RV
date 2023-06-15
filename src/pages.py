@@ -6,16 +6,13 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from __future__ import annotations
-
 import sys
 from asyncio import run as run_async, sleep
 from re import search as re_search
-from typing import Union
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    Log, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
+    VideoInfo, Log, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
     HelpPrintExitException,
 )
 from download import DownloadWorker, at_interrupt
@@ -24,34 +21,6 @@ from fetch_html import make_session, fetch_html
 from validators import find_and_resolve_config_conflicts
 
 __all__ = ()
-
-
-class VideoEntryBase:
-    def __init__(self, m_id: int) -> None:
-        self.my_id = m_id or 0
-
-    def __eq__(self, other: Union[VideoEntryBase, int]) -> bool:
-        return self.my_id == other.my_id if isinstance(other, type(self)) else self.my_id == other if isinstance(other, int) else False
-
-
-class VideoEntryFull(VideoEntryBase):
-    def __init__(self, m_id: int, m_title: str) -> None:
-        super().__init__(m_id)
-        self.my_title = m_title or ''
-        # self.my_rating = m_rating or ''
-
-    def __repr__(self) -> str:
-        return f'{self.my_id:d}: {self.my_title}'
-
-
-class VideoEntryPrev(VideoEntryBase):
-    def __init__(self, m_id: int, m_filename: str, m_link: str) -> None:
-        super().__init__(m_id)
-        self.my_filename = m_filename or ''
-        self.my_link = m_link or ''
-
-    def __repr__(self) -> str:
-        return f'{self.my_id:d}'
 
 
 async def main() -> None:
@@ -136,7 +105,7 @@ async def main() -> None:
                     if cur_id in v_entries:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                     else:
-                        v_entries.append(VideoEntryFull(cur_id, my_title))
+                        v_entries.append(VideoInfo(cur_id, my_title))
             else:
                 content_div = a_html.find('div', class_='thumbs clearfix')
 
@@ -160,12 +129,13 @@ async def main() -> None:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                     else:
                         v_entries.append(
-                            VideoEntryPrev(
-                                cur_id, f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
-                                f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_preview.{cur_ext}', link))
+                            VideoInfo(
+                                cur_id, '', link, '', f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
+                                f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_preview.{cur_ext}',
+                            ))
 
-        orig_count = len(v_entries)
         v_entries.reverse()
+        orig_count = len(v_entries)
 
         if len(v_entries) > 0:
             scan_dest_folder()
@@ -186,8 +156,7 @@ async def main() -> None:
         minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
         Log.info(f'\nOk! {len(v_entries):d} videos found (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-        params = [(v.my_id, v.my_title) if full_download else (v.my_id, v.my_filename, '', v.my_link) for v in v_entries]
-        await DownloadWorker(params, full_download, removed_count, s).run()
+        await DownloadWorker(v_entries, full_download, removed_count, s).run()
 
 
 async def run_main() -> None:

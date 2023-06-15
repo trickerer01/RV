@@ -10,7 +10,7 @@ import sys
 from asyncio import run as run_async, sleep
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
-from defs import Log, ExtraConfig, HelpPrintExitException
+from defs import VideoInfo, Log, ExtraConfig, HelpPrintExitException
 from download import DownloadWorker, at_interrupt
 from path_util import prefilter_existing_items, scan_dest_folder
 from tagger import try_parse_id_or_group
@@ -57,29 +57,29 @@ async def main() -> None:
     else:
         ExtraConfig.extra_tags.clear()
 
-    orig_count = len(id_sequence)
+    v_entries = [VideoInfo(idi) for idi in id_sequence]
+    orig_count = len(v_entries)
 
-    if len(id_sequence) > 0:
+    if len(v_entries) > 0:
         scan_dest_folder()
-        removed_ids = prefilter_existing_items(id_sequence)
-        for i in reversed(range(len(id_sequence))):
-            if id_sequence[i] in removed_ids:
-                del id_sequence[i]
+        removed_ids = prefilter_existing_items([v.my_id for v in v_entries])
+        for i in reversed(range(len(v_entries))):
+            if v_entries[i].my_id in removed_ids:
+                del v_entries[i]
 
     removed_count = orig_count - len(id_sequence)
 
-    if len(id_sequence) == 0:
+    if len(v_entries) == 0:
         if 0 < orig_count == removed_count:
             Log.fatal(f'\nAll {orig_count:d} videos already exist. Aborted.')
         else:
             Log.fatal('\nNo videos found. Aborted.')
         return
 
-    minid, maxid = min(id_sequence), max(id_sequence)
+    minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
     Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-    params = [(idi, '') for idi in id_sequence]
-    await DownloadWorker(params, True, removed_count).run()
+    await DownloadWorker(v_entries, True, removed_count).run()
 
 
 async def run_main() -> None:
