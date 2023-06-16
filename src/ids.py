@@ -11,7 +11,7 @@ from asyncio import run as run_async, sleep
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import VideoInfo, Log, ExtraConfig, HelpPrintExitException
-from download import DownloadWorker, at_interrupt
+from download import download, at_interrupt
 from path_util import prefilter_existing_items, scan_dest_folder
 from tagger import try_parse_id_or_group
 from validators import find_and_resolve_config_conflicts
@@ -79,7 +79,7 @@ async def main() -> None:
     minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
     Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-    await DownloadWorker(v_entries, True, removed_count).run()
+    await download(v_entries, True, removed_count)
 
 
 async def run_main() -> None:
@@ -93,6 +93,8 @@ if __name__ == '__main__':
         run_async(run_main())
     except (KeyboardInterrupt, SystemExit):
         Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
+        at_interrupt()
+    except Exception:
         at_interrupt()
     exit(0)
 

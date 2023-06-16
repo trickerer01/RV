@@ -15,7 +15,7 @@ from defs import (
     VideoInfo, Log, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
     HelpPrintExitException,
 )
-from download import DownloadWorker, at_interrupt
+from download import download, at_interrupt
 from path_util import prefilter_existing_items, scan_dest_folder
 from fetch_html import make_session, fetch_html
 from validators import find_and_resolve_config_conflicts
@@ -159,7 +159,7 @@ async def main() -> None:
         minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
         Log.info(f'\nOk! {len(v_entries):d} videos found (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
-        await DownloadWorker(v_entries, full_download, removed_count, s).run()
+        await download(v_entries, full_download, removed_count, s)
 
 
 async def run_main() -> None:
