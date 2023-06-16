@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
-from re import search as re_search
+from re import compile as re_compile
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
@@ -49,6 +49,9 @@ async def main() -> None:
         search_rule_cat = arglist.search_rule_cat  # type: str
 
         full_download = ExtraConfig.quality != QUALITIES[-1]
+        re_page_entry = re_compile(r'videos/(\d+)/')
+        re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
+        re_paginator = re_compile(r'from_albums:(\d+)')
 
         if search_tags.find(',') != -1 and search_rule_tag == SEARCH_RULE_ALL:
             search_tags = f'{SEARCH_RULE_ALL},{search_tags}'
@@ -84,7 +87,7 @@ async def main() -> None:
             if maxpage == 0:
                 for page_ajax in a_html.find_all('a', attrs={'data-action': 'ajax'}):
                     try:
-                        maxpage = max(maxpage, int(re_search(r'from_albums:(\d+)', str(page_ajax.get('data-parameters'))).group(1)))
+                        maxpage = max(maxpage, int(re_paginator.search(str(page_ajax.get('data-parameters'))).group(1)))
                     except Exception:
                         pass
                 if maxpage == 0:
@@ -94,7 +97,7 @@ async def main() -> None:
             if full_download:
                 arefs = a_html.find_all('a', class_='th js-open-popup')
                 for aref in arefs:
-                    cur_id = int(re_search(r'videos/(\d+)/', str(aref.get('href'))).group(1))
+                    cur_id = int(re_page_entry.search(str(aref.get('href'))).group(1))
                     if cur_id < stop_id:
                         Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
                         continue
@@ -120,7 +123,7 @@ async def main() -> None:
                     cur_num += 1
                     link = str(p.get('data-preview'))
                     title = str(titl_all[i].text)
-                    v_id = re_search(r'/(\d+)_preview[^.]*?\.([^/]+)/', link)
+                    v_id = re_preview_entry.search(link)
                     cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
                     if cur_id < stop_id:
                         Log.trace(f'skipping {cur_id:d} < {stop_id:d}')

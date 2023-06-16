@@ -8,7 +8,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from argparse import ArgumentParser, Namespace, ArgumentError, ZERO_OR_MORE
 from os import path
-from re import sub as re_sub
 from typing import Optional, List
 
 from defs import (
@@ -46,11 +45,11 @@ parser = None  # type: Optional[ArgumentParser]
 def read_cmdfile(cmdfile_path: str) -> List[str]:
     """Read cmd args from a text file"""
     with open(cmdfile_path, 'rt', encoding=UTF8) as cmdfile:
-        args = []  # type: List[str]
+        args = list()
         for line in cmdfile.readlines():
-            rline = re_sub(r'^ *(.+)$', r'\1', line.strip(' \n\ufeff'))
-            if rline != '':
-                args.append(rline)
+            line = line.strip(' \n\ufeff')
+            if line != '':
+                args.append(line)
         return args
 
 

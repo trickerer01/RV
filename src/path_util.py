@@ -7,7 +7,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from os import path, listdir
-from re import match
 from typing import List, Optional, Dict
 
 from defs import ExtraConfig, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_rvfile, prefixp
@@ -60,7 +59,7 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> str:
     if path.isdir(base_folder) and orig_file_names is not None:
         for fname in orig_file_names:
             try:
-                f_match = match(re_rvfile, fname)
+                f_match = re_rvfile.match(fname)
                 f_id = f_match.group(1)
                 f_quality = f_match.group(2)
                 if str(idi) == f_id and (quality is None or quality == f_quality):

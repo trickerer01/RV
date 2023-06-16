@@ -9,7 +9,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from asyncio import sleep, as_completed, get_running_loop, Queue as AsyncQueue, Task, CancelledError
 from os import path, stat, remove, makedirs
 from random import uniform as frand
-from re import match, search
 from typing import Any, List, Optional, Coroutine, Tuple
 
 from aiofile import async_open
@@ -224,7 +223,7 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
                 vi.my_title = ''
         try:
             dislikes_int = 0
-            likes_int = int(match(r'^(\d+)', i_html.find('span', class_='voters count').text).group(1))
+            likes_int = int(i_html.find('span', class_='voters count').text.replace(' likes', ''))
             rating = f'{(likes_int * 100) // (dislikes_int + likes_int):d}' if (dislikes_int + likes_int) > 999999 else rating
             score = f'{likes_int - dislikes_int:d}'
         except Exception:
@@ -305,9 +304,10 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
         links = ddiv.parent.find_all('a', class_='tag_item')
         qualities = []  # type: List[str]
         for lin in links:
-            q = search(r'(\d+p)', str(lin.text))
-            if q:
-                qualities.append(q.group(1))
+            try:
+                qualities.append(str(lin.text).replace('MP4 ', ''))
+            except Exception:
+                pass
         if vi.my_quality not in qualities:
             q_idx = 0
             Log.warn(f'Warning: cannot find quality \'{vi.my_quality}\' for {sname}, using \'{qualities[q_idx]}\'')
@@ -384,7 +384,7 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
         except Exception:
             raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
     else:
-        rv_match = match(re_rvfile, vi.my_filename)
+        rv_match = re_rvfile.match(vi.my_filename)
         rv_quality = rv_match.group(2)
         if file_already_exists(vi.my_id, rv_quality):
             Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')

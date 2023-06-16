@@ -13,7 +13,7 @@ from base64 import b64decode
 from datetime import datetime
 from enum import IntEnum
 from locale import getpreferredencoding
-from re import compile as re_compile, search, sub
+from re import compile as re_compile
 from typing import Optional, List, Union
 from urllib.parse import urlparse
 
@@ -77,7 +77,7 @@ DEFAULT_HEADERS = {'User-Agent': USER_AGENT, 'Referer': SITE}
 HOST = urlparse(SITE).netloc
 
 # language=PythonRegExp
-REPLACE_SYMBOLS = r'[^\da-zA-Z.,_+%\-()\[\] ]+?'
+REPLACE_SYMBOLS = r'[^0-9a-zA-Z.,_+%\-()\[\] ]+'
 # language=PythonRegExp
 NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
 
@@ -252,6 +252,11 @@ DOWNLOAD_STATUS_CHECK_TIMER = 120.0
 TAGS_CONCAT_CHAR = ','
 START_TIME = datetime.now()
 
+re_rvfile = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\..{{3,4}}$')
+re_replace_symbols = re_compile(REPLACE_SYMBOLS)
+re_ext = re_compile(r'(\.[^&]{3,5})&')
+# re_private_video = re_compile(r'^This is a private video\..*?$')
+
 
 class Log:
     @staticmethod
@@ -343,12 +348,12 @@ def normalize_path(basepath: str, append_slash=True) -> str:
 
 def normalize_filename(filename: str, base_path: str) -> str:
     """Returns full path to a file, normalizing base path and removing disallowed symbols from file name"""
-    return normalize_path(base_path) + sub(REPLACE_SYMBOLS, '_', filename)
+    return normalize_path(base_path) + re_replace_symbols.sub('_', filename)
 
 
 def extract_ext(href: str) -> str:
     try:
-        return search(r'(\.[^&]{3,5})&', href).group(1)
+        return re_ext.search(href).group(1)
     except Exception:
         return '.mp4'
 
@@ -375,9 +380,6 @@ class DownloadResult(IntEnum):
 
 class HelpPrintExitException(Exception):
     pass
-
-
-re_rvfile = re_compile(fr'^(?:{prefixp()})?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\..{{3,4}}$')
 
 
 class VideoInfo:

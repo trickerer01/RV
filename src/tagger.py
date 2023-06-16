@@ -8,10 +8,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from base64 import b64decode
 from json import loads
-from re import compile as re_compile, fullmatch as re_fullmatch, match as re_match, sub as re_sub
+from re import compile as re_compile
 from typing import List, Dict, Optional
 
-from defs import TAGS_CONCAT_CHAR, UTF8, Log, normalize_path, prefixp, ExtraConfig
+from defs import TAGS_CONCAT_CHAR, UTF8, Log, normalize_path, prefixp, ExtraConfig, re_replace_symbols
 
 __all__ = (
     'filtered_tags', 'get_matching_tag', 'get_or_group_matching_tag', 'is_neg_and_group_matches',
@@ -2746,13 +2746,12 @@ TAG_NUMS_DECODED = {k.replace(' ', '_'): v for k, v in loads(b64decode(TAG_NUMS_
 ART_NUMS_DECODED = {k.replace(' ', '_'): v for k, v in loads(b64decode(ART_NUMS_ENCODED)).items()}  # type: Dict[str, str]
 CAT_NUMS_DECODED = {k.replace(' ', '_'): v for k, v in loads(b64decode(CAT_NUMS_ENCODED)).items()}  # type: Dict[str, str]
 
-re_replace_symbols = re_compile(
-    r'[^0-9a-zA-Z_+()\[\]]+'
-)
-
-re_numbered_or_counted_tag = re_compile(
-    r'^(?!rule_?\d+)1?([^\d]+?)(?:_?\d+|s)?$'
-)
+re_wtag = re_compile(r'^[^?*]*[?*].*?$')
+re_idval = re_compile(r'^id=\d+?$')
+re_uscore_mult = re_compile(r'_{2,}')
+re_not_a_letter = re_compile(r'[^a-z]+')
+re_bracketed_tag = re_compile(r'^([^(]+)\(([^)]+)\).*$')
+re_numbered_or_counted_tag = re_compile(r'^(?!rule_?\d+)1?([^\d]+?)(?:_?\d+|s)?$')
 
 re_tags_to_process = re_compile(
     r'^(?:.+?_warc.+?|(?:[a-z]+?_)?elf|drae.{3}|tent[a-z]{3}es|(?:bell[a-z]|sto[a-z]{4})_bul[a-z]{2,3}|inf[a-z]{5}n|egg(?:_[a-z]{3,9}|s)?|'
@@ -2953,11 +2952,11 @@ def valid_categories(categories_str: str) -> str:
 
 
 def is_non_wtag(tag: str) -> bool:
-    return not re_fullmatch(r'^[^?*]*[?*].*?$', tag)
+    return not re_wtag.fullmatch(tag)
 
 
 def is_non_idtag(tag: str) -> bool:
-    return not re_fullmatch(r'^id=\d+?$', tag)
+    return not re_idval.fullmatch(tag)
 
 
 def is_valid_extra_tag(extag: str) -> bool:
@@ -3028,7 +3027,7 @@ def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
         return wtag if wtag in mtags else None
     pat = re_compile(rf'^{normalize_wtag(wtag)}$')
     for htag in mtags:
-        if re_fullmatch(pat, htag):
+        if pat.fullmatch(htag):
             return htag
     return None
 
@@ -3050,7 +3049,7 @@ def is_neg_and_group_matches(andgr: str, mtags: List[str]) -> bool:
 
 def is_valid_id_or_group(orgr: str) -> bool:
     if is_valid_or_group(orgr):
-        return all(re_fullmatch(r'^id=\d+?$', tag) for tag in orgr[1:-1].split('~'))
+        return all(re_idval.fullmatch(tag) for tag in orgr[1:-1].split('~'))
     return False
 
 
@@ -3063,7 +3062,7 @@ def try_parse_id_or_group(ex_tags: List[str]) -> List[int]:
 
 
 def trim_undersores(base_str: str) -> str:
-    ret_str = re_sub(r'_{2,}', '_', base_str)
+    ret_str = re_uscore_mult.sub('_', base_str)
     if len(ret_str) != 0:
         if len(ret_str) >= 2 and ret_str[0] == '_' and ret_str[-1] == '_':
             ret_str = ret_str[1:-1]
@@ -3081,8 +3080,8 @@ def filtered_tags(tags_list: List[str]) -> str:
     tags_list_final = []  # type: List[str]
 
     for tag in tags_list:
-        tag = re_sub(re_replace_symbols, '_', tag.replace('-', '').replace('\'', '').replace('.', ''))
-        if TAG_ALIASES.get(tag) is None and re_match(re_tags_to_process, tag) is None:
+        tag = re_replace_symbols.sub('_', tag.replace('-', '').replace('\'', '').replace('.', ''))
+        if TAG_ALIASES.get(tag) is None and re_tags_to_process.match(tag) is None:
             continue
 
         alias = TAG_ALIASES.get(tag)
@@ -3090,11 +3089,11 @@ def filtered_tags(tags_list: List[str]) -> str:
             tag = alias
 
         # digital_media_(artwork)
-        aser_match = re_match(r'^([^(]+)\(([^)]+)\).*$', tag)
+        aser_match = re_bracketed_tag.match(tag)
         aser_valid = False
         if aser_match:
-            major_skip_match1 = re_match(re_tags_exclude_major1, aser_match.group(1))
-            major_skip_match2 = re_match(re_tags_exclude_major2, aser_match.group(2))
+            major_skip_match1 = re_tags_exclude_major1.match(aser_match.group(1))
+            major_skip_match2 = re_tags_exclude_major2.match(aser_match.group(2))
             if major_skip_match1 or major_skip_match2:
                 continue
             stag = trim_undersores(aser_match.group(1))
@@ -3102,27 +3101,27 @@ def filtered_tags(tags_list: List[str]) -> str:
                 continue
             tag = stag
             aser_valid = True
-        elif re_match(re_tags_to_not_exclude, tag) is None:
+        elif re_tags_to_not_exclude.match(tag) is None:
             continue
 
         tag = trim_undersores(tag)
 
         do_add = True
         if len(tags_list_final) > 0:
-            nutag = re_sub(r'[^a-z]+', '', re_sub(re_numbered_or_counted_tag, r'\1', tag))
+            nutag = re_not_a_letter.sub('', re_numbered_or_counted_tag.sub(r'\1', tag))
             # try and see
             # 1) if this tag can be consumed by existing tags
             # 2) if this tag can consume existing tags
             for i in reversed(range(len(tags_list_final))):
-                t = re_sub(re_numbered_or_counted_tag, r'\1', tags_list_final[i].lower())
-                nut = re_sub(r'[^a-z]+', '', t)
+                t = re_numbered_or_counted_tag.sub(r'\1', tags_list_final[i].lower())
+                nut = re_not_a_letter.sub('', t)
                 if len(nut) >= len(nutag) and (nutag in nut):
                     do_add = False
                     break
             if do_add:
                 for i in reversed(range(len(tags_list_final))):
-                    t = re_sub(re_numbered_or_counted_tag, r'\1', tags_list_final[i].lower())
-                    nut = re_sub(r'[^a-z]+', '', t)
+                    t = re_numbered_or_counted_tag.sub(r'\1', tags_list_final[i].lower())
+                    nut = re_not_a_letter.sub('', t)
                     if len(nutag) >= len(nut) and (nut in nutag):
                         if aser_valid is False and tags_list_final[i][0].isupper():
                             aser_valid = True
