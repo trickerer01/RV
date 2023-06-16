@@ -16,17 +16,14 @@ from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
     CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER,
-    TAGS_CONCAT_CHAR, VideoInfo, Log, ExtraConfig, DownloadResult, NamingFlags, LoggingFlags, has_naming_flag, prefixp, extract_ext,
-    re_rvfile,
+    TAGS_CONCAT_CHAR, VideoInfo, Log, ExtraConfig, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
+    re_media_filename,
 )
 from downloader import DownloadWorker
 from fetch_html import fetch_html, wrap_request
 from path_util import file_already_exists
 from scenario import DownloadScenario
-from tagger import (
-    filtered_tags, get_matching_tag, get_or_group_matching_tag, is_neg_and_group_matches, register_item_tags, try_parse_id_or_group,
-
-)
+from tagger import filtered_tags, register_item_tags, is_filtered_out_by_extra_tags
 
 __all__ = ('download', 'at_interrupt')
 
@@ -41,69 +38,6 @@ async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, 
     download_functions = (download_file, download_id)
     download_worker = DownloadWorker(sequence, download_functions[by_id], filtered_count, session)
     return await download_worker.run()
-
-
-def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], is_extra_seq: bool, subfolder: str) -> bool:
-    suc = True
-    sname = f'{prefixp()}{idi:d}.mp4'
-    if len(extra_tags) > 0:
-        if is_extra_seq:
-            assert len(extra_tags) == 1
-            id_sequence = try_parse_id_or_group(extra_tags)
-            assert id_sequence
-            if idi not in id_sequence:
-                suc = False
-                Log.trace(f'[{subfolder}] Video {sname} isn\'t contained in id list \'{str(id_sequence)}\'. Skipped!',
-                          LoggingFlags.LOGGING_EX_MISSING_TAGS)
-            return not suc
-
-        for extag in extra_tags:
-            if extag[0] == '(':
-                if get_or_group_matching_tag(extag, tags_raw) is None:
-                    suc = False
-                    Log.trace(f'[{subfolder}] Video {sname} misses required tag matching \'{extag}\'. Skipped!',
-                              LoggingFlags.LOGGING_EX_MISSING_TAGS)
-            elif extag.startswith('-('):
-                if is_neg_and_group_matches(extag, tags_raw):
-                    suc = False
-                    Log.info(f'[{subfolder}] Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
-                             LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
-            else:
-                my_extag = extag[1:] if extag[0] == '-' else extag
-                mtag = get_matching_tag(my_extag, tags_raw)
-                if mtag is not None and extag[0] == '-':
-                    suc = False
-                    Log.info(f'[{subfolder}] Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
-                             LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
-                elif mtag is None and extag[0] != '-':
-                    suc = False
-                    Log.trace(f'[{subfolder}] Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
-                              LoggingFlags.LOGGING_EX_MISSING_TAGS)
-    return not suc
-
-
-def get_matching_scenario_subquery_idx(idi: int, tags_raw: List[str], score: str, rating: str, scenario: DownloadScenario) -> int:
-    sname = f'{prefixp()}{idi:d}.mp4'
-    for idx, sq in enumerate(scenario.queries):
-        if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.use_id_sequence, sq.subfolder):
-            if len(score) > 0:
-                try:
-                    if int(score) < sq.minscore:
-                        Log.info(f'[{sq.subfolder}] Video {sname} has low score \'{score}\' (required {sq.minscore:d})!',
-                                 LoggingFlags.LOGGING_EX_LOW_SCORE)
-                        continue
-                except Exception:
-                    pass
-            if len(rating) > 0:
-                try:
-                    if int(rating) < sq.minrating:
-                        Log.info(f'[{sq.subfolder}] Video {sname} has low rating \'{rating}%\' (required {sq.minrating:d}%)!',
-                                 LoggingFlags.LOGGING_EX_LOW_SCORE)
-                        continue
-                except Exception:
-                    pass
-            return idx
-    return -1
 
 
 async def download_id(vi: VideoInfo) -> DownloadResult:
@@ -167,7 +101,7 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
             except Exception:
                 pass
         if scenario is not None:
-            sub_idx = get_matching_scenario_subquery_idx(vi.my_id, tags_raw, score, rating, scenario)
+            sub_idx = scenario.get_matching_scenario_subquery_idx(vi.my_id, tags_raw, score, rating)
             uvp_idx = scenario.get_uvp_always_subquery_idx() if tdiv is None else -1
             if sub_idx != -1:
                 vi.my_subfolder = scenario.queries[sub_idx].subfolder
@@ -287,7 +221,7 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
         except Exception:
             raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
     else:
-        rv_match = re_rvfile.match(vi.my_filename)
+        rv_match = re_media_filename.match(vi.my_filename)
         rv_quality = rv_match.group(2)
         if file_already_exists(vi.my_id, rv_quality):
             Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')

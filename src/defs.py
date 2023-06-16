@@ -252,7 +252,7 @@ DOWNLOAD_STATUS_CHECK_TIMER = 120.0
 TAGS_CONCAT_CHAR = ','
 START_TIME = datetime.now()
 
-re_rvfile = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\..{{3,4}}$')
+re_media_filename = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\..{{3,4}}$')
 re_replace_symbols = re_compile(REPLACE_SYMBOLS)
 re_ext = re_compile(r'(\.[^&]{3,5})&')
 # re_private_video = re_compile(r'^This is a private video\..*?$')

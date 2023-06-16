@@ -11,9 +11,9 @@ from typing import List, Optional
 
 from defs import (
     Log, DEFAULT_QUALITY, HELP_QUALITY, QUALITIES, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, HELP_ARG_EXTRA_TAGS, DOWNLOAD_POLICY_DEFAULT,
-    DOWNLOAD_POLICY_ALWAYS, HELP_ARG_MINRATING, HELP_ARG_MINSCORE, ACTION_STORE_TRUE, HELP_ARG_IDSEQUENCE,
+    DOWNLOAD_POLICY_ALWAYS, HELP_ARG_MINRATING, HELP_ARG_MINSCORE, ACTION_STORE_TRUE, HELP_ARG_IDSEQUENCE, LoggingFlags, prefixp,
 )
-from tagger import valid_extra_tag, try_parse_id_or_group
+from tagger import valid_extra_tag, try_parse_id_or_group, is_filtered_out_by_extra_tags
 from validators import valid_int, valid_rating
 
 __all__ = ('DownloadScenario')
@@ -110,6 +110,29 @@ class DownloadScenario(object):
             if all_matched is True:
                 return True
         return False
+
+    def get_matching_scenario_subquery_idx(self, idi: int, tags_raw: List[str], score: str, rating: str) -> int:
+        sname = f'{prefixp()}{idi:d}.mp4'
+        for idx, sq in enumerate(self.queries):
+            if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.use_id_sequence, sq.subfolder):
+                if len(score) > 0:
+                    try:
+                        if int(score) < sq.minscore:
+                            Log.info(f'[{sq.subfolder}] Video {sname} has low score \'{score}\' (required {sq.minscore:d})!',
+                                     LoggingFlags.LOGGING_EX_LOW_SCORE)
+                            continue
+                    except Exception:
+                        pass
+                if len(rating) > 0:
+                    try:
+                        if int(rating) < sq.minrating:
+                            Log.info(f'[{sq.subfolder}] Video {sname} has low rating \'{rating}%\' (required {sq.minrating:d}%)!',
+                                     LoggingFlags.LOGGING_EX_LOW_SCORE)
+                            continue
+                    except Exception:
+                        pass
+                return idx
+        return -1
 
     def get_uvp_always_subquery_idx(self) -> int:
         for idx, sq in enumerate(self.queries):

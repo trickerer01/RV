@@ -11,12 +11,11 @@ from json import loads
 from re import compile as re_compile
 from typing import List, Dict, Optional
 
-from defs import TAGS_CONCAT_CHAR, UTF8, Log, normalize_path, prefixp, ExtraConfig, re_replace_symbols
+from defs import TAGS_CONCAT_CHAR, UTF8, Log, LoggingFlags, normalize_path, prefixp, ExtraConfig, re_replace_symbols
 
 __all__ = (
-    'filtered_tags', 'get_matching_tag', 'get_or_group_matching_tag', 'is_neg_and_group_matches',
-    'register_item_tags', 'try_parse_id_or_group', 'dump_item_tags', 'valid_extra_tag',
-    'valid_tags', 'valid_artists', 'valid_categories', 'get_tag_num', 'get_artist_num', 'get_category_num',
+    'filtered_tags', 'get_matching_tag', 'register_item_tags', 'try_parse_id_or_group', 'dump_item_tags', 'valid_extra_tag',
+    'is_filtered_out_by_extra_tags', 'valid_tags', 'valid_artists', 'valid_categories'
 )
 
 TAG_NUMS_ENCODED = (
@@ -3062,15 +3061,46 @@ def try_parse_id_or_group(ex_tags: List[str]) -> List[int]:
 
 
 def trim_undersores(base_str: str) -> str:
-    ret_str = re_uscore_mult.sub('_', base_str)
-    if len(ret_str) != 0:
-        if len(ret_str) >= 2 and ret_str[0] == '_' and ret_str[-1] == '_':
-            ret_str = ret_str[1:-1]
-        elif ret_str[-1] == '_':
-            ret_str = ret_str[:-1]
-        elif ret_str[0] == '_':
-            ret_str = ret_str[1:]
-    return ret_str
+    return re_uscore_mult.sub('_', base_str).strip('_')
+
+
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], is_extra_seq: bool, subfolder: str) -> bool:
+    suc = True
+    sname = f'{prefixp()}{idi:d}.mp4'
+    if len(extra_tags) > 0:
+        if is_extra_seq:
+            assert len(extra_tags) == 1
+            id_sequence = try_parse_id_or_group(extra_tags)
+            assert id_sequence
+            if idi not in id_sequence:
+                suc = False
+                Log.trace(f'[{subfolder}] Video {sname} isn\'t contained in id list \'{str(id_sequence)}\'. Skipped!',
+                          LoggingFlags.LOGGING_EX_MISSING_TAGS)
+            return not suc
+
+        for extag in extra_tags:
+            if extag[0] == '(':
+                if get_or_group_matching_tag(extag, tags_raw) is None:
+                    suc = False
+                    Log.trace(f'[{subfolder}] Video {sname} misses required tag matching \'{extag}\'. Skipped!',
+                              LoggingFlags.LOGGING_EX_MISSING_TAGS)
+            elif extag.startswith('-('):
+                if is_neg_and_group_matches(extag, tags_raw):
+                    suc = False
+                    Log.info(f'[{subfolder}] Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
+                             LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
+            else:
+                my_extag = extag[1:] if extag[0] == '-' else extag
+                mtag = get_matching_tag(my_extag, tags_raw)
+                if mtag is not None and extag[0] == '-':
+                    suc = False
+                    Log.info(f'[{subfolder}] Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
+                             LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
+                elif mtag is None and extag[0] != '-':
+                    suc = False
+                    Log.trace(f'[{subfolder}] Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
+                              LoggingFlags.LOGGING_EX_MISSING_TAGS)
+    return not suc
 
 
 def filtered_tags(tags_list: List[str]) -> str:
