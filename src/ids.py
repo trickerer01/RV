@@ -67,7 +67,7 @@ async def main() -> None:
             if v_entries[i].my_id in removed_ids:
                 del v_entries[i]
 
-    removed_count = orig_count - len(id_sequence)
+    removed_count = orig_count - len(v_entries)
 
     if len(v_entries) == 0:
         if 0 < orig_count == removed_count:
@@ -77,7 +77,7 @@ async def main() -> None:
         return
 
     minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
-    Log.info(f'\nOk! {len(id_sequence):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
+    Log.info(f'\nOk! {len(v_entries):d} ids in queue (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
     await download(v_entries, True, removed_count)
 
