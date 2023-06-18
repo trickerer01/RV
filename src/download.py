@@ -236,7 +236,7 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
                 break
 
             r = None
-            async with await wrap_request(download_worker.session, 'GET', vi.my_link, timeout=CTOD, headers={'Referer': vi.my_link}) as r:
+            async with await wrap_request(download_worker.session, 'GET', vi.my_link, timeout=CTOD) as r:
                 if r.status == 404:
                     Log.error(f'Got 404 for {sname}...!')
                     retries = CONNECT_RETRIES_ITEM - 1

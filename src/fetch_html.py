@@ -76,7 +76,7 @@ async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> 
         try:
             async with await wrap_request(
                     session, 'GET', url, timeout=10,
-                    headers={'X-fancyBox': 'true', 'X-Requested-With': 'XMLHttpRequest', 'Host': HOST, 'Referer': url}) as r:
+                    headers={'X-fancyBox': 'true', 'X-Requested-With': 'XMLHttpRequest', 'Connection': 'keep-alive'}) as r:
                 if r.status != 404:
                     r.raise_for_status()
                 content = await r.read()
