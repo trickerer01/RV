@@ -12,7 +12,7 @@ from asyncio import run as run_async, sleep
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import VideoInfo, Log, ExtraConfig, HelpPrintExitException
 from download import download, at_interrupt
-from path_util import prefilter_existing_items, scan_dest_folder
+from path_util import prefilter_existing_items
 from tagger import try_parse_id_or_group
 from validators import find_and_resolve_config_conflicts
 
@@ -61,11 +61,7 @@ async def main() -> None:
     orig_count = len(v_entries)
 
     if len(v_entries) > 0:
-        scan_dest_folder()
-        removed_ids = prefilter_existing_items([v.my_id for v in v_entries])
-        for i in reversed(range(len(v_entries))):
-            if v_entries[i].my_id in removed_ids:
-                del v_entries[i]
+        prefilter_existing_items(v_entries)
 
     removed_count = orig_count - len(v_entries)
 

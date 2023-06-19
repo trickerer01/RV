@@ -9,10 +9,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from os import path, listdir
 from typing import List, Optional, Dict
 
-from defs import ExtraConfig, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_media_filename, prefixp
+from defs import ExtraConfig, VideoInfo, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_media_filename, prefixp
 from scenario import DownloadScenario
 
-__all__ = ('file_already_exists', 'prefilter_existing_items', 'scan_dest_folder')
+__all__ = ('file_already_exists', 'prefilter_existing_items')
 
 found_filenames_dict = dict()  # type: Dict[str, List[str]]
 
@@ -84,19 +84,18 @@ def file_already_exists(idi: int, quality: str) -> str:
     return ''
 
 
-def prefilter_existing_items(id_sequence: List[int]) -> List[int]:
+def prefilter_existing_items(vi_list: List[VideoInfo]) -> None:
     """
     This function filters out existing items with desired quality\n\n
     (which may sometimes be inaccessible).\n\n
     This function may only be called once!
     """
-    removed_ids = list()
-    for id_ in id_sequence:
-        fullpath = file_already_exists(id_, '')
+    scan_dest_folder()
+    for i in reversed(range(len(vi_list))):  # type: int
+        fullpath = file_already_exists(vi_list[i].my_id, '')
         if len(fullpath) > 0:
-            Log.info(f'Info: {prefixp()}{id_:d}.mp4 found in \'{path.split(fullpath)[0]}/\'. Skipped.')
-            removed_ids.append(id_)
-    return removed_ids
+            Log.info(f'Info: {prefixp()}{vi_list[i].my_id:d}.mp4 found in \'{path.split(fullpath)[0]}/\'. Skipped.')
+            del vi_list[i]
 
 #
 #
