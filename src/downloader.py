@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import sleep, as_completed
-from typing import List, Tuple, Coroutine, Any, Callable
+from typing import List, Tuple, Coroutine, Any, Callable, MutableSequence
 
 from aiohttp import ClientSession
 
@@ -26,7 +26,7 @@ class DownloadWorker:
     Async queue wrapper which binds list of lists of arguments to a download function call and processes them
     asynchronously with a limit of simulteneous downloads defined by MAX_VIDEOS_QUEUE_SIZE
     """
-    def __init__(self, my_sequence: List[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
+    def __init__(self, my_sequence: MutableSequence[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
                  filtered_count: int, session: ClientSession = None) -> None:
         self._func = func
         self._seq = my_sequence

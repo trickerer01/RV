@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from argparse import ArgumentParser, Namespace, ArgumentError, ZERO_OR_MORE
 from os import path
-from typing import Optional, List
+from typing import Optional, List, Sequence
 
 from defs import (
     Log, HELP_PATH, HELP_PAGES, HELP_STOP_ID, HELP_SEARCH_STR, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY, HELP_ARG_PROXY, HELP_BEGIN_ID,
@@ -58,7 +58,7 @@ def is_parsed_cmdfile(parse_result: Namespace) -> bool:
     return hasattr(parse_result, 'path') and not hasattr(parse_result, 'extra_tags')
 
 
-def validate_parsed(args: List[str], default_sub: ArgumentParser) -> Namespace:
+def validate_parsed(args: Sequence[str], default_sub: ArgumentParser) -> Namespace:
     global parser
 
     error_to_print = ''
@@ -97,7 +97,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=valid_extra_tag)
 
 
-def prepare_arglist_ids(args: List[str]) -> Namespace:
+def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     global parser
 
     parser = ArgumentParser(add_help=False)
@@ -137,7 +137,7 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
         raise
 
 
-def prepare_arglist_pages(args: List[str]) -> Namespace:
+def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     global parser
 
     parser = ArgumentParser(add_help=False)

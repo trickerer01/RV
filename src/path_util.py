@@ -7,7 +7,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from os import path, listdir
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, MutableSequence
 
 from defs import ExtraConfig, VideoInfo, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_media_filename, prefixp
 from scenario import DownloadScenario
@@ -84,7 +84,7 @@ def file_already_exists(idi: int, quality: str) -> str:
     return ''
 
 
-def prefilter_existing_items(vi_list: List[VideoInfo]) -> None:
+def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
     """
     This function filters out existing items with desired quality\n\n
     (which may sometimes be inaccessible).\n\n

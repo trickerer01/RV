@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from base64 import b64decode
 from json import loads
 from re import compile as re_compile
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Collection, Iterable, Sequence
 
 from defs import TAGS_CONCAT_CHAR, UTF8, Log, LoggingFlags, normalize_path, prefixp, ExtraConfig, re_replace_symbols
 
@@ -3021,7 +3021,7 @@ def normalize_wtag(wtag: str) -> str:
     return wtag.replace('*', '.*').replace('?', '.')
 
 
-def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
+def get_matching_tag(wtag: str, mtags: Iterable[str]) -> Optional[str]:
     if is_non_wtag(wtag):
         return wtag if wtag in mtags else None
     pat = re_compile(rf'^{normalize_wtag(wtag)}$')
@@ -3031,7 +3031,7 @@ def get_matching_tag(wtag: str, mtags: List[str]) -> Optional[str]:
     return None
 
 
-def get_or_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
+def get_or_group_matching_tag(orgr: str, mtags: Iterable[str]) -> Optional[str]:
     assert len(orgr) >= len('(.~.)')
     assert orgr[0] == '('
     for tag in orgr[1:-1].split('~'):
@@ -3041,7 +3041,7 @@ def get_or_group_matching_tag(orgr: str, mtags: List[str]) -> Optional[str]:
     return None
 
 
-def is_neg_and_group_matches(andgr: str, mtags: List[str]) -> bool:
+def is_neg_and_group_matches(andgr: str, mtags: Iterable[str]) -> bool:
     validate_neg_and_group(andgr)
     return all(get_matching_tag(wtag, mtags) is not None for wtag in andgr[2:-1].split(','))
 
@@ -3052,7 +3052,7 @@ def is_valid_id_or_group(orgr: str) -> bool:
     return False
 
 
-def try_parse_id_or_group(ex_tags: List[str]) -> List[int]:
+def try_parse_id_or_group(ex_tags: Sequence[str]) -> List[int]:
     if len(ex_tags) == 1:
         orgr = ex_tags[0]
         if is_valid_id_or_group(orgr):
@@ -3064,7 +3064,7 @@ def trim_undersores(base_str: str) -> str:
     return re_uscore_mult.sub('_', base_str).strip('_')
 
 
-def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: List[str], is_extra_seq: bool, subfolder: str) -> bool:
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_tags: List[str], is_extra_seq: bool, subfolder: str) -> bool:
     suc = True
     sname = f'{prefixp()}{idi:d}.mp4'
     if len(extra_tags) > 0:
@@ -3103,7 +3103,7 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: List[str], extra_tags: Lis
     return not suc
 
 
-def filtered_tags(tags_list: List[str]) -> str:
+def filtered_tags(tags_list: Collection[str]) -> str:
     if len(tags_list) == 0:
         return ''
 
