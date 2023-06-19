@@ -49,7 +49,7 @@ class RequestQueue:
 async def make_session() -> ClientSession:
     if ExtraConfig.proxy:
         pp = urlparse(ExtraConfig.proxy)
-        ptype = ProxyType.SOCKS5 if pp.scheme in ['socks5', 'socks5h'] else ProxyType.HTTP
+        ptype = ProxyType.SOCKS5 if pp.scheme in ('socks5', 'socks5h') else ProxyType.HTTP
         connector = ProxyConnector(limit=MAX_VIDEOS_QUEUE_SIZE, proxy_type=ptype, host=pp.hostname, port=pp.port)
     else:
         connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE)

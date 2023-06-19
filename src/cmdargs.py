@@ -116,7 +116,7 @@ def prepare_arglist_ids(args: List[str]) -> Namespace:
 
     add_common_args(par_cmd)
 
-    [p.add_argument('--help', action='help', help='Print this message') for p in [par_file, par_cmd]]
+    [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
 
     def finalize_ex_groups(parsed: Namespace) -> Namespace:
         if parsed.use_id_sequence:
@@ -162,7 +162,7 @@ def prepare_arglist_pages(args: List[str]) -> Namespace:
 
     add_common_args(par_cmd)
 
-    [p.add_argument('--help', action='help', help='Print this message') for p in [par_file, par_cmd]]
+    [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
 
     try:
         pparsed = validate_parsed(args, par_cmd)

@@ -52,7 +52,7 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
             Log.error(f'Got error 404 for {sname}, skipping...')
             return DownloadResult.DOWNLOAD_FAIL_SKIPPED
 
-        if vi.my_title in [None, '']:
+        if vi.my_title in (None, ''):
             titleh1 = i_html.find('h1', class_='title_video')
             if titleh1:
                 vi.my_title = titleh1.text
@@ -196,7 +196,7 @@ async def check_item_download_status(idi: int, dest: str, resp: ClientResponse) 
                 Log.error(f'{sname} status checker is still running for finished download!')
                 break
             file_size = stat(dest).st_size if path.isfile(dest) else 0
-            if file_size in [0, last_size]:
+            if file_size in (0, last_size):
                 Log.error(f'{sname} status check failed (download stalled at {file_size:d})! Interrupting current try...')
                 resp.connection.transport.abort()  # abort download task (forcefully - close connection)
                 break
