@@ -38,9 +38,9 @@ class DownloadWorker:
         self.filtered_count_after = 0
         self.skipped_count = 0
 
-        self._downloads_active = []  # type: List[int]
-        self.writes_active = []  # type: List[str]
-        self.failed_items = []  # type: List[int]
+        self._downloads_active = list()  # type: List[int]
+        self.writes_active = list()  # type: List[str]
+        self.failed_items = list()  # type: List[int]
 
         self._total_queue_size_last = 0
         self._download_queue_size_last = 0

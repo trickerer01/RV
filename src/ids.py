@@ -41,7 +41,7 @@ async def main() -> None:
                 Log.fatal(f'\nInvalid ID \'or\' group \'{ExtraConfig.extra_tags[0] if len(ExtraConfig.extra_tags) > 0 else ""}\'!')
                 raise ValueError
         else:
-            id_sequence = []
+            id_sequence = list()
             if start_id > end_id:
                 Log.fatal(f'\nError: start ({start_id:d}) > end ({end_id:d})')
                 raise ValueError

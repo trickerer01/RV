@@ -3107,7 +3107,7 @@ def filtered_tags(tags_list: Collection[str]) -> str:
     if len(tags_list) == 0:
         return ''
 
-    tags_list_final = []  # type: List[str]
+    tags_list_final = list()  # type: List[str]
 
     for tag in tags_list:
         tag = re_replace_symbols.sub('_', tag.replace('-', '').replace('\'', '').replace('.', ''))

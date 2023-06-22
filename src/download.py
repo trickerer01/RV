@@ -69,17 +69,17 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
             my_authors = [str(a.string).lower() for a in i_html.find('div', string='Artist:').parent.find_all('span')]
         except Exception:
             Log.warn(f'Warning: cannot extract authors for {sname}.')
-            my_authors = []
+            my_authors = list()
         try:
             my_categories = [str(c.string).lower() for c in i_html.find('div', string='Categories:').parent.find_all('span')]
         except Exception:
             Log.warn(f'Warning: cannot extract categories for {sname}.')
-            my_categories = []
+            my_categories = list()
         tdiv = i_html.find('div', string='Tags:')
         if tdiv is None:
             Log.info(f'Warning: video {sname} has no tags!')
-        tags = [str(elem.string) for elem in tdiv.parent.find_all('a', class_='tag_item')] if tdiv else []
-        tags_raw = [tag.replace(' ', '_').lower() for tag in tags]
+        tags = [str(elem.string) for elem in tdiv.parent.find_all('a', class_='tag_item')] if tdiv else ['']
+        tags_raw = [tag.replace(' ', '_').lower() for tag in tags if len(tag) > 0]
         for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
             if add_tag not in tags_raw:
                 tags_raw.append(add_tag)
@@ -139,7 +139,7 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
                 return DownloadResult.DOWNLOAD_FAIL_SKIPPED
             i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % vi.my_id, session=download_worker.session)
         links = ddiv.parent.find_all('a', class_='tag_item')
-        qualities = []
+        qualities = list()
         for lin in links:
             try:
                 qualities.append(str(lin.text).replace('MP4 ', ''))

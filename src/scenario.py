@@ -28,7 +28,7 @@ class SubQueryParams(object):
     def __init__(self, subfolder: str, extra_tags: List[str], quality: str, minscore: Optional[int], minrating: int,
                  uvp: str, use_id_sequence: bool) -> None:
         self.subfolder = subfolder or ''  # type: str
-        self.extra_tags = extra_tags or []  # type: List[str]
+        self.extra_tags = extra_tags or list()  # type: List[str]
         self.quality = quality or ''  # type: str
         self.minrating = minrating or 0  # type: int
         self.minscore = minscore  # type: Optional[int]
@@ -53,7 +53,7 @@ class SubQueryParams(object):
 
 class DownloadScenario(object):
     def __init__(self, fmt_str: str) -> None:
-        self.queries = []  # type: List[SubQueryParams]
+        self.queries = list()  # type: List[SubQueryParams]
         if fmt_str is None:
             return
 

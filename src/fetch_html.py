@@ -25,7 +25,7 @@ class RequestQueue:
     """
     Request delayed queue wrapper
     """
-    _queue = []  # type: List[str]
+    _queue = list()  # type: List[str]
     _ready = True
     _lock = AsyncLock()
 
