@@ -74,7 +74,7 @@ SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wb3B1cC1
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.2 Firefox/102.0 PaleMoon/32.2.0'
 HOST = urlparse(SITE).netloc
-DEFAULT_HEADERS = {'User-Agent': USER_AGENT, 'Referer': SITE}
+DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
 # language=PythonRegExp
 REPLACE_SYMBOLS = r'[^0-9a-zA-Z.,_+%\-()\[\] ]+'
