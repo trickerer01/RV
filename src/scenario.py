@@ -111,9 +111,9 @@ class DownloadScenario(object):
                 return True
         return False
 
-    def get_matching_scenario_subquery_idx(self, idi: int, tags_raw: List[str], score: str, rating: str) -> int:
+    def get_matching_subquery(self, idi: int, tags_raw: List[str], score: str, rating: str) -> Optional[SubQueryParams]:
         sname = f'{prefixp()}{idi:d}.mp4'
-        for idx, sq in enumerate(self.queries):
+        for sq in self.queries:
             if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.use_id_sequence, sq.subfolder):
                 if len(score) > 0:
                     try:
@@ -131,14 +131,14 @@ class DownloadScenario(object):
                             continue
                     except Exception:
                         pass
-                return idx
-        return -1
+                return sq
+        return None
 
-    def get_uvp_always_subquery_idx(self) -> int:
-        for idx, sq in enumerate(self.queries):
+    def get_uvp_always_subquery(self) -> Optional[SubQueryParams]:
+        for sq in self.queries:
             if sq.uvp == UVP_ALWAYS:
-                return idx
-        return -1
+                return sq
+        return None
 
 #
 #

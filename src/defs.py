@@ -383,6 +383,15 @@ class HelpPrintExitException(Exception):
 
 
 class VideoInfo:
+    class VIState(IntEnum):
+        NONE = 0
+        QUEUED = 1
+        ACTIVE = 2
+        DOWNLOADING = 3
+        WRITING = 4
+        DONE = 5
+        FAILED = 6
+
     def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='') -> None:
         self.my_id = m_id or 0
         self.my_title = m_title or ''
@@ -392,15 +401,18 @@ class VideoInfo:
         self.my_rating = m_rating or ''
 
         self.my_quality = ExtraConfig.quality or DEFAULT_QUALITY
-        self.done = False
+        self._state = VideoInfo.VIState.NONE
+
+    def set_state(self, state: VideoInfo.VIState) -> None:
+        self._state = state
 
     def __eq__(self, other: Union[VideoInfo, int]) -> bool:
         return self.my_id == other.my_id if isinstance(other, type(self)) else self.my_id == other if isinstance(other, int) else False
 
     def __repr__(self) -> str:
         return (
-            f'{"[DONE] " if self.done else ""}\'{prefixp()}{self.my_id}_{self.my_title}.mp4\' ({self.my_quality})'
-            f'\nDest: {self.my_fullpath}\nLink: {self.my_link}'
+            f'[{self.state_str}] \'{prefixp()}{self.my_id}_{self.my_title}.mp4\' ({self.my_quality})'
+            f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.my_link}\''
         )
 
     @property
@@ -410,6 +422,10 @@ class VideoInfo:
     @property
     def my_fullpath(self) -> str:
         return normalize_filename(self.my_filename, self.my_folder)
+
+    @property
+    def state_str(self) -> str:
+        return self._state.name
 
 #
 #

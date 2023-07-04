@@ -65,6 +65,7 @@ class DownloadWorker:
     async def _prod(self) -> None:
         while len(self._seq) > 0:
             if self._queue.full() is False:
+                self._seq[0].set_state(VideoInfo.VIState.QUEUED)
                 await self._queue.put((self._seq[0].my_id, self._func(self._seq[0])))
                 del self._seq[0]
             else:
