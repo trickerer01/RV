@@ -118,9 +118,7 @@ async def main() -> None:
 
                 prev_all = content_div.find_all('div', class_='img wrap_image')
                 titl_all = content_div.find_all('div', class_='thumb_title')
-                cur_num = 1
                 for i, p in enumerate(prev_all):
-                    cur_num += 1
                     link = str(p.get('data-preview'))
                     title = str(titl_all[i].text)
                     v_id = re_preview_entry.search(link)
