@@ -2889,7 +2889,7 @@ def valid_extra_tag(tag: str) -> str:
             assert is_valid_extra_tag(tag[1:] if tag.startswith('-') else tag)
         return tag.lower().replace(' ', '_')
     except Exception:
-        Log.fatal(f'Fatal: invalid tags group: \'{tag}\'!')
+        Log.fatal(f'Fatal: invalid extra tag or group: \'{tag}\'!')
         raise ValueError
 
 

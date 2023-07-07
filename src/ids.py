@@ -85,13 +85,18 @@ async def run_main() -> None:
 
 if __name__ == '__main__':
     assert sys.version_info >= (3, 7), 'Minimum python version required is 3.7!'
+
+    interrupted = False
     try:
         run_async(run_main())
     except (KeyboardInterrupt, SystemExit):
         Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
-        at_interrupt()
+        interrupted = True
     except Exception:
-        at_interrupt()
+        interrupted = True
+    finally:
+        if interrupted:
+            at_interrupt()
     exit(0)
 
 #

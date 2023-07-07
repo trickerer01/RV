@@ -17,6 +17,10 @@ from re import compile as re_compile
 from typing import Optional, List, Union
 from urllib.parse import urlparse
 
+from colorama import init as colorama_init, Fore
+
+colorama_init()
+
 
 class BaseConfig(object):
     """Parameters container for params used in both **pages** and **ids** modes"""
@@ -80,9 +84,6 @@ DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 REPLACE_SYMBOLS = r'[^0-9a-zA-Z.,_+%\-()\[\] ]+'
 # language=PythonRegExp
 NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
-
-SLASH = '/'
-UTF8 = 'utf-8'
 
 QUALITIES = ('2160p', '1080p', '720p', '480p', '360p', 'preview')
 
@@ -249,6 +250,8 @@ MAX_DEST_SCAN_SUB_DEPTH = 1
 MAX_VIDEOS_QUEUE_SIZE = 8
 DOWNLOAD_STATUS_CHECK_TIMER = 120.0
 
+SLASH = '/'
+UTF8 = 'utf-8'
 TAGS_CONCAT_CHAR = ','
 START_TIME = datetime.now()
 
@@ -259,11 +262,25 @@ re_ext = re_compile(r'(\.[^&]{3,5})&')
 
 
 class Log:
+    COLORS = {
+        LoggingFlags.LOGGING_TRACE: Fore.WHITE,
+        LoggingFlags.LOGGING_DEBUG: Fore.LIGHTWHITE_EX,
+        LoggingFlags.LOGGING_INFO: Fore.LIGHTCYAN_EX,
+        LoggingFlags.LOGGING_WARN: Fore.LIGHTYELLOW_EX,
+        LoggingFlags.LOGGING_ERROR: Fore.LIGHTYELLOW_EX,
+        LoggingFlags.LOGGING_FATAL: Fore.LIGHTRED_EX
+    }
+
     @staticmethod
     def log(text: str, flags: LoggingFlags) -> None:
         # if flags & LoggingFlags.LOGGING_FATAL == 0 and ExtraConfig.logging_flags & flags != flags:
         if flags < ExtraConfig.logging_flags:
             return
+
+        for f in reversed(Log.COLORS.keys()):
+            if f & flags:
+                text = f'{Log.COLORS[f]}{text}{Fore.RESET}'
+                break
 
         try:
             print(text)
