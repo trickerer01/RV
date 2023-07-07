@@ -295,17 +295,8 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
 
 def at_interrupt() -> None:
     dwn = DownloadWorker.get()
-    if dwn is None:
-        return
-
-    if len(dwn.writes_active) > 0:
-        Log.debug(f'at_interrupt: cleaning {len(dwn.writes_active):d} unfinished files...')
-        for unfinished in sorted(dwn.writes_active):
-            Log.debug(f'at_interrupt: trying to remove \'{unfinished}\'...')
-            if path.isfile(unfinished):
-                remove(unfinished)
-            else:
-                Log.debug(f'at_interrupt: file \'{unfinished}\' not found!')
+    if dwn is not None:
+        return dwn.at_interrupt()
 
 #
 #

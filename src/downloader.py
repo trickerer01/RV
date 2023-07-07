@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import sleep, as_completed
+from os import path, remove
 from typing import List, Tuple, Coroutine, Any, Callable, MutableSequence, Optional
 
 from aiohttp import ClientSession
@@ -132,6 +133,16 @@ class DownloadWorker:
         if ExtraConfig.save_tags is True:
             dump_item_tags()
         await self._after_download()
+
+    def at_interrupt(self) -> None:
+        if len(self.writes_active) > 0:
+            Log.debug(f'at_interrupt: cleaning {len(self.writes_active):d} unfinished files...')
+            for unfinished in sorted(self.writes_active):
+                Log.debug(f'at_interrupt: trying to remove \'{unfinished}\'...')
+                if path.isfile(unfinished):
+                    remove(unfinished)
+                else:
+                    Log.debug(f'at_interrupt: file \'{unfinished}\' not found!')
 
 #
 #
