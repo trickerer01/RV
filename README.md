@@ -17,7 +17,8 @@ RV is a video downloader with a lot of features, most of which are filters for f
 
 #### Tags
 - Refer to `rv_tags.list` file for list of existing tags. Any tag you use must be a valid tag. That is, unless you also utilize...
-- Wildcards. In any kind of tag you can use symbols `?` and `*` for 'any symbol' and 'any number of any symbols' repectively. Tags containing wildcards are not being validated, they can be anything
+- Wildcards. In any kind of tag you can use symbols `?` and `*` for 'any symbol' and 'any number of any symbols' repectively.
+- Tags containing wildcards aren't validated, they can be anything
 - Keep in mind that in tags all spaces must be **replaced_with_underscores** - tag names are all unified this way for convenience
 
 #### Additional info
@@ -25,7 +26,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - `OR` group is a parenthesized tilda (**\~**) -separated group of tags:
     - **(\<tag1>\~\<tag2>\~...\~\<tagN>)**
     - video containing **any** of the tags in `OR` group is considered matching said group
-  - `AND` group is a parenthesized comma (**,**) -separated group of tags. It is only used for exclusion:
+  - `AND` group is a parenthesized comma (**,**) -separated group of tags. It is only used as negative group, for exclusion:
     - **-(\<tag1>,\<tag2>,...,\<tagN>)**
     - video containing **all** of the tags in `AND` group is considered matching said group
     - negative `AND` group are for filtering out videos having this undesired **tags combination**
@@ -40,7 +41,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
      - ... -script "s1: a b (c\~d) **-e**; s2: **-a -b -c -d -e** f g (h\~i); s3: **-a -b -c -d -e -f -g -h -i** k" `<< full script`
      - ... -script "s1: a b (c\~d) **-e**; s2: **f g (h\~i) -e**; s3: **k -e**" `<< no redundant excludes`
      - ... **-e** -script "s1: **a b (c\~d)**; s2: **f g (h\~i)**; s3: **k**" `<< "-e" moved outside of script`
-   - Besides tags, each subquery can also have `-quality` set, which will be used to download files matching that subquery. You can also set `-uvp` for **one** subquery
+   - Besides tags, each subquery can also have `-quality` set, which will be used to download files matching that subquery. You can also set `-uvp always` for **one** subquery
    - Instead of pure tags subquery can also use `--use-id-sequence:` / `-seq` (see below) so instead of checking tags subquery will match ids. Such a subquery is better be first in script
 
 3. `--use-id-sequence`:
@@ -53,7 +54,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
 
 4. File naming
   - File names are generated based on video *title* and *tags*:
-  - Base template: ***rv\_\<video_id>\_\<title>\_(\<tag1,tag2,...,tagN>).\<ext>***
+  - Base template: ***rv\_\<video_id>\_\<score>_\<title>\_(\<tags>).\<ext>***
   - Non-descriptive or way-too-long tags will be dropped
   - If resulting file total path is too long to fit into 240 symbols, first the tags will be gradually dropped; if not enough, title will be shrunk to fit; general advice: do not download to folders way too deep down the folder tree
 

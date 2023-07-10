@@ -116,6 +116,7 @@ SEARCH_RULE_DEFAULT = SEARCH_RULE_ALL
 
 
 class NamingFlags:
+    NAMING_FLAG_NONE = 0x00
     NAMING_FLAG_PREFIX = 0x01
     NAMING_FLAG_SCORE = 0x02
     NAMING_FLAG_TITLE = 0x04
@@ -126,6 +127,7 @@ class NamingFlags:
 
 
 NAMING_FLAGS = {
+    'none': f'0x{NamingFlags.NAMING_FLAG_NONE:02X}',
     'prefix': f'0x{NamingFlags.NAMING_FLAG_PREFIX:02X}',
     'score': f'0x{NamingFlags.NAMING_FLAG_SCORE:02X}',
     'title': f'0x{NamingFlags.NAMING_FLAG_TITLE:02X}',
@@ -133,7 +135,10 @@ NAMING_FLAGS = {
     'quality': f'0x{NamingFlags.NAMING_FLAG_QUALITY:02X}',
     'full': f'0x{NamingFlags.NAMING_FLAGS_ALL:02X}'
 }
-"""{\n\n'prefix': '0x01',\n\n'score': '0x02',\n\n'title': '0x04',\n\n'tags': '0x08',\n\n'quality': '0x10',\n\n'full': '0x1F',\n\n}"""
+"""
+{\n\n'none': '0x00',\n\n'prefix': '0x01',\n\n'score': '0x02',\n\n'title': '0x04',\n\n'tags': '0x08',\n\n'quality': '0x10',
+\n\n'full': '0x1F',\n\n}
+"""
 NAMING_FLAGS_DEFAULT = NamingFlags.NAMING_FLAGS_ALL
 """0x1F"""
 
@@ -186,19 +191,11 @@ HELP_SEARCH_RULE = (
     f' Example: while searching for tags \'sfw,side_view\','
     f' \'{SEARCH_RULE_ANY}\' will search for any of those tags, \'{SEARCH_RULE_ALL}\' will only return results matching both'
 )
-HELP_SEARCH_TAGS = (
-    'Native search by tags (matching any tag). Spaces must be replced with \'_\', concatenate with \',\'.'
-    ' Ex. \'1girl,side_view\''
+HELP_SEARCH_ACT = (
+    'Native search by tag(s) / artist(s) / category(ies). Spaces must be replced with \'_\', concatenate with \',\'.'
+    ' Example: \'-search_tag 1girl,side_view -search_art artist_name -search_cat category_name\''
 )
-HELP_SEARCH_ARTISTS = (
-    'Native search by artists (matching any artist). Spaces must be replced with \'_\', concatenate with \',\'.'
-    ' Ex. \'artist1,artist_sfw2\''
-)
-HELP_SEARCH_CATEGORIES = (
-    'Native search by categories (matching any category). Spaces must be replced with \'_\', concatenate with \',\'.'
-    ' Ex. \'category1,category_sfw2\''
-)
-HELP_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'back-view\''
+HELP_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'after-hours\''
 HELP_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
 HELP_ARG_UVPOLICY = (
@@ -207,8 +204,9 @@ HELP_ARG_UVPOLICY = (
 )
 HELP_ARG_DMMODE = 'Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (
-    'All remaining \'args\' and \'-args\' count as tags to exclude / require. All spaces must be replaced with \'_\'.'
-    ' Videos containing any of \'-tags\', or not containing all of \'tags\' will be skipped. Wildcards are supported.'
+    'All remaining \'args\' and \'-args\' count as tags to require or exclude. All spaces must be replaced with \'_\'.'
+    ' Videos containing any of \'-tags\', or not containing all of \'tags\' will be skipped.'
+    ' Supports wildcards, \'or\' groups and \'negative\' groups (check README for more info).'
     ' Only existing tags are allowed unless wildcards are used'
 )
 HELP_ARG_DWN_SCENARIO = (

@@ -3470,7 +3470,7 @@ saved_tags_dict = dict()  # type: Dict[str, Dict[int, str]]
 
 
 def register_item_tags(item_id: int, tags_str: str, subfolder: str) -> None:
-    if subfolder not in saved_tags_dict.keys():
+    if subfolder not in saved_tags_dict:
         saved_tags_dict[subfolder] = dict()
     saved_tags_dict[subfolder][item_id] = tags_str
 

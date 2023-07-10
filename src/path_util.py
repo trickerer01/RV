@@ -29,7 +29,6 @@ def scan_dest_folder() -> None:
     => files{'folder1': ['file1'], 'subfolder1': ['file2','file3']}\n\n
     This function may only be called once!
     """
-
     assert len(found_filenames_dict.keys()) == 0
     if path.isdir(ExtraConfig.dest_base):
         Log.info('Scanning dest folder...')
@@ -77,7 +76,7 @@ def file_already_exists(idi: int, quality: str) -> str:
             if len(fullpath) > 0:
                 return fullpath
     else:
-        for fullpath in found_filenames_dict.keys():
+        for fullpath in found_filenames_dict:
             fullpath = file_exists_in_folder(fullpath, idi, quality or ExtraConfig.quality)
             if len(fullpath) > 0:
                 return fullpath
