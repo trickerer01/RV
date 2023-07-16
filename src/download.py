@@ -40,120 +40,115 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
     scenario = ExtraConfig.scenario  # type: Optional[DownloadScenario]
     sname = f'{prefixp()}{vi.my_id:d}.mp4'
     my_tags = 'no_tags'
-    rating = ''
+    rating = vi.my_rating
     score = ''
 
     vi.set_state(VideoInfo.VIState.ACTIVE)
     i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.my_id}?popup_id={2 + vi.my_id % 10:d}', session=dwn.session)
-    if i_html:
-        if i_html.find('title', string='404 Not Found'):
-            Log.error(f'Got error 404 for {sname}, skipping...')
-            return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-
-        if vi.my_title in (None, ''):
-            titleh1 = i_html.find('h1', class_='title_video')
-            if titleh1:
-                vi.my_title = titleh1.text
-            else:
-                vi.my_title = ''
-        try:
-            dislikes_int = 0
-            likes_int = int(i_html.find('span', class_='voters count').text.replace(' likes', ''))
-            rating = f'{(likes_int * 100) // (dislikes_int + likes_int):d}' if (dislikes_int + likes_int) > 999999 else rating
-            score = f'{likes_int - dislikes_int:d}'
-        except Exception:
-            pass
-        try:
-            my_authors = [str(a.string).lower() for a in i_html.find('div', string='Artist:').parent.find_all('span')]
-        except Exception:
-            Log.warn(f'Warning: cannot extract authors for {sname}.')
-            my_authors = list()
-        try:
-            my_categories = [str(c.string).lower() for c in i_html.find('div', string='Categories:').parent.find_all('span')]
-        except Exception:
-            Log.warn(f'Warning: cannot extract categories for {sname}.')
-            my_categories = list()
-        tdiv = i_html.find('div', string='Tags:')
-        if tdiv is None:
-            Log.info(f'Warning: video {sname} has no tags!')
-        tags = [str(elem.string) for elem in tdiv.parent.find_all('a', class_='tag_item')] if tdiv else ['']
-        tags_raw = [tag.replace(' ', '_').lower() for tag in tags if len(tag) > 0]
-        for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
-            if add_tag not in tags_raw:
-                tags_raw.append(add_tag)
-        if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, ExtraConfig.extra_tags, False, vi.my_subfolder):
-            Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
-            return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-        if len(score) > 0 and ExtraConfig.min_score is not None:
-            try:
-                if int(score) < ExtraConfig.min_score:
-                    Log.info(f'Info: video {sname} has low score \'{score}\' (required {ExtraConfig.min_score:d}), skipping...')
-                    return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-            except Exception:
-                pass
-        if len(rating) > 0:
-            try:
-                if int(rating) < ExtraConfig.min_rating:
-                    Log.info(f'Info: video {sname} has low rating \'{rating}%\' (required {ExtraConfig.min_rating:d}%), skipping...')
-                    return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-            except Exception:
-                pass
-        if scenario is not None:
-            matching_sq = scenario.get_matching_subquery(vi.my_id, tags_raw, score, rating)
-            uvpalways_sq = scenario.get_uvp_always_subquery() if tdiv is None else None
-            if matching_sq:
-                vi.my_subfolder = matching_sq.subfolder
-                vi.my_quality = matching_sq.quality
-            elif uvpalways_sq:
-                vi.my_subfolder = uvpalways_sq.subfolder
-                vi.my_quality = uvpalways_sq.quality
-            else:
-                Log.info(f'Info: unable to find matching or uvp scenario subquery for {sname}, skipping...')
-                return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-        elif tdiv is None and len(ExtraConfig.extra_tags) > 0 and ExtraConfig.uvp != DOWNLOAD_POLICY_ALWAYS:
-            Log.warn(f'Warning: could not extract tags from {sname}, skipping due to untagged videos download policy...')
-            return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-        if ExtraConfig.save_tags:
-            register_item_tags(vi.my_id, ' '.join(sorted(tags_raw)), vi.my_subfolder)
-        tags_str = filtered_tags(list(sorted(tags_raw)))
-        if tags_str != '':
-            my_tags = tags_str
-
-        tries = 0
-        while True:
-            ddiv = i_html.find('div', string='Download:')
-            if ddiv is not None and ddiv.parent is not None:
-                break
-            reason = 'probably an error'
-            del_span = i_html.find('span', class_='message')
-            if del_span:
-                reason = f'reason: \'{str(del_span.text)}\''
-            Log.error(f'Cannot find download section for {sname}, {reason}, skipping...')
-            tries += 1
-            if tries >= 5:
-                dwn.failed_items.append(vi.my_id)
-                return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-            elif reason != 'probably an error':
-                return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-            i_html = await fetch_html(SITE_AJAX_REQUEST_VIDEO % vi.my_id, session=dwn.session)
-        links = ddiv.parent.find_all('a', class_='tag_item')
-        qualities = list()
-        for lin in links:
-            try:
-                qualities.append(str(lin.text).replace('MP4 ', ''))
-            except Exception:
-                pass
-        if vi.my_quality not in qualities:
-            q_idx = 0
-            Log.warn(f'Warning: cannot find quality \'{vi.my_quality}\' for {sname}, using \'{qualities[q_idx]}\'')
-            vi.my_quality = qualities[q_idx]
-            link_idx = q_idx
-        else:
-            link_idx = qualities.index(vi.my_quality)
-        vi.my_link = links[link_idx].get('href')
-    else:
+    if i_html is None:
         Log.error(f'Error: unable to retreive html for {sname}! Aborted!')
         return DownloadResult.DOWNLOAD_FAIL_RETRIES
+
+    if i_html.find('title', string='404 Not Found'):
+        Log.error(f'Got error 404 for {sname}, skipping...')
+        return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+
+    if vi.my_title in (None, ''):
+        titleh1 = i_html.find('h1', class_='title_video')
+        vi.my_title = titleh1.text if titleh1 else ''
+    try:
+        dislikes_int = 0
+        likes_int = int(i_html.find('span', class_='voters count').text.replace(' likes', ''))
+        rating = f'{(likes_int * 100) // (dislikes_int + likes_int):d}' if (dislikes_int + likes_int) > 999999 else rating
+        score = f'{likes_int - dislikes_int:d}'
+    except Exception:
+        pass
+    try:
+        my_authors = [str(a.string).lower() for a in i_html.find('div', string='Artist:').parent.find_all('span')]
+    except Exception:
+        Log.warn(f'Warning: cannot extract authors for {sname}.')
+        my_authors = list()
+    try:
+        my_categories = [str(c.string).lower() for c in i_html.find('div', string='Categories:').parent.find_all('span')]
+    except Exception:
+        Log.warn(f'Warning: cannot extract categories for {sname}.')
+        my_categories = list()
+    tdiv = i_html.find('div', string='Tags:')
+    if tdiv is None:
+        Log.info(f'Warning: video {sname} has no tags!')
+    tags = [str(elem.string) for elem in tdiv.parent.find_all('a', class_='tag_item')] if tdiv else ['']
+    tags_raw = [tag.replace(' ', '_').lower() for tag in tags if len(tag) > 0]
+    for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
+        if add_tag not in tags_raw:
+            tags_raw.append(add_tag)
+    if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, ExtraConfig.extra_tags, False, vi.my_subfolder):
+        Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
+        return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+    if len(score) > 0 and ExtraConfig.min_score is not None:
+        try:
+            if int(score) < ExtraConfig.min_score:
+                Log.info(f'Info: video {sname} has low score \'{score}\' (required {ExtraConfig.min_score:d}), skipping...')
+                return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+        except Exception:
+            pass
+    if len(rating) > 0:
+        try:
+            if int(rating) < ExtraConfig.min_rating:
+                Log.info(f'Info: video {sname} has low rating \'{rating}%\' (required {ExtraConfig.min_rating:d}%), skipping...')
+                return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+        except Exception:
+            pass
+    if scenario is not None:
+        matching_sq = scenario.get_matching_subquery(vi.my_id, tags_raw, score, rating)
+        uvpalways_sq = scenario.get_uvp_always_subquery() if tdiv is None else None
+        if matching_sq:
+            vi.my_subfolder = matching_sq.subfolder
+            vi.my_quality = matching_sq.quality
+        elif uvpalways_sq:
+            vi.my_subfolder = uvpalways_sq.subfolder
+            vi.my_quality = uvpalways_sq.quality
+        else:
+            Log.info(f'Info: unable to find matching or uvp scenario subquery for {sname}, skipping...')
+            return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+    elif tdiv is None and len(ExtraConfig.extra_tags) > 0 and ExtraConfig.uvp != DOWNLOAD_POLICY_ALWAYS:
+        Log.warn(f'Warning: could not extract tags from {sname}, skipping due to untagged videos download policy...')
+        return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+    if ExtraConfig.save_tags:
+        register_item_tags(vi.my_id, ' '.join(sorted(tags_raw)), vi.my_subfolder)
+    tags_str = filtered_tags(list(sorted(tags_raw)))
+    if tags_str != '':
+        my_tags = tags_str
+
+    tries = 0
+    while True:
+        ddiv = i_html.find('div', string='Download:')
+        if ddiv is not None and ddiv.parent is not None:
+            break
+        message_span = i_html.find('span', class_='message')
+        if message_span:
+            Log.warn(f'Cannot find download section for {sname}, reason: \'{message_span.text}\', skipping...')
+            return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+        elif tries >= 5:
+            Log.error(f'Cannot find download section for {sname} after {tries:d} tries, failed!')
+            return DownloadResult.DOWNLOAD_FAIL_RETRIES
+        tries += 1
+        Log.debug(f'No download section for {sname}, retry #{tries:d}...')
+        i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.my_id}?popup_id={2 + tries + vi.my_id % 10:d}', session=dwn.session)
+    links = ddiv.parent.find_all('a', class_='tag_item')
+    qualities = list()
+    for lin in links:
+        try:
+            qualities.append(str(lin.text).replace('MP4 ', ''))
+        except Exception:
+            pass
+    if vi.my_quality not in qualities:
+        q_idx = 0
+        Log.warn(f'Warning: cannot find quality \'{vi.my_quality}\' for {sname}, using \'{qualities[q_idx]}\'')
+        vi.my_quality = qualities[q_idx]
+        link_idx = q_idx
+    else:
+        link_idx = qualities.index(vi.my_quality)
+    vi.my_link = links[link_idx].get('href')
 
     my_score = (f'{f"+" if score.isnumeric() else ""}{score}' if len(score) > 0
                 else '' if len(rating) > 0 else 'unk')

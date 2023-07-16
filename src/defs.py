@@ -88,7 +88,7 @@ NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
 QUALITIES = ('2160p', '1080p', '720p', '480p', '360p', 'preview')
 
 DEFAULT_QUALITY = QUALITIES[4]
-"""360p"""
+"""'360p'"""
 
 # untagged videos download policy
 DOWNLOAD_POLICY_NOFILTERS = 'nofilters'
