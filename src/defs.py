@@ -182,7 +182,7 @@ HELP_PAGES = 'Pages count to process. Required'
 HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
 HELP_BEGIN_ID = 'If you want to download only videos below or equal to this id'
 HELP_ARG_IDSEQUENCE = (
-    'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequesnce instead of'
+    'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence instead of'
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
 HELP_PATH = 'Download destination. Default is current folder'
