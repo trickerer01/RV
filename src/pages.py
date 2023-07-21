@@ -47,6 +47,7 @@ async def main() -> None:
         search_rule_tag = arglist.search_rule_tag  # type: str
         search_rule_art = arglist.search_rule_art  # type: str
         search_rule_cat = arglist.search_rule_cat  # type: str
+        session_id = arglist.session_id  # type: str
 
         full_download = ExtraConfig.quality != QUALITIES[-1]
         re_page_entry = re_compile(r'videos/(\d+)/')
@@ -70,7 +71,7 @@ async def main() -> None:
     maxpage = 0
 
     pi = start_page
-    async with await make_session() as s:
+    async with await make_session(session_id) as s:
         while pi < start_page + pages_count:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')

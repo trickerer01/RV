@@ -11,12 +11,12 @@ from random import uniform as frand
 from typing import Optional, List
 from urllib.parse import urlparse
 
-from aiohttp import ClientSession, ClientResponse, TCPConnector, http_parser
+from aiohttp import ClientSession, ClientResponse, TCPConnector
 from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, HOST, UTF8
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, UTF8
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
 
@@ -46,21 +46,25 @@ class RequestQueue:
             get_running_loop().create_task(RequestQueue._reset())
 
 
-async def make_session() -> ClientSession:
+async def make_session(session_id: str = None) -> ClientSession:
     if ExtraConfig.proxy:
         pp = urlparse(ExtraConfig.proxy)
         ptype = ProxyType.SOCKS5 if pp.scheme in ('socks5', 'socks5h') else ProxyType.HTTP
         connector = ProxyConnector(limit=MAX_VIDEOS_QUEUE_SIZE, proxy_type=ptype, host=pp.hostname, port=pp.port)
     else:
         connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE)
-    return ClientSession(connector=connector, read_bufsize=2**20)
+    s = ClientSession(connector=connector, read_bufsize=2**20)
+    s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'})
+    if session_id:
+        s.cookie_jar.update_cookies({'PHPSESSID': session_id, 'kt_member': '1'})
+        pass
+    return s
 
 
 async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> ClientResponse:
     """Queues request, updating headers/proxies beforehand, and returns the response"""
     await RequestQueue.until_ready(url)
     s.headers.update(DEFAULT_HEADERS.copy())
-    s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'}, http_parser.URL(HOST))
     r = await s.request(method, url, **kwargs)
     return r
 

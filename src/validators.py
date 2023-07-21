@@ -176,6 +176,15 @@ def log_level(level: str) -> LoggingFlags:
     except Exception:
         raise ArgumentError
 
+
+def valid_sessionid(sessionid: str) -> str:
+    try:
+        re_sessionid = re_compile(r'[a-z0-9]{26}')
+        assert (not sessionid) or re_sessionid.fullmatch(sessionid)
+        return sessionid
+    except Exception:
+        raise ArgumentError
+
 #
 #
 #########################################

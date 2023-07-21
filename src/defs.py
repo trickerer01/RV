@@ -187,6 +187,9 @@ HELP_ARG_IDSEQUENCE = (
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
 HELP_PATH = 'Download destination. Default is current folder'
+HELP_SESSIONID = (
+    '\'PHPSESSID\' cookie. Some tags to search for are hidden behind login wall. Using cookie from logged in account resolves this'
+)
 HELP_SEARCH_RULE = (
     f'Multiple search args of the same type combine logic. Default is \'{SEARCH_RULE_DEFAULT}\'.'
     f' Example: while searching for tags \'sfw,side_view\','

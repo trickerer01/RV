@@ -15,13 +15,13 @@ from defs import (
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING, HELP_ARG_MINSCORE,
     HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, ACTION_STORE_TRUE, UTF8, HelpPrintExitException,
-    HELP_SEARCH_ACT, HELP_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT,
+    HELP_SEARCH_ACT, HELP_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT, HELP_SESSIONID,
 )
 from scenario import DownloadScenario
 from tagger import valid_extra_tag, valid_tags, valid_artists, valid_categories
 from validators import (
     valid_int, valid_positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
-    log_level,
+    log_level, valid_sessionid,
 )
 
 __all__ = ('prepare_arglist_pages', 'prepare_arglist_ids', 'read_cmdfile', 'is_parsed_cmdfile')
@@ -141,7 +141,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     par_cmd.add_argument('-start', metavar='#number', default=1, help="Start page number. Default is '1'", type=valid_positive_nonzero_int)
     par_cmd.add_argument('-pages', metavar='#number', required=True, help=HELP_PAGES, type=valid_positive_nonzero_int)
     par_cmd.add_argument('-stop_id', metavar='#number', default=1, help=HELP_STOP_ID, type=valid_positive_nonzero_int)
-    par_cmd.add_argument('-begin_id', metavar='#number', default=1000000000, help=HELP_BEGIN_ID, type=valid_positive_nonzero_int)
+    par_cmd.add_argument('-begin_id', metavar='#number', default=10**9, help=HELP_BEGIN_ID, type=valid_positive_nonzero_int)
     par_cmd.add_argument('-search', metavar='#string', default='', help=HELP_SEARCH_STR, type=valid_search_string)
     par_cmd.add_argument('-search_tag', metavar='#tag[,tag...]', default='', help='', type=valid_tags)
     par_cmd.add_argument('-search_art', metavar='#artist[,artist...]', default='', help='', type=valid_artists)
@@ -149,6 +149,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     par_cmd.add_argument('-search_rule_tag', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_art', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_cat', default=SEARCH_RULE_DEFAULT, help=HELP_SEARCH_RULE, choices=SEARCH_RULES)
+    par_cmd.add_argument('-session_id', default='', help=HELP_SESSIONID, type=valid_sessionid)
     par_cmd.epilog = 'Note that search obeys \'AND\' rule: (ANY/ALL tag(s)) AND (ANY/ALL artist(s)) AND (ANY/ALL category(ies))'
 
     add_common_args(par_cmd)
