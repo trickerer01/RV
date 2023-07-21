@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from argparse import ArgumentParser, Namespace, ArgumentError, ZERO_OR_MORE
 from os import path
-from typing import Optional, List, Sequence
+from typing import List, Sequence, Tuple
 
 from defs import (
     Log, HELP_PATH, HELP_PAGES, HELP_STOP_ID, HELP_SEARCH_STR, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY, HELP_ARG_PROXY, HELP_BEGIN_ID,
@@ -39,8 +39,6 @@ PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
 EXISTING_PARSERS = {PARSER_TITLE_CMD, PARSER_TITLE_FILE}
 
-parser = None  # type: Optional[ArgumentParser]
-
 
 def read_cmdfile(cmdfile_path: str) -> List[str]:
     """Read cmd args from a text file"""
@@ -58,9 +56,7 @@ def is_parsed_cmdfile(parse_result: Namespace) -> bool:
     return hasattr(parse_result, 'path') and not hasattr(parse_result, 'extra_tags')
 
 
-def validate_parsed(args: Sequence[str], default_sub: ArgumentParser) -> Namespace:
-    global parser
-
+def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: ArgumentParser) -> Namespace:
     error_to_print = ''
     try:
         parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
@@ -82,6 +78,15 @@ def validate_parsed(args: Sequence[str], default_sub: ArgumentParser) -> Namespa
     return parsed
 
 
+def create_parsers() -> Tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
+    parser = ArgumentParser(add_help=False)
+    subs = parser.add_subparsers()
+    par_file = subs.add_parser(PARSER_TITLE_FILE, description='Run using text file containing cmdline', add_help=False)
+    par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
+    [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
+    return parser, par_file, par_cmd
+
+
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=valid_path(path.abspath(path.curdir)), help=HELP_PATH, type=valid_path)
     parser_or_group.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_QUALITY, choices=QUALITIES)
@@ -98,15 +103,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
 
 
 def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
-    global parser
-
-    parser = ArgumentParser(add_help=False)
-
-    subs = parser.add_subparsers()
-    par_file = subs.add_parser(PARSER_TITLE_FILE, description='Run using text file containing cmdline', add_help=False)
-    par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
-
-    [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
+    parser, par_file, par_cmd = create_parsers()
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     arggr_start_or_seq = par_cmd.add_mutually_exclusive_group(required=True)
@@ -127,7 +124,7 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
         return parsed
 
     try:
-        pparsed = validate_parsed(args, par_cmd)
+        pparsed = validate_parsed(parser, args, par_cmd)
         if not is_parsed_cmdfile(pparsed):
             pparsed = finalize_ex_groups(pparsed)
         return pparsed
@@ -138,15 +135,7 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
 
 
 def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
-    global parser
-
-    parser = ArgumentParser(add_help=False)
-
-    subs = parser.add_subparsers()
-    par_file = subs.add_parser(PARSER_TITLE_FILE, description='Run using text file containing cmdline', add_help=False)
-    par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
-
-    [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
+    parser, par_file, par_cmd = create_parsers()
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     par_cmd.add_argument('-start', metavar='#number', default=1, help="Start page number. Default is '1'", type=valid_positive_nonzero_int)
@@ -165,7 +154,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     add_common_args(par_cmd)
 
     try:
-        pparsed = validate_parsed(args, par_cmd)
+        pparsed = validate_parsed(parser, args, par_cmd)
         return pparsed
     except SystemExit:
         raise HelpPrintExitException

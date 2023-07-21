@@ -27,7 +27,7 @@ from tagger import filtered_tags, register_item_tags, is_filtered_out_by_extra_t
 
 __all__ = ('download', 'at_interrupt')
 
-CTOD = ClientTimeout(total=7200, connect=10)
+CTOD = ClientTimeout(total=None, connect=10)
 """Client timeout (download)"""
 
 
