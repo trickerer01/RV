@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from os import path, listdir
 from typing import List, Optional, Dict, MutableSequence
 
-from defs import ExtraConfig, VideoInfo, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_media_filename, prefixp
+from defs import Config, VideoInfo, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_media_filename, prefixp
 from scenario import DownloadScenario
 
 __all__ = ('file_already_exists', 'prefilter_existing_items')
@@ -30,7 +30,7 @@ def scan_dest_folder() -> None:
     This function may only be called once!
     """
     assert len(found_filenames_dict.keys()) == 0
-    if path.isdir(ExtraConfig.dest_base):
+    if path.isdir(Config.dest_base):
         Log.info('Scanning dest folder...')
 
         def scan_folder(base_folder: str, level: int) -> None:
@@ -44,9 +44,9 @@ def scan_dest_folder() -> None:
                 elif path.isfile(fullpath):
                     found_filenames_dict[base_folder].append(cname)
 
-        found_filenames_dict[ExtraConfig.dest_base] = list()
-        scan_folder(ExtraConfig.dest_base, 0)
-        base_files_count = len(found_filenames_dict.get(ExtraConfig.dest_base))
+        found_filenames_dict[Config.dest_base] = list()
+        scan_folder(Config.dest_base, 0)
+        base_files_count = len(found_filenames_dict.get(Config.dest_base))
         total_files_count = sum(len(li) for li in found_filenames_dict.values())
         Log.info(f'Found {base_files_count:d} files in base and '
                  f'{total_files_count - base_files_count:d} files in {len(found_filenames_dict.keys()) - 1:d} subfolders '
@@ -69,15 +69,15 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> str:
 
 
 def file_already_exists(idi: int, quality: str) -> str:
-    scenario = ExtraConfig.scenario  # type: Optional[DownloadScenario]
+    scenario = Config.scenario  # type: Optional[DownloadScenario]
     if scenario:
         for q in scenario.queries:
-            fullpath = file_exists_in_folder(f'{ExtraConfig.dest_base}{q.subfolder}', idi, quality or q.quality)
+            fullpath = file_exists_in_folder(f'{Config.dest_base}{q.subfolder}', idi, quality or q.quality)
             if len(fullpath) > 0:
                 return fullpath
     else:
         for fullpath in found_filenames_dict:
-            fullpath = file_exists_in_folder(fullpath, idi, quality or ExtraConfig.quality)
+            fullpath = file_exists_in_folder(fullpath, idi, quality or Config.quality)
             if len(fullpath) > 0:
                 return fullpath
     return ''

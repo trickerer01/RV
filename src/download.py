@@ -16,7 +16,7 @@ from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
     CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER,
-    TAGS_CONCAT_CHAR, VideoInfo, Log, ExtraConfig, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
+    TAGS_CONCAT_CHAR, VideoInfo, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
     re_media_filename,
 )
 from downloader import DownloadWorker
@@ -37,7 +37,7 @@ async def download(sequence: MutableSequence[VideoInfo], by_id: bool, filtered_c
 
 async def download_id(vi: VideoInfo) -> DownloadResult:
     dwn = DownloadWorker.get()
-    scenario = ExtraConfig.scenario  # type: Optional[DownloadScenario]
+    scenario = Config.scenario  # type: Optional[DownloadScenario]
     sname = f'{prefixp()}{vi.my_id:d}.mp4'
     my_tags = 'no_tags'
     rating = vi.my_rating
@@ -81,20 +81,20 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
     for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
         if add_tag not in tags_raw:
             tags_raw.append(add_tag)
-    if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, ExtraConfig.extra_tags, False, vi.my_subfolder):
+    if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, Config.extra_tags, False, vi.my_subfolder):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
         return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-    if len(score) > 0 and ExtraConfig.min_score is not None:
+    if len(score) > 0 and Config.min_score is not None:
         try:
-            if int(score) < ExtraConfig.min_score:
-                Log.info(f'Info: video {sname} has low score \'{score}\' (required {ExtraConfig.min_score:d}), skipping...')
+            if int(score) < Config.min_score:
+                Log.info(f'Info: video {sname} has low score \'{score}\' (required {Config.min_score:d}), skipping...')
                 return DownloadResult.DOWNLOAD_FAIL_SKIPPED
         except Exception:
             pass
     if len(rating) > 0:
         try:
-            if int(rating) < ExtraConfig.min_rating:
-                Log.info(f'Info: video {sname} has low rating \'{rating}%\' (required {ExtraConfig.min_rating:d}%), skipping...')
+            if int(rating) < Config.min_rating:
+                Log.info(f'Info: video {sname} has low rating \'{rating}%\' (required {Config.min_rating:d}%), skipping...')
                 return DownloadResult.DOWNLOAD_FAIL_SKIPPED
         except Exception:
             pass
@@ -110,10 +110,10 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
         else:
             Log.info(f'Info: unable to find matching or uvp scenario subquery for {sname}, skipping...')
             return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-    elif tdiv is None and len(ExtraConfig.extra_tags) > 0 and ExtraConfig.uvp != DOWNLOAD_POLICY_ALWAYS:
+    elif tdiv is None and len(Config.extra_tags) > 0 and Config.uvp != DOWNLOAD_POLICY_ALWAYS:
         Log.warn(f'Warning: could not extract tags from {sname}, skipping due to untagged videos download policy...')
         return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-    if ExtraConfig.save_tags:
+    if Config.save_tags:
         register_item_tags(vi.my_id, ' '.join(sorted(tags_raw)), vi.my_subfolder)
     tags_str = filtered_tags(list(sorted(tags_raw)))
     if tags_str != '':
@@ -228,7 +228,7 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
 
     while (not (path.isfile(vi.my_fullpath) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
-            if ExtraConfig.dm == DOWNLOAD_MODE_TOUCH:
+            if Config.dm == DOWNLOAD_MODE_TOUCH:
                 Log.info(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
                 with open(vi.my_fullpath, 'wb'):
                     pass

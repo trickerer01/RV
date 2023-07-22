@@ -12,7 +12,7 @@ from re import compile as re_compile
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    VideoInfo, Log, ExtraConfig, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
+    VideoInfo, Log, Config, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
     HelpPrintExitException,
 )
 from download import download, at_interrupt
@@ -35,7 +35,7 @@ async def main() -> None:
         return
 
     try:
-        ExtraConfig.read_params(arglist, True)
+        Config.read(arglist, True)
         search_str = arglist.search  # type: str
         search_tags = arglist.search_tag  # type: str
         search_arts = arglist.search_art  # type: str
@@ -45,13 +45,13 @@ async def main() -> None:
         search_rule_cat = arglist.search_rule_cat  # type: str
         session_id = arglist.session_id  # type: str
 
-        full_download = ExtraConfig.quality != QUALITIES[-1]
+        full_download = Config.quality != QUALITIES[-1]
         re_page_entry = re_compile(r'videos/(\d+)/')
         re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
         re_paginator = re_compile(r'from_albums:(\d+)')
 
-        if ExtraConfig.start_id > ExtraConfig.end_id:
-            Log.fatal(f'\nError: invalid video id bounds: start ({ExtraConfig.start_id:d}) > end ({ExtraConfig.end_id:d})')
+        if Config.start_id > Config.end_id:
+            Log.fatal(f'\nError: invalid video id bounds: start ({Config.start_id:d}) > end ({Config.end_id:d})')
             raise ValueError
 
         if search_tags.find(',') != -1 and search_rule_tag == SEARCH_RULE_ALL:
@@ -68,20 +68,20 @@ async def main() -> None:
         return
 
     def check_id_bounds(video_id: int) -> bool:
-        if video_id > ExtraConfig.end_id:
-            Log.trace(f'skipping {video_id:d} > {ExtraConfig.end_id:d}')
+        if video_id > Config.end_id:
+            Log.trace(f'skipping {video_id:d} > {Config.end_id:d}')
             return False
-        if video_id < ExtraConfig.start_id:
-            Log.trace(f'skipping {video_id:d} < {ExtraConfig.start_id:d}')
+        if video_id < Config.start_id:
+            Log.trace(f'skipping {video_id:d} < {Config.start_id:d}')
             return False
         return True
 
     v_entries = list()
     maxpage = 0
 
-    pi = ExtraConfig.start
+    pi = Config.start
     async with await make_session(session_id) as s:
-        while pi <= ExtraConfig.end:
+        while pi <= Config.end:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')
                 break

@@ -38,7 +38,7 @@ class BaseConfig(object):
         self.naming_flags = self.logging_flags = 0
         self.start = self.end = self.start_id = self.end_id = 0
 
-    def read_params(self, params: Namespace, pages: bool) -> None:
+    def read(self, params: Namespace, pages: bool) -> None:
         self.dest_base = params.path
         self.proxy = params.proxy
         self.min_rating = params.minimum_rating
@@ -69,7 +69,7 @@ class BaseConfig(object):
         return self.download_mode
 
 
-ExtraConfig = BaseConfig()
+Config = BaseConfig()
 
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS8=').decode()
 SITE_AJAX_REQUEST_PAGE = b64decode(
@@ -278,8 +278,8 @@ class Log:
 
     @staticmethod
     def log(text: str, flags: LoggingFlags) -> None:
-        # if flags & LoggingFlags.LOGGING_FATAL == 0 and ExtraConfig.logging_flags & flags != flags:
-        if flags < ExtraConfig.logging_flags:
+        # if flags & LoggingFlags.LOGGING_FATAL == 0 and Config.logging_flags & flags != flags:
+        if flags < Config.logging_flags:
             return
 
         for f in reversed(Log.COLORS.keys()):
@@ -380,12 +380,12 @@ def extract_ext(href: str) -> str:
 
 
 def has_naming_flag(flag: int) -> bool:
-    return not not (ExtraConfig.naming_flags & flag)
+    return not not (Config.naming_flags & flag)
 
 
 def calc_sleep_time(base_time: float) -> float:
     """Returns either base_time for full download or shortened time otherwise"""
-    return base_time if ExtraConfig.download_mode == DOWNLOAD_MODE_FULL else max(1.0, base_time / 3.0)
+    return base_time if Config.download_mode == DOWNLOAD_MODE_FULL else max(1.0, base_time / 3.0)
 
 
 class DownloadResult(IntEnum):
@@ -421,7 +421,7 @@ class VideoInfo:
         self.my_filename = m_filename or ''
         self.my_rating = m_rating or ''
 
-        self.my_quality = ExtraConfig.quality or DEFAULT_QUALITY
+        self.my_quality = Config.quality or DEFAULT_QUALITY
         self._state = VideoInfo.VIState.NONE
 
     def set_state(self, state: VideoInfo.VIState) -> None:
@@ -438,7 +438,7 @@ class VideoInfo:
 
     @property
     def my_folder(self) -> str:
-        return normalize_path(f'{ExtraConfig.dest_base}{self.my_subfolder}')
+        return normalize_path(f'{Config.dest_base}{self.my_subfolder}')
 
     @property
     def my_fullpath(self) -> str:

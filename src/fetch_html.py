@@ -16,7 +16,7 @@ from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, ExtraConfig, UTF8
+from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, Config, UTF8
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
 
@@ -47,8 +47,8 @@ class RequestQueue:
 
 
 async def make_session(session_id: str = None) -> ClientSession:
-    if ExtraConfig.proxy:
-        pp = urlparse(ExtraConfig.proxy)
+    if Config.proxy:
+        pp = urlparse(Config.proxy)
         ptype = ProxyType.SOCKS5 if pp.scheme in ('socks5', 'socks5h') else ProxyType.HTTP
         connector = ProxyConnector(limit=MAX_VIDEOS_QUEUE_SIZE, proxy_type=ptype, host=pp.hostname, port=pp.port)
     else:

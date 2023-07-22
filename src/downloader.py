@@ -16,7 +16,7 @@ from typing import List, Tuple, Coroutine, Any, Callable, MutableSequence, Optio
 from aiohttp import ClientSession
 
 from defs import (
-    MAX_VIDEOS_QUEUE_SIZE, VideoInfo, Log, ExtraConfig, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s,
+    MAX_VIDEOS_QUEUE_SIZE, VideoInfo, Log, Config, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s,
 )
 from fetch_html import make_session
 from tagger import dump_item_tags
@@ -130,7 +130,7 @@ class DownloadWorker:
         async with self.session or await make_session() as self.session:
             for cv in as_completed([self._prod(), self._state_reporter()] + [self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE)]):
                 await cv
-        if ExtraConfig.save_tags is True:
+        if Config.save_tags is True:
             dump_item_tags()
         await self._after_download()
 

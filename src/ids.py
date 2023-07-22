@@ -10,7 +10,7 @@ import sys
 from asyncio import run as run_async, sleep
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
-from defs import VideoInfo, Log, ExtraConfig, HelpPrintExitException
+from defs import VideoInfo, Log, Config, HelpPrintExitException
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
 from tagger import try_parse_id_or_group
@@ -31,17 +31,17 @@ async def main() -> None:
         return
 
     try:
-        ExtraConfig.read_params(arglist, False)
+        Config.read(arglist, False)
 
         if arglist.use_id_sequence is True:
-            id_sequence = try_parse_id_or_group(ExtraConfig.extra_tags)
+            id_sequence = try_parse_id_or_group(Config.extra_tags)
             if len(id_sequence) == 0:
-                Log.fatal(f'\nInvalid ID \'or\' group \'{ExtraConfig.extra_tags[0] if len(ExtraConfig.extra_tags) > 0 else ""}\'!')
+                Log.fatal(f'\nInvalid ID \'or\' group \'{Config.extra_tags[0] if len(Config.extra_tags) > 0 else ""}\'!')
                 raise ValueError
         else:
             id_sequence = list()
-            if ExtraConfig.start_id > ExtraConfig.end_id:
-                Log.fatal(f'\nError: invalid video id bounds: start ({ExtraConfig.start_id:d}) > end ({ExtraConfig.end_id:d})')
+            if Config.start_id > Config.end_id:
+                Log.fatal(f'\nError: invalid video id bounds: start ({Config.start_id:d}) > end ({Config.end_id:d})')
                 raise ValueError
 
         if find_and_resolve_config_conflicts() is True:
@@ -51,9 +51,9 @@ async def main() -> None:
         return
 
     if len(id_sequence) == 0:
-        id_sequence = list(range(ExtraConfig.start_id, ExtraConfig.end_id + 1))
+        id_sequence = list(range(Config.start_id, Config.end_id + 1))
     else:
-        ExtraConfig.extra_tags.clear()
+        Config.extra_tags.clear()
 
     v_entries = [VideoInfo(idi) for idi in id_sequence]
     orig_count = len(v_entries)

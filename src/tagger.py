@@ -11,7 +11,7 @@ from json import loads
 from re import compile as re_compile
 from typing import List, Dict, Optional, Collection, Iterable, Sequence
 
-from defs import TAGS_CONCAT_CHAR, UTF8, Log, LoggingFlags, normalize_path, prefixp, ExtraConfig, re_replace_symbols
+from defs import TAGS_CONCAT_CHAR, UTF8, Log, LoggingFlags, normalize_path, prefixp, Config, re_replace_symbols
 
 __all__ = (
     'filtered_tags', 'get_matching_tag', 'register_item_tags', 'try_parse_id_or_group', 'dump_item_tags', 'valid_extra_tag',
@@ -3481,7 +3481,7 @@ def dump_item_tags() -> None:
         if len(tags_dict) == 0:
             continue
         min_id, max_id = min(tags_dict.keys()), max(tags_dict.keys())
-        fullpath = f'{normalize_path(f"{ExtraConfig.dest_base}{subfolder}")}{prefixp()}!tags_{min_id:d}-{max_id:d}.txt'
+        fullpath = f'{normalize_path(f"{Config.dest_base}{subfolder}")}{prefixp()}!tags_{min_id:d}-{max_id:d}.txt'
         with open(fullpath, 'wt', encoding=UTF8) as sfile:
             sfile.writelines(f'{prefixp()}{idi:d}: {tags.strip()}\n' for idi, tags in sorted(tags_dict.items(), key=lambda t: t[0]))
 
