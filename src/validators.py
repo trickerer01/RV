@@ -69,7 +69,7 @@ def valid_int(val: str) -> int:
         raise ArgumentError
 
 
-def valid_positive_nonzero_int(val: str) -> int:
+def positive_nonzero_int(val: str) -> int:
     try:
         val = int(val)
         assert val > 0
@@ -177,7 +177,7 @@ def log_level(level: str) -> LoggingFlags:
         raise ArgumentError
 
 
-def valid_sessionid(sessionid: str) -> str:
+def valid_session_id(sessionid: str) -> str:
     try:
         re_sessionid = re_compile(r'[a-z0-9]{26}')
         assert (not sessionid) or re_sessionid.fullmatch(sessionid)

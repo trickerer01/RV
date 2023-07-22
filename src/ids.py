@@ -31,9 +31,7 @@ async def main() -> None:
         return
 
     try:
-        ExtraConfig.read_params(arglist)
-        start_id = arglist.start  # type: int
-        end_id = arglist.end  # type: int
+        ExtraConfig.read_params(arglist, False)
 
         if arglist.use_id_sequence is True:
             id_sequence = try_parse_id_or_group(ExtraConfig.extra_tags)
@@ -42,8 +40,8 @@ async def main() -> None:
                 raise ValueError
         else:
             id_sequence = list()
-            if start_id > end_id:
-                Log.fatal(f'\nError: start ({start_id:d}) > end ({end_id:d})')
+            if ExtraConfig.start_id > ExtraConfig.end_id:
+                Log.fatal(f'\nError: invalid video id bounds: start ({ExtraConfig.start_id:d}) > end ({ExtraConfig.end_id:d})')
                 raise ValueError
 
         if find_and_resolve_config_conflicts() is True:
@@ -53,7 +51,7 @@ async def main() -> None:
         return
 
     if len(id_sequence) == 0:
-        id_sequence = list(range(start_id, end_id + 1))
+        id_sequence = list(range(ExtraConfig.start_id, ExtraConfig.end_id + 1))
     else:
         ExtraConfig.extra_tags.clear()
 

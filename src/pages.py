@@ -35,11 +35,7 @@ async def main() -> None:
         return
 
     try:
-        ExtraConfig.read_params(arglist)
-        start_page = arglist.start  # type: int
-        pages_count = arglist.pages  # type: int
-        stop_id = arglist.stop_id  # type: int
-        begin_id = arglist.begin_id  # type: int
+        ExtraConfig.read_params(arglist, True)
         search_str = arglist.search  # type: str
         search_tags = arglist.search_tag  # type: str
         search_arts = arglist.search_art  # type: str
@@ -54,6 +50,10 @@ async def main() -> None:
         re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
         re_paginator = re_compile(r'from_albums:(\d+)')
 
+        if ExtraConfig.start_id > ExtraConfig.end_id:
+            Log.fatal(f'\nError: invalid video id bounds: start ({ExtraConfig.start_id:d}) > end ({ExtraConfig.end_id:d})')
+            raise ValueError
+
         if search_tags.find(',') != -1 and search_rule_tag == SEARCH_RULE_ALL:
             search_tags = f'{SEARCH_RULE_ALL},{search_tags}'
         if search_arts.find(',') != -1 and search_rule_art == SEARCH_RULE_ALL:
@@ -67,12 +67,21 @@ async def main() -> None:
         Log.fatal('\nError reading parsed arglist!')
         return
 
+    def check_id_bounds(video_id: int) -> bool:
+        if video_id > ExtraConfig.end_id:
+            Log.trace(f'skipping {video_id:d} > {ExtraConfig.end_id:d}')
+            return False
+        if video_id < ExtraConfig.start_id:
+            Log.trace(f'skipping {video_id:d} < {ExtraConfig.start_id:d}')
+            return False
+        return True
+
     v_entries = list()
     maxpage = 0
 
-    pi = start_page
+    pi = ExtraConfig.start
     async with await make_session(session_id) as s:
-        while pi < start_page + pages_count:
+        while pi <= ExtraConfig.end:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')
                 break
@@ -99,17 +108,13 @@ async def main() -> None:
                 arefs = a_html.find_all('a', class_='th js-open-popup')
                 for aref in arefs:
                     cur_id = int(re_page_entry.search(str(aref.get('href'))).group(1))
-                    if cur_id < stop_id:
-                        Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
+                    if check_id_bounds(cur_id) is False:
                         continue
-                    if cur_id > begin_id:
-                        Log.trace(f'skipping {cur_id:d} > {begin_id:d}')
+                    elif cur_id in v_entries:
+                        Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
                     my_title = str(aref.get('title'))
-                    if cur_id in v_entries:
-                        Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
-                    else:
-                        v_entries.append(VideoInfo(cur_id, my_title))
+                    v_entries.append(VideoInfo(cur_id, my_title))
             else:
                 content_div = a_html.find('div', class_='thumbs clearfix')
 
@@ -124,17 +129,16 @@ async def main() -> None:
                     title = str(titl_all[i].text)
                     v_id = re_preview_entry.search(link)
                     cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
-                    if cur_id < stop_id:
-                        Log.trace(f'skipping {cur_id:d} < {stop_id:d}')
+                    if check_id_bounds(cur_id) is False:
                         continue
-                    if cur_id in v_entries:
+                    elif cur_id in v_entries:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
-                    else:
-                        v_entries.append(
-                            VideoInfo(
-                                cur_id, '', link, '', f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
-                                f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_preview.{cur_ext}',
-                            ))
+                        continue
+                    v_entries.append(
+                        VideoInfo(
+                            cur_id, '', link, '', f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
+                            f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_preview.{cur_ext}',
+                        ))
 
         v_entries.reverse()
         orig_count = len(v_entries)

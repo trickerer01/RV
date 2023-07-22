@@ -35,10 +35,10 @@ class BaseConfig(object):
         self.save_tags = None  # type: Optional[bool]
         self.extra_tags = None  # type: Optional[List[str]]
         self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
-        self.naming_flags = 0
-        self.logging_flags = 0
+        self.naming_flags = self.logging_flags = 0
+        self.start = self.end = self.start_id = self.end_id = 0
 
-    def read_params(self, params: Namespace) -> None:
+    def read_params(self, params: Namespace, pages: bool) -> None:
         self.dest_base = params.path
         self.proxy = params.proxy
         self.min_rating = params.minimum_rating
@@ -51,6 +51,10 @@ class BaseConfig(object):
         self.scenario = params.download_scenario
         self.naming_flags = params.naming
         self.logging_flags = params.log_level
+        self.start = params.start
+        self.end = params.end
+        self.start_id = params.stop_id if pages else self.start
+        self.end_id = params.begin_id if pages else self.end
 
     @property
     def uvp(self) -> Optional[str]:
@@ -179,15 +183,13 @@ LOGGING_FLAGS_DEFAULT = LoggingFlags.LOGGING_INFO
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
-HELP_PAGES = 'Pages count to process. Required'
-HELP_STOP_ID = 'If you want to download only videos above or equal to this id'
-HELP_BEGIN_ID = 'If you want to download only videos below or equal to this id'
+HELP_BEGIN_STOP_ID = 'Video id lower / upper bounds filter to only download videos where \'begin_id >= video_id >= stop_id\''
 HELP_ARG_IDSEQUENCE = (
     'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence instead of'
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
 HELP_PATH = 'Download destination. Default is current folder'
-HELP_SESSIONID = (
+HELP_SESSION_ID = (
     '\'PHPSESSID\' cookie. Some tags to search for are hidden behind login wall. Using cookie from logged in account resolves this'
 )
 HELP_SEARCH_RULE = (

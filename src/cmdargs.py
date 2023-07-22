@@ -11,17 +11,17 @@ from os import path
 from typing import List, Sequence, Tuple
 
 from defs import (
-    Log, HELP_PATH, HELP_PAGES, HELP_STOP_ID, HELP_SEARCH_STR, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY, HELP_ARG_PROXY, HELP_BEGIN_ID,
+    Log, HELP_PATH, HELP_SEARCH_STR, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY, HELP_ARG_PROXY, HELP_BEGIN_STOP_ID,
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING, HELP_ARG_MINSCORE,
     HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, ACTION_STORE_TRUE, UTF8, HelpPrintExitException,
-    HELP_SEARCH_ACT, HELP_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT, HELP_SESSIONID,
+    HELP_SEARCH_ACT, HELP_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT, HELP_SESSION_ID,
 )
 from scenario import DownloadScenario
 from tagger import valid_extra_tag, valid_tags, valid_artists, valid_categories
 from validators import (
-    valid_int, valid_positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
-    log_level, valid_sessionid,
+    valid_int, positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
+    log_level, valid_session_id,
 )
 
 __all__ = ('prepare_arglist_pages', 'prepare_arglist_ids', 'read_cmdfile', 'is_parsed_cmdfile')
@@ -78,6 +78,25 @@ def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: Ar
     return parsed
 
 
+def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Sequence[str], pages: bool) -> Namespace:
+    try:
+        parsed = validate_parsed(parser, args, default_sub)
+        if not is_parsed_cmdfile(parsed):
+            if pages:
+                if parsed.end < parsed.start + parsed.pages - 1:
+                    parsed.end = parsed.start + parsed.pages - 1
+            else:
+                if parsed.use_id_sequence:
+                    parsed.start = parsed.end = None
+                elif parsed.end < parsed.start + parsed.count - 1:
+                    parsed.end = parsed.start + parsed.count - 1
+        return parsed
+    except SystemExit:
+        raise HelpPrintExitException
+    except Exception:
+        raise
+
+
 def create_parsers() -> Tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
     parser = ArgumentParser(add_help=False)
     subs = parser.add_subparsers()
@@ -108,40 +127,25 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     arggr_start_or_seq = par_cmd.add_mutually_exclusive_group(required=True)
     arggr_count_or_end = par_cmd.add_mutually_exclusive_group()
-    arggr_start_or_seq.add_argument('-start', metavar='#number', help='Start video id. Required', type=valid_positive_nonzero_int)
-    arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=valid_positive_nonzero_int)
-    arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End video id', type=valid_positive_nonzero_int)
+    arggr_start_or_seq.add_argument('-start', metavar='#number', help='Start video id. Required', type=positive_nonzero_int)
+    arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=positive_nonzero_int)
+    arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End video id', type=positive_nonzero_int)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
 
     add_common_args(par_cmd)
-
-    def finalize_ex_groups(parsed: Namespace) -> Namespace:
-        if parsed.use_id_sequence:
-            parsed.start = parsed.end = None
-        elif parsed.end < parsed.start + parsed.count - 1:
-            parsed.end = parsed.start + parsed.count - 1
-        parsed.count = None
-        return parsed
-
-    try:
-        pparsed = validate_parsed(parser, args, par_cmd)
-        if not is_parsed_cmdfile(pparsed):
-            pparsed = finalize_ex_groups(pparsed)
-        return pparsed
-    except SystemExit:
-        raise HelpPrintExitException
-    except (ArgumentError, TypeError, Exception):
-        raise
+    return execute_parser(parser, par_cmd, args, False)
 
 
 def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     parser, par_file, par_cmd = create_parsers()
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
-    par_cmd.add_argument('-start', metavar='#number', default=1, help="Start page number. Default is '1'", type=valid_positive_nonzero_int)
-    par_cmd.add_argument('-pages', metavar='#number', required=True, help=HELP_PAGES, type=valid_positive_nonzero_int)
-    par_cmd.add_argument('-stop_id', metavar='#number', default=1, help=HELP_STOP_ID, type=valid_positive_nonzero_int)
-    par_cmd.add_argument('-begin_id', metavar='#number', default=10**9, help=HELP_BEGIN_ID, type=valid_positive_nonzero_int)
+    par_cmd.add_argument('-start', metavar='#number', default=1, help="Start page number. Default is '1'", type=positive_nonzero_int)
+    arggr_count_or_end = par_cmd.add_mutually_exclusive_group(required=True)
+    arggr_count_or_end.add_argument('-pages', metavar='#number', help='Pages count to process', type=positive_nonzero_int)
+    arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End page number', type=positive_nonzero_int)
+    par_cmd.add_argument('-stop_id', metavar='#number', default=1, help='', type=positive_nonzero_int)
+    par_cmd.add_argument('-begin_id', metavar='#number', default=10**9, help=HELP_BEGIN_STOP_ID, type=positive_nonzero_int)
     par_cmd.add_argument('-search', metavar='#string', default='', help=HELP_SEARCH_STR, type=valid_search_string)
     par_cmd.add_argument('-search_tag', metavar='#tag[,tag...]', default='', help='', type=valid_tags)
     par_cmd.add_argument('-search_art', metavar='#artist[,artist...]', default='', help='', type=valid_artists)
@@ -149,18 +153,11 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     par_cmd.add_argument('-search_rule_tag', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_art', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_cat', default=SEARCH_RULE_DEFAULT, help=HELP_SEARCH_RULE, choices=SEARCH_RULES)
-    par_cmd.add_argument('-session_id', default='', help=HELP_SESSIONID, type=valid_sessionid)
+    par_cmd.add_argument('-session_id', default='', help=HELP_SESSION_ID, type=valid_session_id)
     par_cmd.epilog = 'Note that search obeys \'AND\' rule: (ANY/ALL tag(s)) AND (ANY/ALL artist(s)) AND (ANY/ALL category(ies))'
 
     add_common_args(par_cmd)
-
-    try:
-        pparsed = validate_parsed(parser, args, par_cmd)
-        return pparsed
-    except SystemExit:
-        raise HelpPrintExitException
-    except (ArgumentError, TypeError, Exception):
-        raise
+    return execute_parser(parser, par_cmd, args, True)
 
 #
 #
