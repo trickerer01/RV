@@ -37,6 +37,8 @@ class BaseConfig(object):
         self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
         self.naming_flags = self.logging_flags = 0
         self.start = self.end = self.start_id = self.end_id = 0
+        # extras (can't be set through cmdline arguments)
+        self.nodelay = False
 
     def read(self, params: Namespace, pages: bool) -> None:
         self.dest_base = params.path
