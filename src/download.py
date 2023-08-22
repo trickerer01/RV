@@ -84,20 +84,14 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
     if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, Config.extra_tags, False, vi.my_subfolder):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
         return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-    if len(score) > 0 and Config.min_score is not None:
-        try:
-            if int(score) < Config.min_score:
-                Log.info(f'Info: video {sname} has low score \'{score}\' (required {Config.min_score:d}), skipping...')
-                return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-        except Exception:
-            pass
-    if len(rating) > 0:
-        try:
-            if int(rating) < Config.min_rating:
-                Log.info(f'Info: video {sname} has low rating \'{rating}%\' (required {Config.min_rating:d}%), skipping...')
-                return DownloadResult.DOWNLOAD_FAIL_SKIPPED
-        except Exception:
-            pass
+    for vsrs, csri, srn, pc in zip((score, rating), (Config.min_score, Config.min_rating), ('score', 'rating'), ('', '%')):
+        if len(vsrs) > 0 and csri is not None:
+            try:
+                if int(vsrs) < csri:
+                    Log.info(f'Info: video {sname} has low {srn} \'{vsrs}{pc}\' (required {csri:d}), skipping...')
+                    return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+            except Exception:
+                pass
     if scenario is not None:
         matching_sq = scenario.get_matching_subquery(vi.my_id, tags_raw, score, rating)
         uvpalways_sq = scenario.get_uvp_always_subquery() if tdiv is None else None
