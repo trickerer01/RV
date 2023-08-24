@@ -131,7 +131,7 @@ def valid_proxy(prox: str) -> str:
         except ValueError:
             Log.error('Failed to split proxy type and value/port!')
             raise
-        if pt not in ['http', 'https', 'socks5', 'socks5h']:
+        if pt not in {'http', 'https', 'socks5', 'socks5h'}:
             Log.error(f'Invalid proxy type: \'{pt}\'!')
             raise ValueError
         try:

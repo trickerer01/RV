@@ -115,23 +115,18 @@ class DownloadScenario(object):
         sname = f'{prefixp()}{idi:d}.mp4'
         for sq in self.queries:
             if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.use_id_sequence, sq.subfolder):
-                if len(score) > 0:
-                    try:
-                        if int(score) < sq.minscore:
-                            Log.info(f'[{sq.subfolder}] Video {sname} has low score \'{score}\' (required {sq.minscore:d})!',
-                                     LoggingFlags.LOGGING_EX_LOW_SCORE)
-                            continue
-                    except Exception:
-                        pass
-                if len(rating) > 0:
-                    try:
-                        if int(rating) < sq.minrating:
-                            Log.info(f'[{sq.subfolder}] Video {sname} has low rating \'{rating}%\' (required {sq.minrating:d}%)!',
-                                     LoggingFlags.LOGGING_EX_LOW_SCORE)
-                            continue
-                    except Exception:
-                        pass
-                return sq
+                sq_skip = False
+                for vsrs, csri, srn, pc in zip((score, rating), (sq.minscore, sq.minrating), ('score', 'rating'), ('', '%')):
+                    if len(vsrs) > 0 and csri is not None and sq_skip is False:
+                        try:
+                            if int(vsrs) < csri:
+                                Log.info(f'[{sq.subfolder}] Video {sname} has low {srn} \'{vsrs}{pc}\' (required {csri:d})!',
+                                         LoggingFlags.LOGGING_EX_LOW_SCORE)
+                                sq_skip = True
+                        except Exception:
+                            pass
+                if sq_skip is False:
+                    return sq
         return None
 
     def get_uvp_always_subquery(self) -> Optional[SubQueryParams]:

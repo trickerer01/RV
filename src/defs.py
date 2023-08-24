@@ -213,7 +213,7 @@ HELP_ARG_UVPOLICY = (
 HELP_ARG_DMMODE = 'Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (
     'All remaining \'args\' and \'-args\' count as tags to require or exclude. All spaces must be replaced with \'_\'.'
-    ' Videos containing any of \'-tags\', or not containing all of \'tags\' will be skipped.'
+    ' Videos containing any of \'-tags\', or not containing all \'tags\' will be skipped.'
     ' Supports wildcards, \'or\' groups and \'negative\' groups (check README for more info).'
     ' Only existing tags are allowed unless wildcards are used'
 )
