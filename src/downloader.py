@@ -15,11 +15,9 @@ from typing import List, Tuple, Coroutine, Any, Callable, MutableSequence, Optio
 
 from aiohttp import ClientSession
 
-from defs import (
-    MAX_VIDEOS_QUEUE_SIZE, VideoInfo, Log, Config, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s,
-)
+from defs import MAX_VIDEOS_QUEUE_SIZE, VideoInfo, Log, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s
 from fetch_html import make_session
-from tagger import dump_item_tags
+from tagger import dump_item_info
 
 __all__ = ('DownloadWorker',)
 
@@ -115,6 +113,7 @@ class DownloadWorker:
                 self._write_queue_size_last = write_count
 
     async def _after_download(self) -> None:
+        dump_item_info()
         newline = '\n'
         Log.info(f'\nDone. {self.downloaded_count:d} / {self.orig_count:d}+{self.filtered_count_pre:d} files downloaded, '
                  f'{self.filtered_count_after:d}+{self.filtered_count_pre:d} already existed, '
@@ -130,8 +129,6 @@ class DownloadWorker:
         async with self.session or await make_session() as self.session:
             for cv in as_completed([self._prod(), self._state_reporter()] + [self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE)]):
                 await cv
-        if Config.save_tags is True:
-            dump_item_tags()
         await self._after_download()
 
     def at_interrupt(self) -> None:

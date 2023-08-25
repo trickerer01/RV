@@ -23,7 +23,10 @@ from downloader import DownloadWorker
 from fetch_html import fetch_html, wrap_request
 from path_util import file_already_exists
 from scenario import DownloadScenario
-from tagger import filtered_tags, register_item_tags, is_filtered_out_by_extra_tags
+from tagger import (
+    filtered_tags, register_item_tags, register_item_description, register_item_comments, is_filtered_out_by_extra_tags,
+
+)
 
 __all__ = ('download', 'at_interrupt')
 
@@ -109,6 +112,12 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
         return DownloadResult.DOWNLOAD_FAIL_SKIPPED
     if Config.save_tags:
         register_item_tags(vi.my_id, ' '.join(sorted(tags_raw)), vi.my_subfolder)
+    if Config.save_descriptions or Config.save_comments:
+        if Config.save_descriptions:
+            desc_em = i_html.find('em')  # exactly one
+            register_item_description(vi.my_id, ('\n' + desc_em.get_text('\n')) if desc_em else '', vi.my_subfolder)
+        if Config.save_comments:
+            register_item_comments(vi.my_id, '', vi.my_subfolder)  # TODO: NIY
     tags_str = filtered_tags(list(sorted(tags_raw)))
     if tags_str != '':
         my_tags = tags_str

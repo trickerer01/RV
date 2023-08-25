@@ -33,6 +33,8 @@ class BaseConfig(object):
         self.un_video_policy = None  # type: Optional[str]
         self.download_mode = None  # type: Optional[str]
         self.save_tags = None  # type: Optional[bool]
+        self.save_descriptions = None  # type: Optional[bool]
+        self.save_comments = None  # type: Optional[bool]
         self.extra_tags = None  # type: Optional[List[str]]
         self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
         self.naming_flags = self.logging_flags = 0
@@ -49,6 +51,8 @@ class BaseConfig(object):
         self.un_video_policy = params.untag_video_policy
         self.download_mode = params.download_mode
         self.save_tags = params.dump_tags
+        self.save_descriptions = params.dump_descriptions
+        self.save_comments = params.dump_comments
         self.extra_tags = params.extra_tags
         self.scenario = params.download_scenario
         self.naming_flags = params.naming
