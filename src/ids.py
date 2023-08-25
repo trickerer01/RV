@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
+from typing import Sequence
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
 from defs import VideoInfo, Log, Config, HelpPrintExitException
@@ -16,12 +17,12 @@ from path_util import prefilter_existing_items
 from tagger import try_parse_id_or_group
 from validators import find_and_resolve_config_conflicts
 
-__all__ = ()
+__all__ = ('main_sync',)
 
 
-async def main() -> None:
+async def main(args: Sequence[str]) -> None:
     try:
-        arglist = prepare_arglist_ids(sys.argv[1:])
+        arglist = prepare_arglist_ids(args)
         while is_parsed_cmdfile(arglist):
             arglist = prepare_arglist_ids(read_cmdfile(arglist.path))
     except HelpPrintExitException:
@@ -76,17 +77,17 @@ async def main() -> None:
     await download(v_entries, True, removed_count)
 
 
-async def run_main() -> None:
-    await main()
+async def run_main(args: Sequence[str]) -> None:
+    await main(args)
     await sleep(0.5)
 
 
-if __name__ == '__main__':
+def main_sync(args: Sequence[str]) -> None:
     assert sys.version_info >= (3, 7), 'Minimum python version required is 3.7!'
 
     interrupted = False
     try:
-        run_async(run_main())
+        run_async(run_main(args))
     except (KeyboardInterrupt, SystemExit):
         Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
         interrupted = True
@@ -95,6 +96,10 @@ if __name__ == '__main__':
     finally:
         if interrupted:
             at_interrupt()
+
+
+if __name__ == '__main__':
+    main_sync(sys.argv[1:])
     exit(0)
 
 #
