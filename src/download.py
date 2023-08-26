@@ -23,10 +23,8 @@ from downloader import DownloadWorker
 from fetch_html import fetch_html, wrap_request
 from path_util import file_already_exists
 from scenario import DownloadScenario
-from tagger import (
-    filtered_tags, register_item_tags, register_item_description, register_item_comments, is_filtered_out_by_extra_tags,
-
-)
+from tagger import filtered_tags, is_filtered_out_by_extra_tags
+from export import export_item_info, register_item_tags, register_item_description, register_item_comments
 
 __all__ = ('download', 'at_interrupt')
 
@@ -35,7 +33,8 @@ CTOD = ClientTimeout(total=None, connect=10)
 
 
 async def download(sequence: MutableSequence[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
-    return await DownloadWorker(sequence, (download_file, download_id)[by_id], filtered_count, session).run()
+    await DownloadWorker(sequence, (download_file, download_id)[by_id], filtered_count, session).run()
+    export_item_info()
 
 
 async def download_id(vi: VideoInfo) -> DownloadResult:
@@ -115,7 +114,7 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
     if Config.save_descriptions or Config.save_comments:
         if Config.save_descriptions:
             desc_em = i_html.find('em')  # exactly one
-            register_item_description(vi.my_id, ('\n' + desc_em.get_text('\n')) if desc_em else '', vi.my_subfolder)
+            register_item_description(vi.my_id, ('\n' + desc_em.get_text('\n') + '\n') if desc_em else '', vi.my_subfolder)
         if Config.save_comments:
             register_item_comments(vi.my_id, '', vi.my_subfolder)  # TODO: NIY
     tags_str = filtered_tags(list(sorted(tags_raw)))
