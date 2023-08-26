@@ -27,6 +27,7 @@ class BaseConfig(object):
     def __init__(self) -> None:
         self.dest_base = None  # type: Optional[str]
         self.proxy = None  # type: Optional[str]
+        self.session_id = None  # type: Optional[str]
         self.min_rating = None  # type: Optional[int]
         self.min_score = None  # type: Optional[int]
         self.quality = None  # type: Optional[str]
@@ -45,6 +46,7 @@ class BaseConfig(object):
     def read(self, params: Namespace, pages: bool) -> None:
         self.dest_base = params.path
         self.proxy = params.proxy
+        self.session_id = params.session_id
         self.min_rating = params.minimum_rating
         self.min_score = params.minimum_score
         self.quality = params.quality

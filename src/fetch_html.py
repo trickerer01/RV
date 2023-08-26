@@ -46,7 +46,7 @@ class RequestQueue:
             get_running_loop().create_task(RequestQueue._reset())
 
 
-async def make_session(session_id: str = None) -> ClientSession:
+async def make_session() -> ClientSession:
     if Config.proxy:
         pp = urlparse(Config.proxy)
         ptype = ProxyType.SOCKS5 if pp.scheme in ('socks5', 'socks5h') else ProxyType.HTTP
@@ -55,8 +55,8 @@ async def make_session(session_id: str = None) -> ClientSession:
         connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE)
     s = ClientSession(connector=connector, read_bufsize=2**20)
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'})
-    if session_id:
-        s.cookie_jar.update_cookies({'PHPSESSID': session_id, 'kt_member': '1'})
+    if Config.session_id:
+        s.cookie_jar.update_cookies({'PHPSESSID': Config.session_id, 'kt_member': '1'})
         pass
     return s
 

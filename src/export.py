@@ -30,8 +30,6 @@ def register_item_description(item_id: int, desc_str: str, subfolder: str) -> No
 
 
 def register_item_comments(item_id: int, coms_str: str, subfolder: str) -> None:
-    if len(saved_comms_dict) == 0 or coms_str == '':
-        return  # TODO: NYI
     if subfolder not in saved_comms_dict:
         saved_comms_dict[subfolder] = dict()
     saved_comms_dict[subfolder][item_id] = coms_str

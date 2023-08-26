@@ -112,11 +112,22 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
     if Config.save_tags:
         register_item_tags(vi.my_id, ' '.join(sorted(tags_raw)), vi.my_subfolder)
     if Config.save_descriptions or Config.save_comments:
+        cidivs = i_html.find_all('div', class_='comment-info')
+        cudivs = [cidiv.find('a') for cidiv in cidivs]
+        cbdivs = [cidiv.find('div', class_='coment-text') for cidiv in cidivs]
+        desc_em = i_html.find('em')  # exactly one
+        uploader_div = i_html.find('div', string=' Uploaded By: ')
+        my_uploader = uploader_div.parent.find('a', class_='name').text.lower().strip() if uploader_div else ''
+        has_description = (cudivs[-1].text.lower() == my_uploader) if (cudivs and cbdivs) else False  # first comment by uploader
+        if cudivs and cbdivs:
+            assert len(cbdivs) == len(cudivs)
         if Config.save_descriptions:
-            desc_em = i_html.find('em')  # exactly one
-            register_item_description(vi.my_id, ('\n' + desc_em.get_text('\n') + '\n') if desc_em else '', vi.my_subfolder)
+            desc_comment = f'{cudivs[-1].text}:\n' + cbdivs[-1].get_text('\n').strip() if has_description else ''
+            desc_text = ('\n' + desc_em.get_text('\n') + '\n') if desc_em else f'\n{desc_comment}\n' if desc_comment else ''
+            register_item_description(vi.my_id, desc_text, vi.my_subfolder)
         if Config.save_comments:
-            register_item_comments(vi.my_id, '', vi.my_subfolder)  # TODO: NIY
+            comments_list = [f'{cudivs[i].text}:\n' + cbdivs[i].get_text('\n').strip() for i in range(len(cbdivs) - int(has_description))]
+            register_item_comments(vi.my_id, ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else '', vi.my_subfolder)
     tags_str = filtered_tags(list(sorted(tags_raw)))
     if tags_str != '':
         my_tags = tags_str
