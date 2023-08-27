@@ -15,8 +15,8 @@ from aiofile import async_open
 from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
-    CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_STATUS_CHECK_TIMER,
-    TAGS_CONCAT_CHAR, VideoInfo, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
+    CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
+    DOWNLOAD_STATUS_CHECK_TIMER, VideoInfo, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
     re_media_filename,
 )
 from downloader import DownloadWorker
@@ -226,6 +226,10 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
     ret = DownloadResult.DOWNLOAD_SUCCESS
     status_checker = None  # type: Optional[Task]
 
+    if Config.dm == DOWNLOAD_MODE_SKIP:
+        vi.set_state(VideoInfo.VIState.DONE)
+        return ret
+
     vi.set_state(VideoInfo.VIState.DOWNLOADING)
     if not path.isdir(vi.my_folder):
         try:
@@ -244,7 +248,7 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
             if Config.dm == DOWNLOAD_MODE_TOUCH:
                 Log.info(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
                 with open(vi.my_fullpath, 'wb'):
-                    pass
+                    vi.set_state(VideoInfo.VIState.DONE)
                 break
 
             r = None
