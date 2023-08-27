@@ -19,6 +19,10 @@ from defs import (
 
 def find_and_resolve_config_conflicts(full_download=True) -> bool:
     delay_for_message = False
+    if Config.save_comments is True and Config.session_id is None:
+        Log.info('Info: Comments cannot be accessed without `-session_id`, saving comments is impossible. Disabled!')
+        Config.save_comments = False
+        delay_for_message = True
     if Config.scenario is not None:
         if Config.uvp != DOWNLOAD_POLICY_DEFAULT:
             Log.info('Info: running download script, outer untagged policy will be ignored')
