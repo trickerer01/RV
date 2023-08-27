@@ -15,9 +15,9 @@ from aiofile import async_open
 from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
-    CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
-    DOWNLOAD_STATUS_CHECK_TIMER, VideoInfo, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
-    re_media_filename,
+    SITE, CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
+    DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, VideoInfo, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp,
+    extract_ext, re_media_filename,
 )
 from downloader import DownloadWorker
 from fetch_html import fetch_html, wrap_request
@@ -33,11 +33,11 @@ CTOD = ClientTimeout(total=None, connect=10)
 
 
 async def download(sequence: MutableSequence[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
-    await DownloadWorker(sequence, (download_file, download_id)[by_id], filtered_count, session).run()
+    await DownloadWorker(sequence, (download_video, process_id)[by_id], filtered_count, session).run()
     export_item_info()
 
 
-async def download_id(vi: VideoInfo) -> DownloadResult:
+async def process_id(vi: VideoInfo) -> DownloadResult:
     dwn = DownloadWorker.get()
     scenario = Config.scenario  # type: Optional[DownloadScenario]
     sname = f'{prefixp()}{vi.my_id:d}.mp4'
@@ -187,14 +187,14 @@ async def download_id(vi: VideoInfo) -> DownloadResult:
 
     vi.my_filename = f'{fname_part1}{fname_mid}{fname_part2}'
 
-    res = await download_file(vi)
+    res = await download_video(vi)
     if res != DownloadResult.DOWNLOAD_SUCCESS:
         vi.set_state(VideoInfo.VIState.FAILED)
 
     return res
 
 
-async def check_item_download_status(idi: int, dest: str, resp: ClientResponse) -> None:
+async def check_video_download_status(idi: int, dest: str, resp: ClientResponse) -> None:
     dwn = DownloadWorker.get()
     sname = f'{prefixp()}{idi:d}.mp4'
     try:
@@ -217,33 +217,81 @@ async def check_item_download_status(idi: int, dest: str, resp: ClientResponse) 
         pass
 
 
-async def download_file(vi: VideoInfo) -> DownloadResult:
+async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
+    dwn = DownloadWorker.get()
+    sname = f'{prefixp()}{vi.my_id:d}_{scr_num:02d}.webp'
+    sfilename = f'{f"{vi.my_subfolder}/" if len(vi.my_subfolder) > 0 else ""}{prefixp()}{vi.my_id:d}/{scr_num:02d}.webp'
+    my_folder = f'{vi.my_folder}{prefixp()}{vi.my_id:d}/'
+    fullpath = f'{my_folder}{scr_num:02d}.webp'
+    my_link = f'{SITE}contents/videos_screenshots/{vi.my_id - vi.my_id % 1000:d}/{vi.my_id:d}/336x189/{scr_num:d}.jpg'
+    ret = DownloadResult.DOWNLOAD_SUCCESS
+
+    if not path.isdir(my_folder):
+        try:
+            makedirs(my_folder)
+        except Exception:
+            raise IOError(f'ERROR: Unable to create subfolder \'{my_folder}\'!')
+
+    try:
+        async with await wrap_request(dwn.session, 'GET', my_link, timeout=CTOD) as r:
+            if r.status == 404:
+                Log.error(f'Got 404 for {sname}...!')
+                ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
+            elif r.content_type and r.content_type.find('text') != -1:
+                Log.error(f'File not found at {my_link}!')
+                ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
+
+            expected_size = r.content_length
+            async with async_open(fullpath, 'wb') as outf:
+                async for chunk in r.content.iter_chunked(2**22):
+                    await outf.write(chunk)
+
+            file_size = stat(fullpath).st_size
+            if expected_size and file_size != expected_size:
+                Log.error(f'Error: file size mismatch for {sfilename}: {file_size:d} / {expected_size:d}')
+                ret = DownloadResult.DOWNLOAD_FAIL_RETRIES
+    except Exception:
+        ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
+
+    return ret
+
+
+async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
+    ret = DownloadResult.DOWNLOAD_SUCCESS
+    for t in [get_running_loop().create_task(download_sceenshot(vi, scr_idx + 1)) for scr_idx in range(SCREENSHOTS_COUNT)]:
+        res = await t  # type: DownloadResult
+        if res not in (DownloadResult.DOWNLOAD_SUCCESS, ret):
+            ret = res
+    return ret
+
+
+async def download_video(vi: VideoInfo) -> DownloadResult:
     dwn = DownloadWorker.get()
     sname = f'{prefixp()}{vi.my_id:d}.mp4'
     sfilename = f'{f"{vi.my_subfolder}/" if len(vi.my_subfolder) > 0 else ""}{vi.my_filename}'
     file_size = 0
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS
+    skip = Config.dm == DOWNLOAD_MODE_SKIP
     status_checker = None  # type: Optional[Task]
 
-    if Config.dm == DOWNLOAD_MODE_SKIP:
+    if skip is True:
         vi.set_state(VideoInfo.VIState.DONE)
-        return ret
-
-    vi.set_state(VideoInfo.VIState.DOWNLOADING)
-    if not path.isdir(vi.my_folder):
-        try:
-            makedirs(vi.my_folder)
-        except Exception:
-            raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
     else:
-        rv_match = re_media_filename.match(vi.my_filename)
-        rv_quality = rv_match.group(2)
-        if file_already_exists(vi.my_id, rv_quality):
-            Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
-            return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
+        vi.set_state(VideoInfo.VIState.DOWNLOADING)
+        if not path.isdir(vi.my_folder):
+            try:
+                makedirs(vi.my_folder)
+            except Exception:
+                raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
+        else:
+            rv_match = re_media_filename.match(vi.my_filename)
+            rv_quality = rv_match.group(2)
+            if file_already_exists(vi.my_id, rv_quality):
+                Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
+                return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
 
-    while (not (path.isfile(vi.my_fullpath) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
+    while (not skip) and (not (path.isfile(vi.my_fullpath) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
         try:
             if Config.dm == DOWNLOAD_MODE_TOUCH:
                 Log.info(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
@@ -266,7 +314,7 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
 
                 dwn.writes_active.append(vi.my_fullpath)
                 vi.set_state(VideoInfo.VIState.WRITING)
-                status_checker = get_running_loop().create_task(check_item_download_status(vi.my_id, vi.my_fullpath, r))
+                status_checker = get_running_loop().create_task(check_video_download_status(vi.my_id, vi.my_fullpath, r))
                 async with async_open(vi.my_fullpath, 'wb') as outf:
                     async for chunk in r.content.iter_chunked(2**22):
                         await outf.write(chunk)
@@ -302,6 +350,12 @@ async def download_file(vi: VideoInfo) -> DownloadResult:
     ret = (ret if ret == DownloadResult.DOWNLOAD_FAIL_NOT_FOUND else
            DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_ITEM else
            DownloadResult.DOWNLOAD_FAIL_RETRIES)
+
+    if Config.save_screenshots:
+        sret = await download_sceenshots(vi)
+        if sret != DownloadResult.DOWNLOAD_SUCCESS:
+            Log.warn(f'{sfilename}: `download_sceenshots()` has failed items (ret = {str(sret)})')
+
     return ret
 
 

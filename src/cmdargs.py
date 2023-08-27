@@ -117,10 +117,11 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-log', '--log-level', default=LOGGING_DEFAULT, help=HELP_ARG_LOGGING, type=log_level)
     parser_or_group.add_argument('-tdump', '--dump-tags', action=ACTION_STORE_TRUE, help='Save tags to text file')
     parser_or_group.add_argument('-ddump', '--dump-descriptions', action=ACTION_STORE_TRUE, help='Save descriptions to text file')
-    parser_or_group.add_argument('-cdump', '--dump-comments', action=ACTION_STORE_TRUE, help='NYI')
+    parser_or_group.add_argument('-cdump', '--dump-comments', action=ACTION_STORE_TRUE, help='Save comments to text file')
+    parser_or_group.add_argument('-sdump', '--dump-screenshots', action=ACTION_STORE_TRUE, help='Save screenshots (webp, very slow)')
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
+    parser_or_group.add_argument('-session_id', default=None, help=HELP_SESSION_ID, type=valid_session_id)
     parser_or_group.add_argument('-script', '--download-scenario', default=None, help=HELP_ARG_DWN_SCENARIO, type=DownloadScenario)
-    parser_or_group.add_argument('-session_id', default='', help=HELP_SESSION_ID, type=valid_session_id)
     parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=valid_extra_tag)
 
 

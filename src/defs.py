@@ -36,6 +36,7 @@ class BaseConfig(object):
         self.save_tags = None  # type: Optional[bool]
         self.save_descriptions = None  # type: Optional[bool]
         self.save_comments = None  # type: Optional[bool]
+        self.save_screenshots = None  # type: Optional[bool]
         self.extra_tags = None  # type: Optional[List[str]]
         self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
         self.naming_flags = self.logging_flags = 0
@@ -55,6 +56,7 @@ class BaseConfig(object):
         self.save_tags = params.dump_tags
         self.save_descriptions = params.dump_descriptions
         self.save_comments = params.dump_comments
+        self.save_screenshots = params.dump_screenshots
         self.extra_tags = params.extra_tags
         self.scenario = params.download_scenario
         self.naming_flags = params.naming
@@ -263,6 +265,8 @@ CONNECT_REQUEST_DELAY = 1.0
 MAX_DEST_SCAN_SUB_DEPTH = 1
 MAX_VIDEOS_QUEUE_SIZE = 8
 DOWNLOAD_STATUS_CHECK_TIMER = 120.0
+
+SCREENSHOTS_COUNT = 10
 
 SLASH = '/'
 UTF8 = 'utf-8'
