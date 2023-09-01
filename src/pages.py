@@ -13,7 +13,7 @@ from typing import Sequence
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    VideoInfo, Log, Config, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags,
+    VideoInfo, Log, Config, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags, LoggingFlags,
     HelpPrintExitException,
 )
 from download import download, at_interrupt
@@ -50,6 +50,10 @@ async def main(args: Sequence[str]) -> None:
         re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
         re_paginator = re_compile(r'from_albums:(\d+)')
 
+        if Config.get_maxid:
+            Config.logging_flags = LoggingFlags.LOGGING_FATAL
+            Config.start = Config.end = Config.start_id = Config.end_id = 1
+
         if Config.start_id > Config.end_id:
             Log.fatal(f'\nError: invalid video id bounds: start ({Config.start_id:d}) > end ({Config.end_id:d})')
             raise ValueError
@@ -77,7 +81,7 @@ async def main(args: Sequence[str]) -> None:
         return True
 
     v_entries = list()
-    maxpage = 0
+    maxpage = Config.end if Config.start == Config.end else 0
 
     pi = Config.start
     async with await make_session() as s:
@@ -103,6 +107,12 @@ async def main(args: Sequence[str]) -> None:
                 if maxpage == 0:
                     Log.info('Could not extract max page, assuming single page search')
                     maxpage = 1
+
+            if Config.get_maxid:
+                miref = a_html.find('a', class_='th js-open-popup')
+                max_id = re_page_entry.search(str(miref.get('href'))).group(1)
+                Log.fatal(f'{prefixp()[:2].upper()}: {max_id}')
+                return
 
             if full_download:
                 arefs = a_html.find_all('a', class_='th js-open-popup')

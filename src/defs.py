@@ -41,6 +41,7 @@ class BaseConfig(object):
         self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
         self.naming_flags = self.logging_flags = 0
         self.start = self.end = self.start_id = self.end_id = 0
+        self.get_maxid = None  # type: Optional[bool]
         # extras (can't be set through cmdline arguments)
         self.nodelay = False
 
@@ -65,6 +66,7 @@ class BaseConfig(object):
         self.end = params.end
         self.start_id = params.stop_id if pages else self.start
         self.end_id = params.begin_id if pages else self.end
+        self.get_maxid = params.get_maxid
 
     @property
     def uvp(self) -> Optional[str]:
@@ -194,6 +196,7 @@ LOGGING_FLAGS_DEFAULT = LoggingFlags.LOGGING_INFO
 ACTION_STORE_TRUE = 'store_true'
 ACTION_STORE_FALSE = 'store_false'
 
+HELP_ARG_GET_MAXID = 'Print maximum id and exit'
 HELP_BEGIN_STOP_ID = 'Video id lower / upper bounds filter to only download videos where \'begin_id >= video_id >= stop_id\''
 HELP_ARG_IDSEQUENCE = (
     'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence instead of'

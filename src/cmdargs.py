@@ -11,7 +11,7 @@ from os import path
 from typing import List, Sequence, Tuple
 
 from defs import (
-    Log, HELP_PATH, HELP_SEARCH_STR, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY, HELP_ARG_PROXY, HELP_BEGIN_STOP_ID,
+    Log, HELP_PATH, HELP_SEARCH_STR, QUALITIES, DEFAULT_QUALITY, HELP_QUALITY, HELP_ARG_PROXY, HELP_BEGIN_STOP_ID, HELP_ARG_GET_MAXID,
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING, HELP_ARG_MINSCORE,
     HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, ACTION_STORE_TRUE, UTF8, HelpPrintExitException,
@@ -81,7 +81,7 @@ def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: Ar
 def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Sequence[str], pages: bool) -> Namespace:
     try:
         parsed = validate_parsed(parser, args, default_sub)
-        if not is_parsed_cmdfile(parsed):
+        if (not is_parsed_cmdfile(parsed)) and (not parsed.get_maxid):
             if pages:
                 if parsed.end < parsed.start + parsed.pages - 1:
                     parsed.end = parsed.start + parsed.pages - 1
@@ -146,6 +146,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     par_cmd.add_argument('-start', metavar='#number', default=1, help="Start page number. Default is '1'", type=positive_nonzero_int)
     arggr_count_or_end = par_cmd.add_mutually_exclusive_group(required=True)
+    arggr_count_or_end.add_argument('-get_maxid', action=ACTION_STORE_TRUE, help=HELP_ARG_GET_MAXID)
     arggr_count_or_end.add_argument('-pages', metavar='#number', help='Pages count to process', type=positive_nonzero_int)
     arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End page number', type=positive_nonzero_int)
     par_cmd.add_argument('-stop_id', metavar='#number', default=1, help='', type=positive_nonzero_int)
