@@ -81,7 +81,7 @@ def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: Ar
 def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Sequence[str], pages: bool) -> Namespace:
     try:
         parsed = validate_parsed(parser, args, default_sub)
-        if (not is_parsed_cmdfile(parsed)) and (not parsed.get_maxid):
+        if (not is_parsed_cmdfile(parsed)) and not (pages and parsed.get_maxid):
             if pages:
                 if parsed.end < parsed.start + parsed.pages - 1:
                     parsed.end = parsed.start + parsed.pages - 1

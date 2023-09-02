@@ -66,7 +66,7 @@ class BaseConfig(object):
         self.end = params.end
         self.start_id = params.stop_id if pages else self.start
         self.end_id = params.begin_id if pages else self.end
-        self.get_maxid = params.get_maxid
+        self.get_maxid = getattr(params, 'get_maxid') if hasattr(params, 'get_maxid') else self.get_maxid
 
     @property
     def uvp(self) -> Optional[str]:
