@@ -14,7 +14,7 @@ from typing import Sequence
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
     VideoInfo, Log, Config, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags, LoggingFlags,
-    HelpPrintExitException,
+    HelpPrintExitException, SITE_AJAX_REQUEST_PLAYLIST_PAGE,
 )
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
@@ -44,11 +44,17 @@ async def main(args: Sequence[str]) -> None:
         search_rule_tag = arglist.search_rule_tag  # type: str
         search_rule_art = arglist.search_rule_art  # type: str
         search_rule_cat = arglist.search_rule_cat  # type: str
+        playlist_numb, playlist_name = arglist.playlist_id if arglist.playlist_id[0] else arglist.playlist_name  # type: int, str
 
         full_download = Config.quality != QUALITIES[-1]
         re_page_entry = re_compile(r'videos/(\d+)/')
         re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
-        re_paginator = re_compile(r'from_albums:(\d+)')
+        re_paginator = re_compile(r'from(?:_albums)?:(\d+)')
+        vid_ref_class = 'th' if playlist_name else 'th js-open-popup'
+
+        if playlist_name and (search_str or search_tags or search_arts or search_cats):
+            Log.fatal('\nError: cannot search within playlist! Please use one or the other')
+            raise ValueError
 
         if Config.get_maxid:
             Config.logging_flags = LoggingFlags.LOGGING_FATAL
@@ -91,7 +97,11 @@ async def main(args: Sequence[str]) -> None:
                 break
             Log.info(f'page {pi:d}...{" (this is the last page!)" if (0 < maxpage == pi) else ""}')
 
-            a_html = await fetch_html(SITE_AJAX_REQUEST_PAGE % (search_tags, search_arts, search_cats, search_str, pi), session=s)
+            page_addr = (
+                (SITE_AJAX_REQUEST_PLAYLIST_PAGE % (playlist_numb, playlist_name, pi)) if playlist_name else
+                (SITE_AJAX_REQUEST_PAGE % (search_tags, search_arts, search_cats, search_str, pi))
+            )
+            a_html = await fetch_html(page_addr, session=s)
             if not a_html:
                 Log.error(f'Error: cannot get html for page {pi:d}')
                 continue
@@ -109,13 +119,13 @@ async def main(args: Sequence[str]) -> None:
                     maxpage = 1
 
             if Config.get_maxid:
-                miref = a_html.find('a', class_='th js-open-popup')
+                miref = a_html.find('a', class_=vid_ref_class)
                 max_id = re_page_entry.search(str(miref.get('href'))).group(1)
                 Log.fatal(f'{prefixp()[:2].upper()}: {max_id}')
                 return
 
             if full_download:
-                arefs = a_html.find_all('a', class_='th js-open-popup')
+                arefs = a_html.find_all('a', class_=vid_ref_class)
                 for aref in arefs:
                     cur_id = int(re_page_entry.search(str(aref.get('href'))).group(1))
                     if check_id_bounds(cur_id) is False:

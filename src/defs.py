@@ -91,6 +91,11 @@ SITE_AJAX_REQUEST_PAGE = b64decode(
 Ex. SITE_AJAX_REQUEST_PAGE % ('1,2', '3,4,5', '6', 'sfw', 1)"""
 SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wb3B1cC12aWRlby8lZC8=').decode()
 """Params required: int. Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)"""
+SITE_AJAX_REQUEST_PLAYLIST_PAGE = b64decode(
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wbGF5bGlzdHMvJWQvJXMvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPXBsYXlsaXN0X3ZpZXdfcGxheW'
+    'xpc3RfdmlldyZzb3J0X2J5PWFkZGVkMmZhdl9kYXRlJmZyb209JWQ=').decode()
+"""Params required: **playlist_id**, **playlist_name**, **page** - **int**, **str**, **int**.\n
+Ex. SITE_AJAX_REQUEST_PLAYLIST_PAGE % (999, 'stuff', 1)"""
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.2 Firefox/102.0 PaleMoon/32.2.0'
 HOST = urlparse(SITE).netloc
@@ -215,6 +220,7 @@ HELP_SEARCH_ACT = (
     'Native search by tag(s) / artist(s) / category(ies). Spaces must be replced with \'_\', concatenate with \',\'.'
     ' Example: \'-search_tag 1girl,side_view -search_art artist_name -search_cat category_name\''
 )
+HELP_PLAYLIST = 'Playlist to download (filters still apply)'
 HELP_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'after-hours\''
 HELP_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'

@@ -15,10 +15,10 @@ from defs import (
     HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT,
     NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING, HELP_ARG_MINSCORE,
     HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, ACTION_STORE_TRUE, UTF8, HelpPrintExitException,
-    HELP_SEARCH_ACT, HELP_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT, HELP_SESSION_ID,
+    HELP_PLAYLIST, HELP_SEARCH_ACT, HELP_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT, HELP_SESSION_ID,
 )
 from scenario import DownloadScenario
-from tagger import valid_extra_tag, valid_tags, valid_artists, valid_categories
+from tagger import valid_extra_tag, valid_tags, valid_artists, valid_categories, valid_playlist_name, valid_playlist_id
 from validators import (
     valid_int, positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
     log_level, valid_session_id,
@@ -151,6 +151,9 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End page number', type=positive_nonzero_int)
     par_cmd.add_argument('-stop_id', metavar='#number', default=1, help='', type=positive_nonzero_int)
     par_cmd.add_argument('-begin_id', metavar='#number', default=10**9, help=HELP_BEGIN_STOP_ID, type=positive_nonzero_int)
+    arggr_playlist = par_cmd.add_mutually_exclusive_group()
+    arggr_playlist.add_argument('-playlist_name', metavar='#name', default=(0, ''), help='', type=valid_playlist_name)
+    arggr_playlist.add_argument('-playlist_id', metavar='#number', default=(0, ''), help=HELP_PLAYLIST, type=valid_playlist_id)
     par_cmd.add_argument('-search', metavar='#string', default='', help=HELP_SEARCH_STR, type=valid_search_string)
     par_cmd.add_argument('-search_tag', metavar='#tag[,tag...]', default='', help='', type=valid_tags)
     par_cmd.add_argument('-search_art', metavar='#artist[,artist...]', default='', help='', type=valid_artists)
