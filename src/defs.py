@@ -83,6 +83,9 @@ class BaseConfig(object):
 
 Config = BaseConfig()
 
+APP_NAME = 'RV'
+APP_VERSION = '1.6.249'
+
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS8=').decode()
 SITE_AJAX_REQUEST_PAGE = b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9zZWFyY2gvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc192aWRlb3NfbG'
