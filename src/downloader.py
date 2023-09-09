@@ -11,12 +11,13 @@ from __future__ import annotations
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import sleep, as_completed
 from os import path, remove
-from typing import List, Tuple, Coroutine, Any, Callable, MutableSequence, Optional
+from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable
 
 from aiohttp import ClientSession
 
-from defs import MAX_VIDEOS_QUEUE_SIZE, VideoInfo, Log, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s
+from defs import MAX_VIDEOS_QUEUE_SIZE, Log, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s
 from fetch_html import make_session
+from vinfo import VideoInfo
 
 __all__ = ('DownloadWorker',)
 
@@ -32,13 +33,13 @@ class DownloadWorker:
     def get() -> Optional[DownloadWorker]:
         return DownloadWorker._instance
 
-    def __init__(self, my_sequence: MutableSequence[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
+    def __init__(self, sequence: Iterable[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
                  filtered_count: int, session: ClientSession = None) -> None:
         assert DownloadWorker._instance is None
         DownloadWorker._instance = self
 
         self._func = func
-        self._seq = my_sequence
+        self._seq = [vi for vi in sequence]  # form our own container to erase from
         self._queue = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)  # type: AsyncQueue[Tuple[int, Coroutine[Any, Any, DownloadResult]]]
         self.session = session
         self.orig_count = len(self._seq)

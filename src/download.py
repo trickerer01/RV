@@ -9,22 +9,22 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from asyncio import sleep, get_running_loop, Task, CancelledError
 from os import path, stat, remove, makedirs
 from random import uniform as frand
-from typing import Optional, MutableSequence
+from typing import Optional, Iterable
 
 from aiofile import async_open
 from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 from defs import (
     SITE, CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
-    DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, VideoInfo, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp,
-    extract_ext, re_media_filename,
+    DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
+    re_media_filename,
 )
 from downloader import DownloadWorker
 from fetch_html import fetch_html, wrap_request
 from path_util import file_already_exists
 from scenario import DownloadScenario
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
-from export import export_item_info, register_item_tags, register_item_description, register_item_comments
+from vinfo import export_video_info, VideoInfo
 
 __all__ = ('download', 'at_interrupt')
 
@@ -32,9 +32,9 @@ CTOD = ClientTimeout(total=None, connect=10)
 """Client timeout (download)"""
 
 
-async def download(sequence: MutableSequence[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
+async def download(sequence: Iterable[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
     await DownloadWorker(sequence, (download_video, process_id)[by_id], filtered_count, session).run()
-    export_item_info()
+    export_video_info(sequence)
 
 
 async def process_id(vi: VideoInfo) -> DownloadResult:
@@ -110,7 +110,7 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
         Log.warn(f'Warning: could not extract tags from {sname}, skipping due to untagged videos download policy...')
         return DownloadResult.DOWNLOAD_FAIL_SKIPPED
     if Config.save_tags:
-        register_item_tags(vi.my_id, ' '.join(sorted(tags_raw)), vi.my_subfolder)
+        vi.my_tags = ' '.join(sorted(tags_raw))
     if Config.save_descriptions or Config.save_comments:
         cidivs = i_html.find_all('div', class_='comment-info')
         cudivs = [cidiv.find('a') for cidiv in cidivs]
@@ -123,11 +123,10 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
             assert len(cbdivs) == len(cudivs)
         if Config.save_descriptions:
             desc_comment = f'{cudivs[-1].text}:\n' + cbdivs[-1].get_text('\n').strip() if has_description else ''
-            desc_text = ('\n' + desc_em.get_text('\n') + '\n') if desc_em else f'\n{desc_comment}\n' if desc_comment else ''
-            register_item_description(vi.my_id, desc_text, vi.my_subfolder)
+            vi.my_description = ('\n' + desc_em.get_text('\n') + '\n') if desc_em else f'\n{desc_comment}\n' if desc_comment else ''
         if Config.save_comments:
             comments_list = [f'{cudivs[i].text}:\n' + cbdivs[i].get_text('\n').strip() for i in range(len(cbdivs) - int(has_description))]
-            register_item_comments(vi.my_id, ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else '', vi.my_subfolder)
+            vi.my_comments = ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else ''
     tags_str = filtered_tags(list(sorted(tags_raw)))
     if tags_str != '':
         my_tags = tags_str

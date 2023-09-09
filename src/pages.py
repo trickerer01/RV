@@ -13,13 +13,14 @@ from typing import Sequence
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    VideoInfo, Log, Config, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags, LoggingFlags,
+    Log, Config, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags, LoggingFlags,
     HelpPrintExitException, SITE_AJAX_REQUEST_PLAYLIST_PAGE,
 )
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
 from fetch_html import make_session, fetch_html
 from validators import find_and_resolve_config_conflicts
+from vinfo import VideoInfo
 
 __all__ = ('main_sync',)
 

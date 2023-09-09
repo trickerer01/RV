@@ -9,8 +9,9 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from os import path, listdir
 from typing import List, Optional, Dict, MutableSequence
 
-from defs import Config, VideoInfo, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_media_filename, prefixp
+from defs import Config, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_media_filename, prefixp
 from scenario import DownloadScenario
+from vinfo import VideoInfo
 
 __all__ = ('file_already_exists', 'prefilter_existing_items')
 

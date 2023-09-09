@@ -6,15 +6,13 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from __future__ import annotations
-
 from argparse import Namespace
 from base64 import b64decode
 from datetime import datetime
 from enum import IntEnum
 from locale import getpreferredencoding
 from re import compile as re_compile
-from typing import Optional, List, Union
+from typing import Optional, List
 from urllib.parse import urlparse
 
 from colorama import init as colorama_init, Fore
@@ -427,52 +425,6 @@ class DownloadResult(IntEnum):
 
 class HelpPrintExitException(Exception):
     pass
-
-
-class VideoInfo:
-    class VIState(IntEnum):
-        NONE = 0
-        QUEUED = 1
-        ACTIVE = 2
-        DOWNLOADING = 3
-        WRITING = 4
-        DONE = 5
-        FAILED = 6
-
-    def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='') -> None:
-        self.my_id = m_id or 0
-        self.my_title = m_title or ''
-        self.my_link = m_link or ''
-        self.my_subfolder = m_subfolder or ''
-        self.my_filename = m_filename or ''
-        self.my_rating = m_rating or ''
-
-        self.my_quality = Config.quality or DEFAULT_QUALITY
-        self._state = VideoInfo.VIState.NONE
-
-    def set_state(self, state: VideoInfo.VIState) -> None:
-        self._state = state
-
-    def __eq__(self, other: Union[VideoInfo, int]) -> bool:
-        return self.my_id == other.my_id if isinstance(other, type(self)) else self.my_id == other if isinstance(other, int) else False
-
-    def __repr__(self) -> str:
-        return (
-            f'[{self.state_str}] \'{prefixp()}{self.my_id}_{self.my_title}.mp4\' ({self.my_quality})'
-            f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.my_link}\''
-        )
-
-    @property
-    def my_folder(self) -> str:
-        return normalize_path(f'{Config.dest_base}{self.my_subfolder}')
-
-    @property
-    def my_fullpath(self) -> str:
-        return normalize_filename(self.my_filename, self.my_folder)
-
-    @property
-    def state_str(self) -> str:
-        return self._state.name
 
 #
 #

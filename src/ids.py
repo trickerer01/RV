@@ -11,11 +11,12 @@ from asyncio import run as run_async, sleep
 from typing import Sequence
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
-from defs import VideoInfo, Log, Config, HelpPrintExitException
+from defs import Log, Config, HelpPrintExitException
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
 from tagger import try_parse_id_or_group
 from validators import find_and_resolve_config_conflicts
+from vinfo import VideoInfo
 
 __all__ = ('main_sync',)
 
