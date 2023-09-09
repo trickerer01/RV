@@ -223,7 +223,7 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
     sfilename = f'{f"{vi.my_subfolder}/" if len(vi.my_subfolder) > 0 else ""}{prefixp()}{vi.my_id:d}/{scr_num:02d}.webp'
     my_folder = f'{vi.my_folder}{prefixp()}{vi.my_id:d}/'
     fullpath = f'{my_folder}{scr_num:02d}.webp'
-    my_link = f'{SITE}contents/videos_screenshots/{vi.my_id - vi.my_id % 1000:d}/{vi.my_id:d}/336x189/{scr_num:d}.jpg'
+    my_link = f'{SITE}/contents/videos_screenshots/{vi.my_id - vi.my_id % 1000:d}/{vi.my_id:d}/336x189/{scr_num:d}.jpg'
     ret = DownloadResult.DOWNLOAD_SUCCESS
 
     if not path.isdir(my_folder):
