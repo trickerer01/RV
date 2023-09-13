@@ -10,12 +10,14 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Dict, Optional, Callable, Iterable, Union
 
-from defs import Config, normalize_path, prefixp, UTF8, DEFAULT_QUALITY, normalize_filename
+from defs import Config, normalize_path, normalize_filename, prefixp, UTF8, DEFAULT_QUALITY
+
+__all__ = ('VideoInfo', 'export_video_info')
 
 
 class VideoInfo:
     class VIState(IntEnum):
-        NONE = 0
+        NEW = 0
         QUEUED = 1
         ACTIVE = 2
         DOWNLOADING = 3
@@ -35,7 +37,7 @@ class VideoInfo:
         self.my_tags = ''
         self.my_description = ''
         self.my_comments = ''
-        self._state = VideoInfo.VIState.NONE
+        self._state = VideoInfo.VIState.NEW
 
     def set_state(self, state: VideoInfo.VIState) -> None:
         self._state = state
