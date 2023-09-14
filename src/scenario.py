@@ -10,7 +10,7 @@ from argparse import ArgumentParser, ZERO_OR_MORE, ArgumentError
 from typing import List, Optional
 
 from defs import (
-    Log, DEFAULT_QUALITY, HELP_QUALITY, QUALITIES, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, HELP_ARG_EXTRA_TAGS, DOWNLOAD_POLICY_DEFAULT,
+    Log, DEFAULT_QUALITY, HELP_ARG_QUALITY, QUALITIES, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, HELP_ARG_EXTRA_TAGS, DOWNLOAD_POLICY_DEFAULT,
     DOWNLOAD_POLICY_ALWAYS, HELP_ARG_MINRATING, HELP_ARG_MINSCORE, ACTION_STORE_TRUE, HELP_ARG_IDSEQUENCE, LoggingFlags, prefixp,
 )
 from tagger import valid_extra_tag, try_parse_id_or_group, is_filtered_out_by_extra_tags
@@ -59,7 +59,7 @@ class DownloadScenario(object):
 
         parser = ArgumentParser(add_help=False)
         parser.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
-        parser.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_QUALITY, choices=QUALITIES)
+        parser.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_ARG_QUALITY, choices=QUALITIES)
         parser.add_argument('-minrating', '--minimum-rating', metavar='#0-100', default=0, help=HELP_ARG_MINRATING, type=valid_rating)
         parser.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
         parser.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)

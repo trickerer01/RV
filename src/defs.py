@@ -203,27 +203,27 @@ LOGGING_FLAGS_DEFAULT = LoggingFlags.LOGGING_INFO
 ACTION_STORE_TRUE = 'store_true'
 
 HELP_ARG_GET_MAXID = 'Print maximum id and exit'
-HELP_BEGIN_STOP_ID = 'Video id lower / upper bounds filter to only download videos where \'begin_id >= video_id >= stop_id\''
+HELP_ARG_BEGIN_STOP_ID = 'Video id lower / upper bounds filter to only download videos where \'begin_id >= video_id >= stop_id\''
 HELP_ARG_IDSEQUENCE = (
     'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence instead of'
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
-HELP_PATH = 'Download destination. Default is current folder'
-HELP_SESSION_ID = (
+HELP_ARG_PATH = 'Download destination. Default is current folder'
+HELP_ARG_SESSION_ID = (
     '\'PHPSESSID\' cookie. Some tags to search for are hidden behind login wall. Using cookie from logged in account resolves this'
 )
-HELP_SEARCH_RULE = (
+HELP_ARG_SEARCH_RULE = (
     f'Multiple search args of the same type combine logic. Default is \'{SEARCH_RULE_DEFAULT}\'.'
     f' Example: while searching for tags \'sfw,side_view\','
     f' \'{SEARCH_RULE_ANY}\' will search for any of those tags, \'{SEARCH_RULE_ALL}\' will only return results matching both'
 )
-HELP_SEARCH_ACT = (
+HELP_ARG_SEARCH_ACT = (
     'Native search by tag(s) / artist(s) / category(ies). Spaces must be replced with \'_\', concatenate with \',\'.'
     ' Example: \'-search_tag 1girl,side_view -search_art artist_name -search_cat category_name\''
 )
-HELP_PLAYLIST = 'Playlist to download (filters still apply)'
-HELP_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'after-hours\''
-HELP_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
+HELP_ARG_PLAYLIST = 'Playlist to download (filters still apply)'
+HELP_ARG_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'after-hours\''
+HELP_ARG_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
 HELP_ARG_UVPOLICY = (
     f'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'
@@ -267,6 +267,7 @@ HELP_ARG_LOGGING = (
     f'Logging level: {{{str(list(LOGGING_FLAGS.keys())).replace(" ", "")[1:-1]}}}.'
     f' All messages equal or above this level will be logged. Default is \'info\''
 )
+HELP_ARG_DUMP_INFO = 'Save tags / descriptions / comments to text file (separately)'
 
 CONNECT_RETRIES_PAGE = 50
 CONNECT_RETRIES_ITEM = 50
