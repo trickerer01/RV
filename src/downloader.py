@@ -111,6 +111,9 @@ class DownloadWorker:
                 self._total_queue_size_last = queue_size
                 self._download_queue_size_last = download_count
                 self._write_queue_size_last = write_count
+                wc_threshold = MAX_VIDEOS_QUEUE_SIZE // (2 - int(force_check))
+                if self.orig_count > 1 and queue_size == 0 and download_count == write_count <= wc_threshold:
+                    Log.debug('\n'.join(f' {prefixp()}{ditem:d}' for ditem in self._downloads_active))
 
     async def _after_download(self) -> None:
         newline = '\n'
