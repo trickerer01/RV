@@ -12,7 +12,7 @@ from random import uniform as frand
 from typing import Optional, Iterable
 
 from aiofile import async_open
-from aiohttp import ClientSession, ClientTimeout, ClientResponse
+from aiohttp import ClientSession, ClientTimeout, ClientResponse, ClientPayloadError
 
 from defs import (
     SITE, CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
@@ -327,10 +327,10 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
 
                 vi.set_state(VideoInfo.VIState.DONE)
                 break
-        except Exception:
+        except Exception as e:
             import sys
             print(sys.exc_info()[0], sys.exc_info()[1])
-            if r is None or r.status != 403:
+            if (r is None or r.status != 403) and isinstance(e, ClientPayloadError) is False:
                 retries += 1
                 Log.error(f'{sfilename}: error #{retries:d}...')
             if r is not None and r.closed is False:
