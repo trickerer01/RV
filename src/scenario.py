@@ -6,12 +6,12 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from argparse import ArgumentParser, ZERO_OR_MORE, ArgumentError
+from argparse import ArgumentParser, ZERO_OR_MORE
 from typing import List, Optional
 
 from defs import (
-    Log, DEFAULT_QUALITY, HELP_ARG_QUALITY, QUALITIES, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, HELP_ARG_EXTRA_TAGS, DOWNLOAD_POLICY_DEFAULT,
-    DOWNLOAD_POLICY_ALWAYS, HELP_ARG_MINRATING, HELP_ARG_MINSCORE, ACTION_STORE_TRUE, HELP_ARG_IDSEQUENCE, LoggingFlags, prefixp,
+    Log, DEFAULT_QUALITY, QUALITIES, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, LoggingFlags,
+    prefixp,
 )
 from tagger import valid_extra_tag, try_parse_id_or_group, is_filtered_out_by_extra_tags
 from validators import valid_int, valid_rating
@@ -53,17 +53,17 @@ class SubQueryParams(object):
 
 class DownloadScenario(object):
     def __init__(self, fmt_str: str) -> None:
+        assert fmt_str
+
         self.queries = list()  # type: List[SubQueryParams]
-        if fmt_str is None:
-            return
 
         parser = ArgumentParser(add_help=False)
-        parser.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
-        parser.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_ARG_QUALITY, choices=QUALITIES)
-        parser.add_argument('-minrating', '--minimum-rating', metavar='#0-100', default=0, help=HELP_ARG_MINRATING, type=valid_rating)
-        parser.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
-        parser.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)
-        parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=valid_extra_tag)
+        parser.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help='')
+        parser.add_argument('-quality', default=DEFAULT_QUALITY, help='', choices=QUALITIES)
+        parser.add_argument('-minrating', '--minimum-rating', metavar='#0-100', default=0, help='', type=valid_rating)
+        parser.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help='', type=valid_int)
+        parser.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help='', choices=UVIDEO_POLICIES)
+        parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help='', type=valid_extra_tag)
 
         for query_raw in fmt_str.split('; '):
             error_to_print = ''
@@ -84,10 +84,10 @@ class DownloadScenario(object):
                     error_to_print = f'Scenario can only have one subquery with untagged video policy \'{UVP_ALWAYS}\'!'
                     raise ValueError
                 self.add_subquery(SubQueryParams(
-                    subfolder, parsed.extra_tags, parsed.quality, parsed.minimum_score, parsed.minimum_rating,
-                    parsed.untag_video_policy, parsed.use_id_sequence
+                    subfolder, parsed.extra_tags, parsed.quality, parsed.minimum_score, parsed.minimum_rating, parsed.untag_video_policy,
+                    parsed.use_id_sequence
                 ))
-            except (ArgumentError, TypeError, Exception):
+            except Exception:
                 if error_to_print != '':
                     Log.error(error_to_print)
                 raise
@@ -130,10 +130,7 @@ class DownloadScenario(object):
         return None
 
     def get_uvp_always_subquery(self) -> Optional[SubQueryParams]:
-        for sq in self.queries:
-            if sq.uvp == UVP_ALWAYS:
-                return sq
-        return None
+        return next(filter(lambda sq: sq.uvp == UVP_ALWAYS, self.queries), None)
 
 #
 #
