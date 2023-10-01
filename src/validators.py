@@ -119,8 +119,8 @@ def valid_filepath_abs(pathstr: str) -> str:
 
 def valid_search_string(search_str: str) -> str:
     try:
-        re_invalid_search_string = re_compile(fr'^.*{NON_SEARCH_SYMBOLS}.*$')
-        if len(search_str) > 0 and re_invalid_search_string.match(search_str):
+        re_invalid_search_string = re_compile(NON_SEARCH_SYMBOLS)
+        if len(search_str) > 0 and re_invalid_search_string.search(search_str):
             raise ValueError
     except Exception:
         raise ArgumentError

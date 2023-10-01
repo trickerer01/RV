@@ -15,7 +15,7 @@ from defs import (
     HELP_ARG_BEGIN_STOP_ID, HELP_ARG_GET_MAXID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT,
     DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO,
     HELP_ARG_MINRATING, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, HELP_ARG_PLAYLIST,
-    HELP_ARG_DUMP_INFO, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT, HELP_ARG_SESSION_ID,
+    HELP_ARG_DUMP_INFO, HELP_ARG_VERSION, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT, HELP_ARG_SESSION_ID,
     APP_NAME, APP_VERSION, UTF8, HelpPrintExitException,
 )
 from scenario import DownloadScenario
@@ -104,7 +104,7 @@ def create_parsers() -> Tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
     par_file = subs.add_parser(PARSER_TITLE_FILE, description='Run using text file containing cmdline', add_help=False)
     par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
     [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
-    [p.add_argument('--version', action='version', version=f'{APP_NAME} {APP_VERSION}') for p in (par_file, par_cmd)]
+    [p.add_argument('--version', action='version', help=HELP_ARG_VERSION, version=f'{APP_NAME} {APP_VERSION}') for p in (par_file, par_cmd)]
     return parser, par_file, par_cmd
 
 
