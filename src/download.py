@@ -267,7 +267,7 @@ async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
 async def download_video(vi: VideoInfo) -> DownloadResult:
     dwn = DownloadWorker.get()
     sname = f'{prefixp()}{vi.my_id:d}.mp4'
-    sfilename = f'{f"{vi.my_subfolder}/" if len(vi.my_subfolder) > 0 else ""}{vi.my_filename}'
+    sfilename = f'{vi.my_sfolder}{vi.my_filename}'
     file_size = 0
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS

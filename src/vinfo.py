@@ -52,6 +52,10 @@ class VideoInfo:
         )
 
     @property
+    def my_sfolder(self) -> str:
+        return normalize_path(self.my_subfolder)
+
+    @property
     def my_folder(self) -> str:
         return normalize_path(f'{Config.dest_base}{self.my_subfolder}')
 

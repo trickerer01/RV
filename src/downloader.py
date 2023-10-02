@@ -40,7 +40,7 @@ class DownloadWorker:
 
         self._func = func
         self._seq = [vi for vi in sequence]  # form our own container to erase from
-        self._queue = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)  # type: AsyncQueue[Tuple[int, Coroutine[Any, Any, DownloadResult]]]
+        self._queue = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)  # type: AsyncQueue[Tuple[VideoInfo, Coroutine[Any, Any, DownloadResult]]]
         self.session = session
         self.orig_count = len(self._seq)
         self.downloaded_count = 0
@@ -48,7 +48,7 @@ class DownloadWorker:
         self.filtered_count_after = 0
         self.skipped_count = 0
 
-        self._downloads_active = list()  # type: List[int]
+        self._downloads_active = list()  # type: List[VideoInfo]
         self.writes_active = list()  # type: List[str]
         self.failed_items = list()  # type: List[int]
 
@@ -56,19 +56,19 @@ class DownloadWorker:
         self._download_queue_size_last = 0
         self._write_queue_size_last = 0
 
-    async def _at_task_start(self, idi: int) -> None:
-        self._downloads_active.append(idi)
-        Log.trace(f'[queue] {prefixp()}{idi:d}.mp4 added to queue')
+    async def _at_task_start(self, vi: VideoInfo) -> None:
+        self._downloads_active.append(vi)
+        Log.trace(f'[queue] {prefixp()}{vi.my_id:d}.mp4 added to queue')
 
-    async def _at_task_finish(self, idi: int, result: DownloadResult) -> None:
-        self._downloads_active.remove(idi)
-        Log.trace(f'[queue] {prefixp()}{idi:d}.mp4 removed from queue')
+    async def _at_task_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
+        self._downloads_active.remove(vi)
+        Log.trace(f'[queue] {prefixp()}{vi.my_id:d}.mp4 removed from queue')
         if result == DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS:
             self.filtered_count_after += 1
         elif result == DownloadResult.DOWNLOAD_FAIL_SKIPPED:
             self.skipped_count += 1
         elif result == DownloadResult.DOWNLOAD_FAIL_RETRIES:
-            self.failed_items.append(idi)
+            self.failed_items.append(vi.my_id)
         elif result == DownloadResult.DOWNLOAD_SUCCESS:
             self.downloaded_count += 1
 
@@ -76,7 +76,7 @@ class DownloadWorker:
         while len(self._seq) > 0:
             if self._queue.full() is False:
                 self._seq[0].set_state(VideoInfo.VIState.QUEUED)
-                await self._queue.put((self._seq[0].my_id, self._func(self._seq[0])))
+                await self._queue.put((self._seq[0], self._func(self._seq[0])))
                 del self._seq[0]
             else:
                 await sleep(0.1)
@@ -84,10 +84,10 @@ class DownloadWorker:
     async def _cons(self) -> None:
         while len(self._seq) + self._queue.qsize() > 0:
             if self._queue.empty() is False and len(self._downloads_active) < MAX_VIDEOS_QUEUE_SIZE:
-                idi, task = await self._queue.get()
-                await self._at_task_start(idi)
+                vi, task = await self._queue.get()
+                await self._at_task_start(vi)
                 result = await task
-                await self._at_task_finish(idi, result)
+                await self._at_task_finish(vi, result)
                 self._queue.task_done()
             else:
                 await sleep(0.35)
@@ -112,8 +112,8 @@ class DownloadWorker:
                 self._download_queue_size_last = download_count
                 self._write_queue_size_last = write_count
                 wc_threshold = MAX_VIDEOS_QUEUE_SIZE // (2 - int(force_check))
-                if self.orig_count > 1 and queue_size == 0 and download_count == write_count <= wc_threshold:
-                    Log.debug('\n'.join(f' {prefixp()}{ditem:d}' for ditem in self._downloads_active))
+                if self.orig_count > 2 and queue_size == 0 and download_count == write_count <= wc_threshold:
+                    Log.debug('\n'.join(f' {vi.my_sfolder}{prefixp()}{vi.my_id:d}' for vi in self._downloads_active))
 
     async def _after_download(self) -> None:
         newline = '\n'
