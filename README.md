@@ -13,7 +13,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
 #### Search & filters
 - RV provides advanced searching and filtering functionality
 - Search (pages only) is performed using extended website native API (see help for possible search args)
-- Initial search results / ids list can be then filtered further by using *extra tags* (see help for additional info)
+- Initial search results / ids list can be then filtered further using *extra tags* (see help for additional info)
 
 #### Tags
 - Refer to `rv_tags.list` file for list of existing tags. Any tag you use must be a valid tag. That is, unless you also utilize...
@@ -25,10 +25,10 @@ RV is a video downloader with a lot of features, most of which are filters for f
 1. `OR` / `AND` groups:
   - `OR` group is a parenthesized tilda (**\~**) -separated group of tags:
     - **(\<tag1>\~\<tag2>\~...\~\<tagN>)**
-    - video containing **any** of the tags in `OR` group is considered matching said group
+    - video containing **any** of the tags in `OR` group is considered matching that group
   - `AND` group is a parenthesized comma (**,**) -separated group of tags. It is only used as negative group, for exclusion:
     - **-(\<tag1>,\<tag2>,...,\<tagN>)**
-    - video containing **all** of the tags in `AND` group is considered matching said group
+    - video containing **all** tags in `AND` group is considered matching that group
     - negative `AND` group are for filtering out videos having this undesired **tags combination**
 
 2. `--download-scenario` explained in detail:
@@ -54,11 +54,11 @@ RV is a video downloader with a lot of features, most of which are filters for f
 
 4. File naming
   - File names are generated based on video *title* and *tags*:
-  - Base template: ***rv\_\<video_id>\_\<score>_\<title>\_(\<tags>).\<ext>***
+  - Base template: ***rv\_\<video_id>\_\<score>_\<title>\_(\<tags>).\<ext>***. It can adjusted it using `-naming` argument
   - Non-descriptive or way-too-long tags will be dropped
-  - If resulting file total path is too long to fit into 240 symbols, first the tags will be gradually dropped; if not enough, title will be shrunk to fit; general advice: do not download to folders way too deep down the folder tree
+  - If resulting file full path is too long to fit into 240 symbols, first the tags will be gradually dropped; if not enough, title will be shrunk to fit; general advice: do not download to folders way too deep down the folder tree
 
-  5. Using 'file' mode
+5. Using 'file' mode
   - Although not required as cmdline argument, there is a default mode app runs in which is a `cmd` mode
   - `File` mode becomes useful when your cmdline string becomes **really long**. For example: Windows string buffer for console input is about 32767 characters long but standard `cmd.exe` buffer can only fit about 8192 characters, powershell - about 16384. File mode is avalible for both `pages` and `ids` modules, of course, and can be used with shorter cmdline string as well
   - `File` mode is activated by providing 'file' as first argument and has a single option which is `-path` to a text file containing actual cmdline arguments for used module's cmd mode:
