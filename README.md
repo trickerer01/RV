@@ -80,6 +80,12 @@ RV is a video downloader with a lot of features, most of which are filters for f
       s1: (script~is~a~single~value); s2: -no_quotes_here_either
       ```
 
+6. Unfinished files policy
+  - Unexpected fatal errors, Ctrl-C and other mishaps will cause download(s) to end abruptly
+  - By default, when app manages to exit gracefully, all unfinished files get deleted, and all existing files are automatically considered completed
+  - To check and resume existing unfinished files use `--continue-mode` (or `-continue`). This may be slower for non-empty folders due to additional network requests but safer in case of complex queries
+  - To keep unfinished files use `--keep-unfinished` (or `-unfinish`). It acts as `--continue-mode` helper so it's recommended to use either both or none at all
+
 #### Examples
 1. Pages
   - Minimal example - all videos by a single tag:
