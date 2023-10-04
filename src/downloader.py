@@ -106,7 +106,7 @@ class DownloadWorker:
             elapsed_seconds = get_elapsed_time_i()
             force_check = elapsed_seconds >= 60 and elapsed_seconds - last_check_seconds >= 60
             if queue_last != queue_size or downloading_last != download_count or write_last != write_count or force_check:
-                Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, downloading: {download_count:d} (writing: {write_count:d})')
+                Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, active: {download_count:d} (writing: {write_count:d})')
                 last_check_seconds = elapsed_seconds
                 self._total_queue_size_last = queue_size
                 self._download_queue_size_last = download_count
