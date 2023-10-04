@@ -15,7 +15,7 @@ from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable
 
 from aiohttp import ClientSession
 
-from defs import MAX_VIDEOS_QUEUE_SIZE, Log, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s
+from defs import MAX_VIDEOS_QUEUE_SIZE, Log, Config, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s
 from fetch_html import make_session
 from vinfo import VideoInfo
 
@@ -135,6 +135,10 @@ class DownloadWorker:
 
     def at_interrupt(self) -> None:
         if len(self.writes_active) > 0:
+            if Config.keep_unfinished:
+                unfinished_str = '\n '.join(f'{i + 1:d}) {s}' for i, s in enumerate(sorted(self.writes_active)))
+                Log.debug(f'at_interrupt: keeping {len(self.writes_active):d} unfinished files:\n {unfinished_str}')
+                return
             Log.debug(f'at_interrupt: cleaning {len(self.writes_active):d} unfinished files...')
             for unfinished in sorted(self.writes_active):
                 Log.debug(f'at_interrupt: trying to remove \'{unfinished}\'...')

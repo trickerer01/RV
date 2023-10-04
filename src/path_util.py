@@ -91,6 +91,9 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
     This function may only be called once!
     """
     scan_dest_folder()
+    if Config.continue_mode:
+        return
+
     for i in reversed(range(len(vi_list))):  # type: int
         fullpath = file_already_exists(vi_list[i].my_id, '')
         if len(fullpath) > 0:

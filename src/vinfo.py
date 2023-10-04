@@ -68,7 +68,7 @@ class VideoInfo:
         return self._state.name
 
 
-def export_video_info(info_list: Iterable[VideoInfo]) -> None:
+async def export_video_info(info_list: Iterable[VideoInfo]) -> None:
     """Saves tags, descriptions and comments for each subfolder in scenario and base dest folder based on video info"""
     tags_dict, desc_dict, comm_dict = dict(), dict(), dict()  # type: Dict[str, Dict[int, str]]
     for vi in info_list:

@@ -31,6 +31,8 @@ class BaseConfig(object):
         self.quality = None  # type: Optional[str]
         self.un_video_policy = None  # type: Optional[str]
         self.download_mode = None  # type: Optional[str]
+        self.continue_mode = None  # type: Optional[bool]
+        self.keep_unfinished = None  # type: Optional[bool]
         self.save_tags = None  # type: Optional[bool]
         self.save_descriptions = None  # type: Optional[bool]
         self.save_comments = None  # type: Optional[bool]
@@ -52,6 +54,8 @@ class BaseConfig(object):
         self.quality = params.quality
         self.un_video_policy = params.untag_video_policy
         self.download_mode = params.download_mode
+        self.continue_mode = params.continue_mode
+        self.keep_unfinished = params.keep_unfinished
         self.save_tags = params.dump_tags
         self.save_descriptions = params.dump_descriptions
         self.save_comments = params.dump_comments
@@ -270,6 +274,8 @@ HELP_ARG_LOGGING = (
     f' All messages equal or above this level will be logged. Default is \'info\''
 )
 HELP_ARG_DUMP_INFO = 'Save tags / descriptions / comments to text file (separately)'
+HELP_ARG_CONTINUE = 'Try to continue unfinished files, may be slower if most files already exist'
+HELP_ARG_UNFINISH = 'Do not clean up unfinished files on interrupt'
 
 CONNECT_RETRIES_PAGE = 50
 CONNECT_RETRIES_ITEM = 50

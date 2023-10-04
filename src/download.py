@@ -7,9 +7,9 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from asyncio import sleep, get_running_loop, Task, CancelledError
-from os import path, stat, remove, makedirs
+from os import path, stat, remove, makedirs, rename
 from random import uniform as frand
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Dict
 
 from aiofile import async_open
 from aiohttp import ClientSession, ClientTimeout, ClientResponse, ClientPayloadError
@@ -34,7 +34,7 @@ CTOD = ClientTimeout(total=None, connect=10)
 
 async def download(sequence: Iterable[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
     await DownloadWorker(sequence, (download_video, process_id)[by_id], filtered_count, session).run()
-    export_video_info(sequence)
+    await export_video_info(sequence)
 
 
 async def process_id(vi: VideoInfo) -> DownloadResult:
@@ -268,7 +268,6 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
     dwn = DownloadWorker.get()
     sname = f'{prefixp()}{vi.my_id:d}.mp4'
     sfilename = f'{vi.my_sfolder}{vi.my_filename}'
-    file_size = 0
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS
     skip = Config.dm == DOWNLOAD_MODE_SKIP
@@ -286,20 +285,35 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
         else:
             rv_match = re_media_filename.match(vi.my_filename)
             rv_quality = rv_match.group(2)
-            if file_already_exists(vi.my_id, rv_quality):
-                Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
-                return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
+            rv_curfile = file_already_exists(vi.my_id, rv_quality)
+            if rv_curfile:
+                if Config.continue_mode:
+                    if rv_curfile != vi.my_fullpath:
+                        Log.info(f'{sname} {vi.my_quality} (or similar) found. Enforcing new name (was \'{path.split(rv_curfile)[1]}\').')
+                        rename(rv_curfile, vi.my_fullpath)
+                else:
+                    Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
+                    return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
 
-    while (not skip) and (not (path.isfile(vi.my_fullpath) and file_size > 0)) and retries < CONNECT_RETRIES_ITEM:
+    while (not skip) and retries < CONNECT_RETRIES_ITEM:
         try:
             if Config.dm == DOWNLOAD_MODE_TOUCH:
-                Log.info(f'Saving<touch> {0.0:.2f} Mb to {sfilename}')
+                Log.info(f'Saving<touch> {sname} {0.0:.2f} Mb to {sfilename}')
                 with open(vi.my_fullpath, 'wb'):
                     vi.set_state(VideoInfo.VIState.DONE)
                 break
 
+            file_size = stat(vi.my_fullpath).st_size if path.isfile(vi.my_fullpath) else 0
+            hkwargs = dict(headers={'Range': f'bytes={file_size:d}-'} if file_size > 0 else {})  # type: Dict[str, Dict[str, str]]
             r = None
-            async with await wrap_request(dwn.session, 'GET', vi.my_link, timeout=CTOD) as r:
+            async with await wrap_request(dwn.session, 'GET', vi.my_link, timeout=CTOD, **hkwargs) as r:
+                content_len = r.content_length or 0
+                content_range_s = r.headers.get('Content-Range', '/').split('/', 1)
+                content_range = int(content_range_s[1]) if len(content_range_s) > 1 and content_range_s[1].isnumeric() else 1
+                if (content_len == 0 or r.status == 416) and file_size >= content_range:
+                    Log.warn(f'{sname} ({vi.my_quality}) is already completed, size: {file_size:d} ({file_size / 1024**2:.2f} Mb)')
+                    vi.set_state(VideoInfo.VIState.DONE)
+                    break
                 if r.status == 404:
                     Log.error(f'Got 404 for {sname}...!')
                     retries = CONNECT_RETRIES_ITEM - 1
@@ -308,13 +322,15 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     Log.error(f'File not found at {vi.my_link}!')
                     raise FileNotFoundError(vi.my_link)
 
-                expected_size = r.content_length
-                Log.info(f'Saving {(r.content_length / 1024**2) if r.content_length else 0.0:.2f} Mb to {sfilename}')
+                expected_size = file_size + content_len
+                starting_str = f' <continuing at {file_size:d}>' if file_size else ''
+                total_str = f' / {expected_size / 1024**2:.2f}' if file_size else ''
+                Log.info(f'Saving{starting_str} {sname} {content_len / 1024**2:.2f}{total_str} Mb to {sfilename}')
 
                 dwn.writes_active.append(vi.my_fullpath)
                 vi.set_state(VideoInfo.VIState.WRITING)
                 status_checker = get_running_loop().create_task(check_video_download_status(vi.my_id, vi.my_fullpath, r))
-                async with async_open(vi.my_fullpath, 'wb') as outf:
+                async with async_open(vi.my_fullpath, 'ab') as outf:
                     async for chunk in r.content.iter_chunked(2**22):
                         await outf.write(chunk)
                 status_checker.cancel()
@@ -335,7 +351,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 Log.error(f'{sfilename}: error #{retries:d}...')
             if r is not None and r.closed is False:
                 r.close()
-            if path.isfile(vi.my_fullpath):
+            if Config.continue_mode is False and path.isfile(vi.my_fullpath):
                 remove(vi.my_fullpath)
             # Network error may be thrown before item is added to active downloads
             if vi.my_fullpath in dwn.writes_active:
