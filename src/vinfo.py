@@ -38,6 +38,10 @@ class VideoInfo:
         self.my_description = ''
         self.my_comments = ''
         self.my_expected_size = 0
+        self.my_start_size = 0
+        self.my_start_time = 0
+        self.my_last_check_size = 0
+        self.my_last_check_time = 0
         self._state = VideoInfo.VIState.NEW
 
     def set_state(self, state: VideoInfo.VIState) -> None:

@@ -366,6 +366,13 @@ def prefixp() -> str:
     return 'rv_'
 
 
+def format_time(seconds: int) -> str:
+    """Formats time from seconds to format: **hh:mm:ss**"""
+    mm, ss = divmod(seconds, 60)
+    hh, mm = divmod(mm, 60)
+    return f'{hh:02d}:{mm:02d}:{ss:02d}'
+
+
 def get_elapsed_time_i() -> int:
     """Returns time since launch in **seconds**"""
     return (datetime.now() - START_TIME).seconds
@@ -373,9 +380,7 @@ def get_elapsed_time_i() -> int:
 
 def get_elapsed_time_s() -> str:
     """Returns time since launch in format: **hh:mm:ss**"""
-    mm, ss = divmod((datetime.now() - START_TIME).seconds, 60)
-    hh, mm = divmod(mm, 60)
-    return f'{hh:02d}:{mm:02d}:{ss:02d}'
+    return format_time((datetime.now() - START_TIME).seconds)
 
 
 def unquote(string: str) -> str:

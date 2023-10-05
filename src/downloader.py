@@ -15,7 +15,9 @@ from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable
 
 from aiohttp import ClientSession
 
-from defs import MAX_VIDEOS_QUEUE_SIZE, Log, Config, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s
+from defs import (
+    MAX_VIDEOS_QUEUE_SIZE, Log, Config, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s, format_time
+)
 from fetch_html import make_session
 from vinfo import VideoInfo
 
@@ -112,14 +114,30 @@ class DownloadWorker:
                 self._download_queue_size_last = download_count
                 self._write_queue_size_last = write_count
                 wc_threshold = MAX_VIDEOS_QUEUE_SIZE // (2 - int(force_check))
-                if self.orig_count > 2 and queue_size == 0 and download_count == write_count <= wc_threshold:
+                if self.orig_count > 2 and elapsed_seconds and queue_size == 0 and download_count == write_count <= wc_threshold:
                     item_states = list()
                     for vi in self._downloads_active:
                         cursize = stat(vi.my_fullpath).st_size if path.isfile(vi.my_fullpath) else 0
+                        remsize = vi.my_expected_size - cursize if cursize else 0
                         cursize_str = f'{cursize / 1024**2:.2f}' if cursize else '???'
                         totalsize_str = f'{vi.my_expected_size / 1024**2:.2f}' if vi.my_expected_size else '???'
-                        pct = f'{cursize * 100 / vi.my_expected_size:.1f}' if cursize and vi.my_expected_size else '??.?'
-                        item_states.append(f' {vi.my_sfolder}{prefixp()}{vi.my_id:d}: {cursize_str} / {totalsize_str} Mb ({pct}%)')
+                        size_pct = f'{cursize * 100 / vi.my_expected_size:.1f}' if cursize and vi.my_expected_size else '??.?'
+                        dfull_seconds = max(0, elapsed_seconds - vi.my_start_time)
+                        dfull_size_b = cursize - vi.my_start_size
+                        dfull_speed_kb = ((dfull_size_b / 1024) / dfull_seconds) if dfull_seconds and dfull_size_b >= 1024 else 0.0
+                        dfull_speed_str = f'{dfull_speed_kb:.1f}' if dfull_speed_kb >= 0.1 else '???.?'
+                        dfull_time_str = format_time(dfull_seconds) if dfull_speed_kb >= 0.1 else '??:??:??'
+                        dfull_str = f'{dfull_size_b / 1024**2:.2f} Mb in {dfull_time_str}, avg {dfull_speed_str} Kb/s'
+                        d_seconds = max(0, elapsed_seconds - vi.my_last_check_time)
+                        d_size_b = cursize - vi.my_last_check_size
+                        d_speed_kb = ((d_size_b / 1024) / d_seconds) if d_seconds and d_size_b >= 1024 else 0.0
+                        speed_str = f'{d_speed_kb:.1f}' if d_speed_kb >= 0.1 else '???.?'
+                        eta_str = format_time(int((remsize / 1024) / d_speed_kb)) if remsize and d_speed_kb >= 0.1 else '??:??:??'
+                        item_states.append(f' {vi.my_sfolder}{prefixp()}{vi.my_id:d}:'
+                                           f' {cursize_str} / {totalsize_str} Mb ({size_pct}%),'
+                                           f' {speed_str} Kb/s, ETA: {eta_str} ({dfull_str})')
+                        vi.my_last_check_size = cursize
+                        vi.my_last_check_time = elapsed_seconds
                     Log.debug('\n'.join(item_states))
 
     async def _after_download(self) -> None:
