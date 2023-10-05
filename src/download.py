@@ -117,13 +117,14 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
         cbdivs = [cidiv.find('div', class_='coment-text') for cidiv in cidivs]
         desc_em = i_html.find('em')  # exactly one
         uploader_div = i_html.find('div', string=' Uploaded By: ')
-        my_uploader = uploader_div.parent.find('a', class_='name').text.lower().strip() if uploader_div else ''
+        my_uploader = uploader_div.parent.find('a', class_='name').text.lower().strip() if uploader_div else 'unknown'
         has_description = (cudivs[-1].text.lower() == my_uploader) if (cudivs and cbdivs) else False  # first comment by uploader
         if cudivs and cbdivs:
             assert len(cbdivs) == len(cudivs)
         if Config.save_descriptions:
-            desc_comment = f'{cudivs[-1].text}:\n' + cbdivs[-1].get_text('\n').strip() if has_description else ''
-            vi.my_description = ('\n' + desc_em.get_text('\n') + '\n') if desc_em else f'\n{desc_comment}\n' if desc_comment else ''
+            desc_comment = (f'{cudivs[-1].text}:\n' + cbdivs[-1].get_text('\n').strip()) if has_description else ''
+            desc_base = (f'\n{my_uploader}:\n' + desc_em.get_text('\n') + '\n') if desc_em else ''
+            vi.my_description = desc_base or (f'\n{desc_comment}\n' if desc_comment else '')
         if Config.save_comments:
             comments_list = [f'{cudivs[i].text}:\n' + cbdivs[i].get_text('\n').strip() for i in range(len(cbdivs) - int(has_description))]
             vi.my_comments = ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else ''
