@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import sleep, as_completed
-from os import path, remove
+from os import path, remove, stat
 from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable
 
 from aiohttp import ClientSession
@@ -113,7 +113,14 @@ class DownloadWorker:
                 self._write_queue_size_last = write_count
                 wc_threshold = MAX_VIDEOS_QUEUE_SIZE // (2 - int(force_check))
                 if self.orig_count > 2 and queue_size == 0 and download_count == write_count <= wc_threshold:
-                    Log.debug('\n'.join(f' {vi.my_sfolder}{prefixp()}{vi.my_id:d}' for vi in self._downloads_active))
+                    item_states = list()
+                    for vi in self._downloads_active:
+                        cursize = stat(vi.my_fullpath).st_size if path.isfile(vi.my_fullpath) else 0
+                        cursize_str = f'{cursize / 1024**2:.2f}' if cursize else '???'
+                        totalsize_str = f'{vi.my_expected_size / 1024**2:.2f}' if vi.my_expected_size else '???'
+                        pct = f'{cursize * 100 / vi.my_expected_size:.1f}' if cursize and vi.my_expected_size else '??.?'
+                        item_states.append(f' {vi.my_sfolder}{prefixp()}{vi.my_id:d}: {cursize_str} / {totalsize_str} Mb ({pct}%)')
+                    Log.debug('\n'.join(item_states))
 
     async def _after_download(self) -> None:
         newline = '\n'

@@ -37,6 +37,7 @@ class VideoInfo:
         self.my_tags = ''
         self.my_description = ''
         self.my_comments = ''
+        self.my_expected_size = 0
         self._state = VideoInfo.VIState.NEW
 
     def set_state(self, state: VideoInfo.VIState) -> None:

@@ -324,9 +324,9 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     Log.error(f'File not found at {vi.my_link}!')
                     raise FileNotFoundError(vi.my_link)
 
-                expected_size = file_size + content_len
+                vi.my_expected_size = file_size + content_len
                 starting_str = f' <continuing at {file_size:d}>' if file_size else ''
-                total_str = f' / {expected_size / 1024**2:.2f}' if file_size else ''
+                total_str = f' / {vi.my_expected_size / 1024**2:.2f}' if file_size else ''
                 Log.info(f'Saving{starting_str} {sname} {content_len / 1024**2:.2f}{total_str} Mb to {sfilename}')
 
                 dwn.writes_active.append(vi.my_fullpath)
@@ -339,8 +339,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 dwn.writes_active.remove(vi.my_fullpath)
 
                 file_size = stat(vi.my_fullpath).st_size
-                if expected_size and file_size != expected_size:
-                    Log.error(f'Error: file size mismatch for {sfilename}: {file_size:d} / {expected_size:d}')
+                if vi.my_expected_size and file_size != vi.my_expected_size:
+                    Log.error(f'Error: file size mismatch for {sfilename}: {file_size:d} / {vi.my_expected_size:d}')
                     raise IOError(vi.my_link)
 
                 vi.set_state(VideoInfo.VIState.DONE)
