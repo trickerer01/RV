@@ -257,8 +257,9 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
 
 async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
     ret = DownloadResult.DOWNLOAD_SUCCESS
-    for t in [get_running_loop().create_task(download_sceenshot(vi, scr_idx + 1)) for scr_idx in range(SCREENSHOTS_COUNT)]:
-        res = await t  # type: DownloadResult
+    for t in [get_running_loop().create_task(download_sceenshot(vi, scr_idx + 1))
+              for scr_idx in range(SCREENSHOTS_COUNT)]:  # type: Task[DownloadResult]
+        res = await t
         if res not in (DownloadResult.DOWNLOAD_SUCCESS, ret):
             ret = res
     return ret

@@ -13,8 +13,8 @@ from typing import Sequence
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    Log, Config, SITE_AJAX_REQUEST_PAGE, QUALITIES, SEARCH_RULE_ALL, has_naming_flag, prefixp, NamingFlags, LoggingFlags,
-    HelpPrintExitException, SITE_AJAX_REQUEST_PLAYLIST_PAGE,
+    Log, Config, LoggingFlags, HelpPrintExitException, prefixp, SITE_AJAX_REQUEST_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE,
+    NamingFlags, has_naming_flag, QUALITIES, SEARCH_RULE_ALL,
 )
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
