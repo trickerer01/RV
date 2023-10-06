@@ -10,7 +10,7 @@ from argparse import ArgumentParser, ZERO_OR_MORE
 from typing import List, Optional
 
 from defs import (
-    Log, DEFAULT_QUALITY, QUALITIES, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, LoggingFlags,
+    Log, LoggingFlags, DEFAULT_QUALITY, QUALITIES, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE,
     prefixp,
 )
 from tagger import valid_extra_tag, try_parse_id_or_group, is_filtered_out_by_extra_tags

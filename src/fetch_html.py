@@ -16,7 +16,7 @@ from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
-from defs import CONNECT_RETRIES_PAGE, Log, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, Config, UTF8
+from defs import Log, Config, Mem, UTF8, CONNECT_RETRIES_PAGE, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
 
@@ -53,7 +53,7 @@ async def make_session() -> ClientSession:
         connector = ProxyConnector(limit=MAX_VIDEOS_QUEUE_SIZE, proxy_type=ptype, host=pp.hostname, port=pp.port)
     else:
         connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE)
-    s = ClientSession(connector=connector, read_bufsize=2**20)
+    s = ClientSession(connector=connector, read_bufsize=Mem.MB)
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'})
     if Config.session_id:
         s.cookie_jar.update_cookies({'PHPSESSID': Config.session_id, 'kt_member': '1'})

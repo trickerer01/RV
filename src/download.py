@@ -16,7 +16,7 @@ from aiohttp import ClientSession, ClientTimeout, ClientResponse, ClientPayloadE
 
 from defs import (
     SITE, CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
-    DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
+    DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, Log, Config, DownloadResult, Mem, NamingFlags, has_naming_flag, prefixp, extract_ext,
     get_elapsed_time_i, re_media_filename,
 )
 from downloader import DownloadWorker
@@ -243,7 +243,7 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
 
             expected_size = r.content_length
             async with async_open(fullpath, 'wb') as outf:
-                async for chunk in r.content.iter_chunked(2**22):
+                async for chunk in r.content.iter_chunked(4 * Mem.MB):
                     await outf.write(chunk)
 
             file_size = stat(fullpath).st_size
@@ -313,7 +313,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 content_range_s = r.headers.get('Content-Range', '/').split('/', 1)
                 content_range = int(content_range_s[1]) if len(content_range_s) > 1 and content_range_s[1].isnumeric() else 1
                 if (content_len == 0 or r.status == 416) and file_size >= content_range:
-                    Log.warn(f'{sname} ({vi.my_quality}) is already completed, size: {file_size:d} ({file_size / 1024**2:.2f} Mb)')
+                    Log.warn(f'{sname} ({vi.my_quality}) is already completed, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
                     vi.set_state(VideoInfo.VIState.DONE)
                     break
                 if r.status == 404:
@@ -326,10 +326,10 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
 
                 vi.my_expected_size = file_size + content_len
                 vi.my_last_check_size = vi.my_start_size = file_size
-                vi.my_last_check_time = get_elapsed_time_i()
+                vi.my_last_check_time = vi.my_start_time = get_elapsed_time_i()
                 starting_str = f' <continuing at {file_size:d}>' if file_size else ''
-                total_str = f' / {vi.my_expected_size / 1024**2:.2f}' if file_size else ''
-                Log.info(f'Saving{starting_str} {sname} {content_len / 1024**2:.2f}{total_str} Mb to {sfilename}')
+                total_str = f' / {vi.my_expected_size / Mem.MB:.2f}' if file_size else ''
+                Log.info(f'Saving{starting_str} {sname} {content_len / Mem.MB:.2f}{total_str} Mb to {sfilename}')
 
                 dwn.writes_active.append(vi.my_fullpath)
                 vi.set_state(VideoInfo.VIState.WRITING)

@@ -15,7 +15,7 @@ from defs import Config, normalize_path, normalize_filename, prefixp, UTF8, DEFA
 __all__ = ('VideoInfo', 'export_video_info')
 
 
-class VideoInfo:
+class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
     class VIState(IntEnum):
         NEW = 0
         QUEUED = 1
@@ -52,7 +52,7 @@ class VideoInfo:
 
     def __repr__(self) -> str:
         return (
-            f'[{self.state_str}] \'{prefixp()}{self.my_id}_{self.my_title}.mp4\' ({self.my_quality})'
+            f'[{self.state_str}] \'{prefixp()}{self.my_id:d}_{self.my_title}.mp4\' ({self.my_quality})'
             f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.my_link}\''
         )
 
