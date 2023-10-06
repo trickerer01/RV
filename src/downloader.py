@@ -16,7 +16,8 @@ from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable
 from aiohttp import ClientSession
 
 from defs import (
-    MAX_VIDEOS_QUEUE_SIZE, Log, Config, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i, get_elapsed_time_s, format_time
+    MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, Log, Config, DownloadResult, prefixp, calc_sleep_time, get_elapsed_time_i,
+    get_elapsed_time_s, format_time,
 )
 from fetch_html import make_session
 from vinfo import VideoInfo
@@ -96,6 +97,7 @@ class DownloadWorker:
 
     async def _state_reporter(self) -> None:
         base_sleep_time = calc_sleep_time(3.0)
+        force_check_seconds = DOWNLOAD_QUEUE_STALL_CHECK_TIMER
         last_check_seconds = 0
         while len(self._seq) + self._queue.qsize() + len(self._downloads_active) > 0:
             await sleep(base_sleep_time if len(self._seq) + self._queue.qsize() > 0 else 1.0)
@@ -106,7 +108,7 @@ class DownloadWorker:
             downloading_last = self._download_queue_size_last
             write_last = self._write_queue_size_last
             elapsed_seconds = get_elapsed_time_i()
-            force_check = elapsed_seconds >= 60 and elapsed_seconds - last_check_seconds >= 60
+            force_check = elapsed_seconds >= force_check_seconds and elapsed_seconds - last_check_seconds >= force_check_seconds
             if queue_last != queue_size or downloading_last != download_count or write_last != write_count or force_check:
                 Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, active: {download_count:d} (writing: {write_count:d})')
                 last_check_seconds = elapsed_seconds
@@ -114,7 +116,7 @@ class DownloadWorker:
                 self._download_queue_size_last = download_count
                 self._write_queue_size_last = write_count
                 wc_threshold = MAX_VIDEOS_QUEUE_SIZE // (2 - int(force_check))
-                if self.orig_count > 2 and elapsed_seconds and queue_size == 0 and download_count == write_count <= wc_threshold:
+                if force_check or (queue_size == 0 and download_count == write_count <= wc_threshold):
                     item_states = list()
                     for vi in self._downloads_active:
                         cursize = stat(vi.my_fullpath).st_size if path.isfile(vi.my_fullpath) else 0

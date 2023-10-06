@@ -7,7 +7,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from asyncio import sleep, get_running_loop, Task, CancelledError
-from datetime import datetime
 from os import path, stat, remove, makedirs, rename
 from random import uniform as frand
 from typing import Optional, Iterable, Dict
@@ -18,7 +17,7 @@ from aiohttp import ClientSession, ClientTimeout, ClientResponse, ClientPayloadE
 from defs import (
     SITE, CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
     DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, Log, Config, DownloadResult, NamingFlags, has_naming_flag, prefixp, extract_ext,
-    START_TIME, re_media_filename,
+    get_elapsed_time_i, re_media_filename,
 )
 from downloader import DownloadWorker
 from fetch_html import fetch_html, wrap_request
@@ -327,7 +326,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
 
                 vi.my_expected_size = file_size + content_len
                 vi.my_last_check_size = vi.my_start_size = file_size
-                vi.my_last_check_time = vi.my_start_time = (datetime.now() - START_TIME).seconds
+                vi.my_last_check_time = get_elapsed_time_i()
                 starting_str = f' <continuing at {file_size:d}>' if file_size else ''
                 total_str = f' / {vi.my_expected_size / 1024**2:.2f}' if file_size else ''
                 Log.info(f'Saving{starting_str} {sname} {content_len / 1024**2:.2f}{total_str} Mb to {sfilename}')
