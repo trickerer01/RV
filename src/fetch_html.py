@@ -16,7 +16,7 @@ from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
-from defs import Log, Config, Mem, UTF8, CONNECT_RETRIES, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE
+from defs import Log, Config, Mem, UTF8, CONNECT_RETRIES_BASE, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
 
@@ -66,13 +66,15 @@ async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> Cli
     if Config.nodelay is False:
         await RequestQueue.until_ready(url)
     s.headers.update(DEFAULT_HEADERS.copy())
+    if 'timeout' not in kwargs:
+        kwargs.update(timeout=Config.timeout)
     r = await s.request(method, url, **kwargs)
     return r
 
 
 async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[BeautifulSoup]:
     # very basic, minimum validation
-    tries = tries or CONNECT_RETRIES
+    tries = tries or CONNECT_RETRIES_BASE
 
     r = None
     retries = 0
@@ -80,7 +82,7 @@ async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[B
     while retries < tries:
         try:
             async with await wrap_request(
-                    session, 'GET', url, timeout=10,
+                    session, 'GET', url,
                     headers={'Connection': 'keep-alive', 'X-fancyBox': 'true', 'X-Requested-With': 'XMLHttpRequest'}) as r:
                 if r.status != 404:
                     r.raise_for_status()

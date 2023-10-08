@@ -12,10 +12,10 @@ from random import uniform as frand
 from typing import Optional, Iterable, Dict
 
 from aiofile import async_open
-from aiohttp import ClientSession, ClientTimeout, ClientResponse, ClientPayloadError
+from aiohttp import ClientSession, ClientResponse, ClientPayloadError
 
 from defs import (
-    SITE, CONNECT_RETRIES, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
+    SITE, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
     DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, Log, Config, DownloadResult, Mem, NamingFlags, has_naming_flag, prefixp, extract_ext,
     get_elapsed_time_i, re_media_filename,
 )
@@ -27,9 +27,6 @@ from tagger import filtered_tags, is_filtered_out_by_extra_tags
 from vinfo import export_video_info, VideoInfo
 
 __all__ = ('download', 'at_interrupt')
-
-CTOD = ClientTimeout(total=None, connect=10)
-"""Client timeout (download)"""
 
 
 async def download(sequence: Iterable[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
@@ -233,7 +230,7 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
             raise IOError(f'ERROR: Unable to create subfolder \'{my_folder}\'!')
 
     try:
-        async with await wrap_request(dwn.session, 'GET', my_link, timeout=CTOD) as r:
+        async with await wrap_request(dwn.session, 'GET', my_link) as r:
             if r.status == 404:
                 Log.error(f'Got 404 for {sname}...!')
                 ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
@@ -297,7 +294,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
                     return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
 
-    while (not skip) and retries < CONNECT_RETRIES:
+    while (not skip) and retries < CONNECT_RETRIES_BASE:
         try:
             if Config.dm == DOWNLOAD_MODE_TOUCH:
                 Log.info(f'Saving<touch> {sname} {0.0:.2f} Mb to {sfilename}')
@@ -308,7 +305,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             file_size = stat(vi.my_fullpath).st_size if path.isfile(vi.my_fullpath) else 0
             hkwargs = dict(headers={'Range': f'bytes={file_size:d}-'} if file_size > 0 else {})  # type: Dict[str, Dict[str, str]]
             r = None
-            async with await wrap_request(dwn.session, 'GET', vi.my_link, timeout=CTOD, **hkwargs) as r:
+            async with await wrap_request(dwn.session, 'GET', vi.my_link, **hkwargs) as r:
                 content_len = r.content_length or 0
                 content_range_s = r.headers.get('Content-Range', '/').split('/', 1)
                 content_range = int(content_range_s[1]) if len(content_range_s) > 1 and content_range_s[1].isnumeric() else 1
@@ -318,7 +315,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     break
                 if r.status == 404:
                     Log.error(f'Got 404 for {sname}...!')
-                    retries = CONNECT_RETRIES - 1
+                    retries = CONNECT_RETRIES_BASE - 1
                     ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
                 if r.content_type and r.content_type.find('text') != -1:
                     Log.error(f'File not found at {vi.my_link}!')
@@ -362,12 +359,12 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 dwn.writes_active.remove(vi.my_fullpath)
             if status_checker is not None:
                 status_checker.cancel()
-            if retries < CONNECT_RETRIES:
+            if retries < CONNECT_RETRIES_BASE:
                 vi.set_state(VideoInfo.VIState.DOWNLOADING)
                 await sleep(frand(1.0, 7.0))
 
     ret = (ret if ret == DownloadResult.DOWNLOAD_FAIL_NOT_FOUND else
-           DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES else
+           DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_BASE else
            DownloadResult.DOWNLOAD_FAIL_RETRIES)
 
     if Config.save_screenshots:

@@ -15,9 +15,27 @@ from re import compile as re_compile
 from typing import Optional, List
 from urllib.parse import urlparse
 
+from aiohttp import ClientTimeout
 from colorama import init as colorama_init, Fore
 
 colorama_init()
+
+CONNECT_RETRIES_BASE = 50
+CONNECT_TIMEOUT_BASE = 10
+CONNECT_REQUEST_DELAY = 0.5
+
+MAX_DEST_SCAN_SUB_DEPTH = 1
+MAX_VIDEOS_QUEUE_SIZE = 6
+DOWNLOAD_STATUS_CHECK_TIMER = 120.0
+DOWNLOAD_QUEUE_STALL_CHECK_TIMER = 30
+
+SCREENSHOTS_COUNT = 20
+
+SLASH = '/'
+UTF8 = 'utf-8'
+TAGS_CONCAT_CHAR = ','
+EXTENSIONS_V = ('mp4', 'webm')
+START_TIME = datetime.now()
 
 
 class BaseConfig(object):
@@ -41,6 +59,7 @@ class BaseConfig(object):
         self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
         self.naming_flags = self.logging_flags = 0
         self.start = self.end = self.start_id = self.end_id = 0
+        self.timeout = None  # type: Optional[ClientTimeout]
         self.get_maxid = None  # type: Optional[bool]
         # extras (can't be set through cmdline arguments)
         self.nodelay = False
@@ -68,6 +87,7 @@ class BaseConfig(object):
         self.end = params.end
         self.start_id = params.stop_id if pages else self.start
         self.end_id = params.begin_id if pages else self.end
+        self.timeout = ClientTimeout(total=None, connect=params.timeout or CONNECT_TIMEOUT_BASE)
         self.get_maxid = getattr(params, 'get_maxid') if hasattr(params, 'get_maxid') else self.get_maxid
 
     @property
@@ -235,7 +255,7 @@ HELP_ARG_UVPOLICY = (
     f'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'
     f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'
 )
-HELP_ARG_DMMODE = 'Download (file creation) mode'
+HELP_ARG_DMMODE = '[Debug] Download (file creation) mode'
 HELP_ARG_EXTRA_TAGS = (
     'All remaining \'args\' and \'-args\' count as tags to require or exclude. All spaces must be replaced with \'_\'.'
     ' Videos containing any of \'-tags\', or not containing all \'tags\' will be skipped.'
@@ -276,22 +296,7 @@ HELP_ARG_LOGGING = (
 HELP_ARG_DUMP_INFO = 'Save tags / descriptions / comments to text file (separately)'
 HELP_ARG_CONTINUE = 'Try to continue unfinished files, may be slower if most files already exist'
 HELP_ARG_UNFINISH = 'Do not clean up unfinished files on interrupt'
-
-CONNECT_RETRIES = 50
-CONNECT_REQUEST_DELAY = 1.0
-
-MAX_DEST_SCAN_SUB_DEPTH = 1
-MAX_VIDEOS_QUEUE_SIZE = 8
-DOWNLOAD_STATUS_CHECK_TIMER = 120.0
-DOWNLOAD_QUEUE_STALL_CHECK_TIMER = 30
-
-SCREENSHOTS_COUNT = 10
-
-SLASH = '/'
-UTF8 = 'utf-8'
-TAGS_CONCAT_CHAR = ','
-EXTENSIONS_V = ('mp4', 'webm')
-START_TIME = datetime.now()
+HELP_ARG_TIMEOUT = 'Connection timeout (in seconds)'
 
 re_media_filename = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\.(?:{"|".join(EXTENSIONS_V)})$')
 re_replace_symbols = re_compile(REPLACE_SYMBOLS)
