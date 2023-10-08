@@ -15,7 +15,7 @@ from aiofile import async_open
 from aiohttp import ClientSession, ClientTimeout, ClientResponse, ClientPayloadError
 
 from defs import (
-    SITE, CONNECT_RETRIES_ITEM, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
+    SITE, CONNECT_RETRIES, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
     DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, Log, Config, DownloadResult, Mem, NamingFlags, has_naming_flag, prefixp, extract_ext,
     get_elapsed_time_i, re_media_filename,
 )
@@ -297,7 +297,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
                     return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
 
-    while (not skip) and retries < CONNECT_RETRIES_ITEM:
+    while (not skip) and retries < CONNECT_RETRIES:
         try:
             if Config.dm == DOWNLOAD_MODE_TOUCH:
                 Log.info(f'Saving<touch> {sname} {0.0:.2f} Mb to {sfilename}')
@@ -318,7 +318,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     break
                 if r.status == 404:
                     Log.error(f'Got 404 for {sname}...!')
-                    retries = CONNECT_RETRIES_ITEM - 1
+                    retries = CONNECT_RETRIES - 1
                     ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
                 if r.content_type and r.content_type.find('text') != -1:
                     Log.error(f'File not found at {vi.my_link}!')
@@ -362,12 +362,12 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 dwn.writes_active.remove(vi.my_fullpath)
             if status_checker is not None:
                 status_checker.cancel()
-            if retries < CONNECT_RETRIES_ITEM:
+            if retries < CONNECT_RETRIES:
                 vi.set_state(VideoInfo.VIState.DOWNLOADING)
                 await sleep(frand(1.0, 7.0))
 
     ret = (ret if ret == DownloadResult.DOWNLOAD_FAIL_NOT_FOUND else
-           DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_ITEM else
+           DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES else
            DownloadResult.DOWNLOAD_FAIL_RETRIES)
 
     if Config.save_screenshots:

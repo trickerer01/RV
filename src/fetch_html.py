@@ -16,7 +16,7 @@ from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
-from defs import Log, Config, Mem, UTF8, CONNECT_RETRIES_PAGE, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE
+from defs import Log, Config, Mem, UTF8, CONNECT_RETRIES, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
 
@@ -70,9 +70,9 @@ async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> Cli
     return r
 
 
-async def fetch_html(url: str, *, tries: int = None, session: ClientSession) -> Optional[BeautifulSoup]:
+async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[BeautifulSoup]:
     # very basic, minimum validation
-    tries = tries or CONNECT_RETRIES_PAGE
+    tries = tries or CONNECT_RETRIES
 
     r = None
     retries = 0
