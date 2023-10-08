@@ -6,6 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+import sys
 from argparse import Namespace
 from base64 import b64decode
 from datetime import datetime
@@ -433,6 +434,11 @@ def has_naming_flag(flag: int) -> bool:
 def calc_sleep_time(base_time: float) -> float:
     """Returns either base_time for full download or shortened time otherwise"""
     return base_time if Config.download_mode == DOWNLOAD_MODE_FULL else max(1.0, base_time / 3.0)
+
+
+def at_startup() -> None:
+    """Reports python version and run options"""
+    Log.debug(f'Python {sys.version}\nCommand-line args: {" ".join(sys.argv)}')
 
 
 class DownloadResult(IntEnum):

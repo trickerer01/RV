@@ -11,7 +11,7 @@ from asyncio import run as run_async, sleep
 from typing import Sequence
 
 from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
-from defs import Log, Config, HelpPrintExitException
+from defs import Log, Config, HelpPrintExitException, at_startup
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
 from tagger import try_parse_id_or_group
@@ -100,6 +100,7 @@ def main_sync(args: Sequence[str]) -> None:
 
 
 if __name__ == '__main__':
+    at_startup()
     main_sync(sys.argv[1:])
     exit(0)
 
