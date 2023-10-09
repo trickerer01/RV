@@ -21,6 +21,9 @@ from colorama import init as colorama_init, Fore
 
 colorama_init()
 
+APP_NAME = 'RV'
+APP_VERSION = '1.6.283'
+
 CONNECT_RETRIES_BASE = 50
 CONNECT_TIMEOUT_BASE = 10
 CONNECT_REQUEST_DELAY = 0.7
@@ -105,9 +108,6 @@ class BaseConfig(object):
 
 
 Config = BaseConfig()
-
-APP_NAME = 'RV'
-APP_VERSION = '1.6.249'
 
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eQ==').decode()
 SITE_AJAX_REQUEST_PAGE = b64decode(
