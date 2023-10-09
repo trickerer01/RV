@@ -194,11 +194,12 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
 async def check_video_download_status(idi: int, dest: str, resp: ClientResponse) -> None:
     dwn = DownloadWorker.get()
     sname = f'{prefixp()}{idi:d}.mp4'
+    check_timer = float(DOWNLOAD_STATUS_CHECK_TIMER)
     try:
         # Log.trace(f'{sname} status check started...')
         last_size = -1
         while True:
-            await sleep(DOWNLOAD_STATUS_CHECK_TIMER)
+            await sleep(check_timer)
             if dest not in dwn.writes_active:  # finished already
                 Log.error(f'{sname} status checker is still running for finished download!')
                 break
