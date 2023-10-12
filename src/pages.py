@@ -96,7 +96,6 @@ async def main(args: Sequence[str]) -> None:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')
                 break
-            Log.info(f'page {pi:d}...{" (this is the last page!)" if (0 < maxpage == pi) else ""}')
 
             page_addr = (
                 (SITE_AJAX_REQUEST_PLAYLIST_PAGE % (playlist_numb, playlist_name, pi)) if playlist_name else
@@ -118,12 +117,16 @@ async def main(args: Sequence[str]) -> None:
                 if maxpage == 0:
                     Log.info('Could not extract max page, assuming single page search')
                     maxpage = 1
+                else:
+                    Log.info(f'Extracted max page: {maxpage:d}')
 
             if Config.get_maxid:
                 miref = a_html.find('a', class_=vid_ref_class)
                 max_id = re_page_entry.search(str(miref.get('href'))).group(1)
                 Log.fatal(f'{prefixp()[:2].upper()}: {max_id}')
                 return
+
+            Log.info(f'page {pi:d}...{" (this is the last page!)" if (0 < maxpage == pi) else ""}')
 
             if full_download:
                 arefs = a_html.find_all('a', class_=vid_ref_class)
