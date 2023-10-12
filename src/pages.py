@@ -118,7 +118,7 @@ async def main(args: Sequence[str]) -> None:
                     Log.info('Could not extract max page, assuming single page search')
                     maxpage = 1
                 else:
-                    Log.info(f'Extracted max page: {maxpage:d}')
+                    Log.debug(f'Extracted max page: {maxpage:d}')
 
             if Config.get_maxid:
                 miref = a_html.find('a', class_=vid_ref_class)
@@ -126,7 +126,7 @@ async def main(args: Sequence[str]) -> None:
                 Log.fatal(f'{prefixp()[:2].upper()}: {max_id}')
                 return
 
-            Log.info(f'page {pi:d}...{" (this is the last page!)" if (0 < maxpage == pi) else ""}')
+            Log.info(f'page {pi - 1:d}...{" (this is the last page!)" if (0 < maxpage == pi - 1) else ""}')
 
             if full_download:
                 arefs = a_html.find_all('a', class_=vid_ref_class)
