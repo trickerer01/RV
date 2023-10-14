@@ -51,7 +51,7 @@ async def main(args: Sequence[str]) -> None:
         if find_and_resolve_config_conflicts() is True:
             await sleep(3.0)
     except Exception:
-        Log.fatal('\nError reading parsed arglist!')
+        Log.fatal(f'\nError reading parsed arglist!\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
         return
 
     if len(id_sequence) == 0:
