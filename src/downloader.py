@@ -134,7 +134,8 @@ class DownloadWorker:
                         d_size_b = cursize - vi.my_last_check_size
                         d_speed_kb = ((d_size_b / Mem.KB) / d_seconds) if d_seconds and d_size_b >= Mem.KB else 0.0
                         speed_str = f'{d_speed_kb:.1f}' if d_speed_kb >= 0.1 else '???.?'
-                        eta_str = format_time(int((remsize / Mem.KB) / d_speed_kb)) if remsize and d_speed_kb >= 0.1 else '??:??:??'
+                        eta_str = (format_time(0) if vi.my_expected_size == cursize else
+                                   format_time(int((remsize / Mem.KB) / d_speed_kb)) if remsize and d_speed_kb >= 0.1 else '??:??:??')
                         item_states.append(f' {vi.my_sfolder}{prefixp()}{vi.my_id:d}:'
                                            f' {cursize_str} / {totalsize_str} Mb ({size_pct}%),'
                                            f' {speed_str} Kb/s, ETA: {eta_str} ({dfull_str})')

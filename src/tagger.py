@@ -14136,6 +14136,7 @@ def trim_undersores(base_str: str) -> str:
 def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_tags: List[str], is_extra_seq: bool, subfolder: str) -> bool:
     suc = True
     sname = f'{prefixp()}{idi:d}.mp4'
+    sfol = f'[{subfolder}] ' if subfolder else ''
     if len(extra_tags) > 0:
         if is_extra_seq:
             assert len(extra_tags) == 1
@@ -14143,7 +14144,7 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_tag
             assert id_sequence
             if idi not in id_sequence:
                 suc = False
-                Log.trace(f'[{subfolder}] Video {sname} isn\'t contained in id list \'{str(id_sequence)}\'. Skipped!',
+                Log.trace(f'{sfol}Video {sname} isn\'t contained in id list \'{str(id_sequence)}\'. Skipped!',
                           LoggingFlags.LOGGING_EX_MISSING_TAGS)
             return not suc
 
@@ -14151,23 +14152,23 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_tag
             if extag[0] == '(':
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
-                    Log.trace(f'[{subfolder}] Video {sname} misses required tag matching \'{extag}\'. Skipped!',
+                    Log.trace(f'{sfol}Video {sname} misses required tag matching \'{extag}\'. Skipped!',
                               LoggingFlags.LOGGING_EX_MISSING_TAGS)
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
-                    Log.info(f'[{subfolder}] Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
+                    Log.info(f'{sfol}Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
                              LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
-                    Log.info(f'[{subfolder}] Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
+                    Log.info(f'{sfol}Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
                              LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
                 elif mtag is None and extag[0] != '-':
                     suc = False
-                    Log.trace(f'[{subfolder}] Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
+                    Log.trace(f'{sfol}Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
                               LoggingFlags.LOGGING_EX_MISSING_TAGS)
     return not suc
 

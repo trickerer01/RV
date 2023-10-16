@@ -31,8 +31,6 @@ async def main(args: Sequence[str]) -> None:
     except Exception:
         Log.fatal(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
         return
-    finally:
-        at_startup()
 
     try:
         Config.read(arglist, False)
@@ -102,6 +100,7 @@ def main_sync(args: Sequence[str]) -> None:
 
 
 if __name__ == '__main__':
+    at_startup()
     main_sync(sys.argv[1:])
     exit(0)
 
