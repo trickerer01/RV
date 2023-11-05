@@ -13941,7 +13941,7 @@ def valid_playlist_id(plist: str) -> Tuple[int, str]:
     try:
         assert plist.isnumeric()
         for k, v in PLA_NUMS_DECODED.items():
-            if v[:v.find('_')] == plist:
+            if v == plist:
                 plist_name, plist_numb = k, int(plist)
                 return (plist_numb, plist_name)
         assert False
