@@ -124,7 +124,7 @@ SITE_AJAX_REQUEST_PLAYLIST_PAGE = b64decode(
 """Params required: **playlist_id**, **playlist_name**, **page** - **int**, **str**, **int**\n
 Ex. SITE_AJAX_REQUEST_PLAYLIST_PAGE % (999, 'stuff', 1)"""
 
-USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.3 Firefox/102.0 PaleMoon/32.4.0.1'
+USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.5 Firefox/102.0 PaleMoon/32.5.0'
 HOST = urlparse(SITE).netloc
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 

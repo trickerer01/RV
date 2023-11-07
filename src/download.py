@@ -333,7 +333,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 vi.set_state(VideoInfo.VIState.WRITING)
                 status_checker = get_running_loop().create_task(check_video_download_status(vi.my_id, vi.my_fullpath, r))
                 async with async_open(vi.my_fullpath, 'ab') as outf:
-                    async for chunk in r.content.iter_chunked(2**22):
+                    async for chunk in r.content.iter_chunked(2**20):
                         await outf.write(chunk)
                 status_checker.cancel()
                 dwn.writes_active.remove(vi.my_fullpath)
@@ -353,8 +353,6 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 Log.error(f'{sfilename}: error #{retries:d}...')
             if r is not None and r.closed is False:
                 r.close()
-            if Config.continue_mode is False and path.isfile(vi.my_fullpath):
-                remove(vi.my_fullpath)
             # Network error may be thrown before item is added to active downloads
             if vi.my_fullpath in dwn.writes_active:
                 dwn.writes_active.remove(vi.my_fullpath)
@@ -363,6 +361,9 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             if retries < CONNECT_RETRIES_BASE:
                 vi.set_state(VideoInfo.VIState.DOWNLOADING)
                 await sleep(frand(1.0, 7.0))
+            elif Config.continue_mode is False and path.isfile(vi.my_fullpath):
+                Log.error(f'Failed to download {sfilename}. Removing unfinished file...')
+                remove(vi.my_fullpath)
 
     ret = (ret if ret == DownloadResult.DOWNLOAD_FAIL_NOT_FOUND else
            DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_BASE else
