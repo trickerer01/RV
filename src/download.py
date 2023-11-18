@@ -304,7 +304,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 break
 
             file_size = stat(vi.my_fullpath).st_size if path.isfile(vi.my_fullpath) else 0
-            hkwargs = dict(headers={'Range': f'bytes={file_size:d}-'} if file_size > 0 else {})  # type: Dict[str, Dict[str, str]]
+            hkwargs = {'headers': {'Range': f'bytes={file_size:d}-'}} if file_size > 0 else {}  # type: Dict[str, Dict[str, str]]
             r = None
             async with await wrap_request(dwn.session, 'GET', vi.my_link, **hkwargs) as r:
                 content_len = r.content_length or 0
@@ -361,7 +361,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             if retries < CONNECT_RETRIES_BASE:
                 vi.set_state(VideoInfo.VIState.DOWNLOADING)
                 await sleep(frand(1.0, 7.0))
-            elif Config.continue_mode is False and path.isfile(vi.my_fullpath):
+            elif Config.keep_unfinished is False and path.isfile(vi.my_fullpath):
                 Log.error(f'Failed to download {sfilename}. Removing unfinished file...')
                 remove(vi.my_fullpath)
 
