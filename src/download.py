@@ -200,7 +200,7 @@ async def check_video_download_status(idi: int, dest: str, resp: ClientResponse)
         last_size = -1
         while True:
             await sleep(check_timer)
-            if dest not in dwn.writes_active:  # finished already
+            if dwn.is_writing(dest):  # finished already
                 Log.error(f'{sname} status checker is still running for finished download!')
                 break
             file_size = stat(dest).st_size if path.isfile(dest) else 0
@@ -329,14 +329,14 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 total_str = f' / {vi.my_expected_size / Mem.MB:.2f}' if file_size else ''
                 Log.info(f'Saving{starting_str} {sname} {content_len / Mem.MB:.2f}{total_str} Mb to {sfilename}')
 
-                dwn.writes_active.append(vi.my_fullpath)
+                dwn.add_to_writes(vi)
                 vi.set_state(VideoInfo.VIState.WRITING)
                 status_checker = get_running_loop().create_task(check_video_download_status(vi.my_id, vi.my_fullpath, r))
                 async with async_open(vi.my_fullpath, 'ab') as outf:
                     async for chunk in r.content.iter_chunked(2**20):
                         await outf.write(chunk)
                 status_checker.cancel()
-                dwn.writes_active.remove(vi.my_fullpath)
+                dwn.remove_from_writes(vi)
 
                 file_size = stat(vi.my_fullpath).st_size
                 if vi.my_expected_size and file_size != vi.my_expected_size:
@@ -354,8 +354,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             if r is not None and r.closed is False:
                 r.close()
             # Network error may be thrown before item is added to active downloads
-            if vi.my_fullpath in dwn.writes_active:
-                dwn.writes_active.remove(vi.my_fullpath)
+            if dwn.is_writing(vi):
+                dwn.remove_from_writes(vi)
             if status_checker is not None:
                 status_checker.cancel()
             if retries < CONNECT_RETRIES_BASE:
