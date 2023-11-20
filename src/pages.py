@@ -14,7 +14,7 @@ from typing import Sequence
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
     Log, Config, LoggingFlags, HelpPrintExitException, prefixp, at_startup, SITE_AJAX_REQUEST_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE,
-    NamingFlags, has_naming_flag, QUALITIES, SEARCH_RULE_ALL,
+    SITE_AJAX_REQUEST_UPLOADER_PAGE, NamingFlags, has_naming_flag, QUALITIES, SEARCH_RULE_ALL,
 )
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
@@ -46,15 +46,20 @@ async def main(args: Sequence[str]) -> None:
         search_rule_art = arglist.search_rule_art  # type: str
         search_rule_cat = arglist.search_rule_cat  # type: str
         playlist_numb, playlist_name = arglist.playlist_id if arglist.playlist_id[0] else arglist.playlist_name  # type: int, str
+        uploader_id = arglist.uploader  # type: int
 
         full_download = Config.quality != QUALITIES[-1]
         re_page_entry = re_compile(r'videos/(\d+)/')
         re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
-        re_paginator = re_compile(r'from(?:_albums)?:(\d+)')
+        re_paginator = re_compile(r'from(?:_(?:albums|videos))?:(\d+)')
         vid_ref_class = 'th' if playlist_name else 'th js-open-popup'
 
         if playlist_name and (search_str or search_tags or search_arts or search_cats):
-            Log.fatal('\nError: cannot search within playlist! Please use one or the other')
+            Log.fatal('\nError: cannot use search within playlist! Please use one or the other')
+            raise ValueError
+
+        if uploader_id and (search_str or search_tags or search_arts or search_cats):
+            Log.fatal('\nError: cannot use search within uploader\'s videos! Please use one or the other')
             raise ValueError
 
         if Config.get_maxid:
@@ -99,6 +104,7 @@ async def main(args: Sequence[str]) -> None:
 
             page_addr = (
                 (SITE_AJAX_REQUEST_PLAYLIST_PAGE % (playlist_numb, playlist_name, pi)) if playlist_name else
+                (SITE_AJAX_REQUEST_UPLOADER_PAGE % (uploader_id, pi)) if uploader_id else
                 (SITE_AJAX_REQUEST_PAGE % (search_tags, search_arts, search_cats, search_str, pi))
             )
             a_html = await fetch_html(page_addr, session=s)

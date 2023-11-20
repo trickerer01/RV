@@ -123,6 +123,11 @@ SITE_AJAX_REQUEST_PLAYLIST_PAGE = b64decode(
     'xpc3RfdmlldyZzb3J0X2J5PWFkZGVkMmZhdl9kYXRlJmZyb209JWQ=').decode()
 """Params required: **playlist_id**, **playlist_name**, **page** - **int**, **str**, **int**\n
 Ex. SITE_AJAX_REQUEST_PLAYLIST_PAGE % (999, 'stuff', 1)"""
+SITE_AJAX_REQUEST_UPLOADER_PAGE = b64decode(
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9tZW1iZXJzLyVkL3ZpZGVvcy8/bW9kZT1hc3luYyZmdW5jdGlvbj1nZXRfYmxvY2smYmxvY2tfaWQ9bGlzdF92aWRlb3NfdXBsb2'
+    'FkZWRfdmlkZW9zJnNvcnRfYnk9JmZyb21fdmlkZW9zPSVk').decode()
+"""Params required: **user_id**, **page** - **int**, **int**\n
+Ex. SITE_AJAX_REQUEST_UPLOADER_PAGE % (158018, 1)"""
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.5 Firefox/102.0 PaleMoon/32.5.0'
 HOST = urlparse(SITE).netloc
@@ -298,6 +303,7 @@ HELP_ARG_DUMP_INFO = 'Save tags / descriptions / comments to text file (separate
 HELP_ARG_CONTINUE = 'Try to continue unfinished files, may be slower if most files already exist'
 HELP_ARG_UNFINISH = 'Do not clean up unfinished files on interrupt'
 HELP_ARG_TIMEOUT = 'Connection timeout (in seconds)'
+HELP_ARG_UPLOADER = 'Uploader user id (integer, filters still apply)'
 
 re_media_filename = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\.(?:{"|".join(EXTENSIONS_V)})$')
 re_replace_symbols = re_compile(REPLACE_SYMBOLS)
