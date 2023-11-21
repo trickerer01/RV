@@ -8,9 +8,9 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
-from typing import Sequence
+from typing import Sequence, List
 
-from cmdargs import prepare_arglist_ids, read_cmdfile, is_parsed_cmdfile
+from cmdargs import prepare_arglist_ids
 from defs import Log, Config, HelpPrintExitException, at_startup
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
@@ -24,8 +24,6 @@ __all__ = ('main_sync',)
 async def main(args: Sequence[str]) -> None:
     try:
         arglist = prepare_arglist_ids(args)
-        while is_parsed_cmdfile(arglist):
-            arglist = prepare_arglist_ids(read_cmdfile(arglist.path))
     except HelpPrintExitException:
         return
     except Exception:
@@ -35,16 +33,10 @@ async def main(args: Sequence[str]) -> None:
     try:
         Config.read(arglist, False)
 
-        if arglist.use_id_sequence is True:
-            id_sequence = try_parse_id_or_group(Config.extra_tags)
-            if len(id_sequence) == 0:
-                Log.fatal(f'\nInvalid ID \'or\' group \'{Config.extra_tags[0] if len(Config.extra_tags) > 0 else ""}\'!')
-                raise ValueError
-        else:
-            id_sequence = list()
-            if Config.start_id > Config.end_id:
-                Log.fatal(f'\nError: invalid video id bounds: start ({Config.start_id:d}) > end ({Config.end_id:d})')
-                raise ValueError
+        id_sequence = try_parse_id_or_group(Config.extra_tags) if Config.use_id_sequence else list()  # type: List[int]
+        if Config.use_id_sequence is True and len(id_sequence) == 0:
+            Log.fatal(f'\nInvalid ID \'or\' group \'{Config.extra_tags[0] if len(Config.extra_tags) > 0 else ""}\'!')
+            raise ValueError
 
         if find_and_resolve_config_conflicts() is True:
             await sleep(3.0)

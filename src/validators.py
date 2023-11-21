@@ -13,11 +13,32 @@ from re import compile as re_compile
 
 from defs import (
     normalize_path, unquote, Log, NamingFlags, LoggingFlags, SLASH, NON_SEARCH_SYMBOLS, NAMING_FLAGS, LOGGING_FLAGS, Config,
-    DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, has_naming_flag,
+    DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, SEARCH_RULE_ALL, has_naming_flag,
 )
 
 
 def find_and_resolve_config_conflicts(full_download=True) -> bool:
+    if Config.playlist_name and (Config.search or Config.search_tags or Config.search_arts or Config.search_cats):
+        Log.fatal('\nError: cannot use search within playlist! Please use one or the other')
+        raise ValueError
+    if Config.uploader and (Config.search or Config.search_tags or Config.search_arts or Config.search_cats):
+        Log.fatal('\nError: cannot use search within uploader\'s videos! Please use one or the other')
+        raise ValueError
+    if Config.use_id_sequence in (False, None) and Config.start_id > Config.end_id:
+        Log.fatal(f'\nError: invalid video id bounds: start ({Config.start_id:d}) > end ({Config.end_id:d})')
+        raise ValueError
+
+    if Config.get_maxid:
+        Config.logging_flags = LoggingFlags.LOGGING_FATAL
+        Config.start = Config.end = Config.start_id = Config.end_id = 1
+
+    if Config.search_tags.find(',') != -1 and Config.search_rule_tag == SEARCH_RULE_ALL:
+        Config.search_tags = f'{SEARCH_RULE_ALL},{Config.search_tags}'
+    if Config.search_arts.find(',') != -1 and Config.search_rule_art == SEARCH_RULE_ALL:
+        Config.search_arts = f'{SEARCH_RULE_ALL},{Config.search_arts}'
+    if Config.search_cats.find(',') != -1 and Config.search_rule_cat == SEARCH_RULE_ALL:
+        Config.search_cats = f'{SEARCH_RULE_ALL},{Config.search_cats}'
+
     delay_for_message = False
     if Config.save_comments is True and Config.session_id is None:
         Log.info('Info: Comments cannot be accessed without `-session_id`, saving comments is impossible. Disabled!')

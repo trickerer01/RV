@@ -25,7 +25,7 @@ from validators import (
     log_level, valid_session_id,
 )
 
-__all__ = ('prepare_arglist_pages', 'prepare_arglist_ids', 'read_cmdfile', 'is_parsed_cmdfile')
+__all__ = ('prepare_arglist_pages', 'prepare_arglist_ids')
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 """'nofilters'"""
@@ -91,6 +91,8 @@ def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Se
                     parsed.start = parsed.end = None
                 elif parsed.end < parsed.start + parsed.count - 1:
                     parsed.end = parsed.start + parsed.count - 1
+        while is_parsed_cmdfile(parsed):
+            parsed = prepare_arglist_pages(read_cmdfile(parsed.path))
         return parsed
     except SystemExit:
         raise HelpPrintExitException
