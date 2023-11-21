@@ -110,11 +110,11 @@ class BaseConfig(object):
 Config = BaseConfig()
 
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eQ==').decode()
-SITE_AJAX_REQUEST_PAGE = b64decode(
+SITE_AJAX_REQUEST_SEARCH_PAGE = b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9zZWFyY2gvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc192aWRlb3NfbG'
     'lzdF9zZWFyY2gmc29ydF9ieT1wb3N0X2RhdGUmdGFnX2lkcz0lcyZtb2RlbF9pZHM9JXMmY2F0ZWdvcnlfaWRzPSVzJnE9JXMmZnJvbV92aWRlb3M9JWQ=').decode()
 """Params required: **tags**, **artists**, **categories**, **search**, **page** - **str**, **str**, **str**, **str**, **int**\n
-Ex. SITE_AJAX_REQUEST_PAGE % ('1,2', '3,4,5', '6', 'sfw', 1)"""
+Ex. SITE_AJAX_REQUEST_SEARCH_PAGE % ('1,2', '3,4,5', '6', 'sfw', 1)"""
 SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wb3B1cC12aWRlby8lZC8=').decode()
 """Params required: **video_id** - **int**\n
 Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)"""

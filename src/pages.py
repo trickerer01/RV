@@ -13,7 +13,7 @@ from typing import Sequence
 
 from cmdargs import prepare_arglist_pages, read_cmdfile, is_parsed_cmdfile
 from defs import (
-    Log, Config, LoggingFlags, HelpPrintExitException, prefixp, at_startup, SITE_AJAX_REQUEST_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE,
+    Log, Config, LoggingFlags, HelpPrintExitException, prefixp, at_startup, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE,
     SITE_AJAX_REQUEST_UPLOADER_PAGE, NamingFlags, has_naming_flag, QUALITIES, SEARCH_RULE_ALL,
 )
 from download import download, at_interrupt
@@ -105,7 +105,7 @@ async def main(args: Sequence[str]) -> None:
             page_addr = (
                 (SITE_AJAX_REQUEST_PLAYLIST_PAGE % (playlist_numb, playlist_name, pi)) if playlist_name else
                 (SITE_AJAX_REQUEST_UPLOADER_PAGE % (uploader_id, pi)) if uploader_id else
-                (SITE_AJAX_REQUEST_PAGE % (search_tags, search_arts, search_cats, search_str, pi))
+                (SITE_AJAX_REQUEST_SEARCH_PAGE % (search_tags, search_arts, search_cats, search_str, pi))
             )
             a_html = await fetch_html(page_addr, session=s)
             if not a_html:
