@@ -17,8 +17,8 @@ from aiohttp import ClientSession, ClientResponse, ClientPayloadError
 from defs import (
     SITE, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
     DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, DownloadResult, Mem, NamingFlags, PREFIX,
-    re_media_filename,
 )
+from rex import re_media_filename
 from config import Config
 from util import get_elapsed_time_i, extract_ext, has_naming_flag
 from logger import Log

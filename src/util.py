@@ -9,7 +9,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 import sys
 from datetime import datetime
 
-from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL, re_replace_symbols, re_ext
+from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL
+from rex import re_replace_symbols, re_ext
 from config import Config
 from logger import Log
 
@@ -63,10 +64,8 @@ def normalize_filename(filename: str, base_path: str) -> str:
 
 
 def extract_ext(href: str) -> str:
-    try:
-        return re_ext.search(href).group(1)
-    except Exception:
-        return '.mp4'
+    ext_match = re_ext.search(href)
+    return ext_match.group(1) if ext_match else '.mp4'
 
 
 def has_naming_flag(flag: int) -> bool:

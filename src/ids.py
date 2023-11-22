@@ -30,7 +30,9 @@ async def main(args: Sequence[str]) -> None:
     except HelpPrintExitException:
         return
     except Exception:
-        Log.fatal(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
+        import traceback
+        traceback.print_exc()
+        Log.fatal('\nUnable to parse cmdline. Exiting.')
         return
 
     try:
@@ -44,7 +46,9 @@ async def main(args: Sequence[str]) -> None:
         if find_and_resolve_config_conflicts() is True:
             await sleep(3.0)
     except Exception:
-        Log.fatal(f'\nError reading parsed arglist!\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
+        import traceback
+        traceback.print_exc()
+        Log.fatal('\nError reading parsed arglist!')
         return
 
     if len(id_sequence) == 0:

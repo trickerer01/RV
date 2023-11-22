@@ -9,7 +9,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from os import path, listdir
 from typing import List, Optional, Dict, MutableSequence
 
-from defs import MAX_DEST_SCAN_SUB_DEPTH, re_media_filename, PREFIX
+from defs import MAX_DEST_SCAN_SUB_DEPTH, PREFIX
+from rex import re_media_filename
 from config import Config
 from util import normalize_path
 from logger import Log

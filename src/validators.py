@@ -9,13 +9,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from argparse import ArgumentError
 from ipaddress import IPv4Address
 from os import path
-from re import compile as re_compile
 
-from defs import (
-    NamingFlags, LoggingFlags, SLASH, NON_SEARCH_SYMBOLS, NAMING_FLAGS, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT,
-    DEFAULT_QUALITY, SEARCH_RULE_ALL,
-)
+from defs import NamingFlags, LoggingFlags, SLASH, NAMING_FLAGS, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, SEARCH_RULE_ALL
 from config import Config
+from rex import re_non_search_symbols, re_session_id
 from util import unquote, normalize_path, has_naming_flag
 from logger import Log
 
@@ -143,8 +140,7 @@ def valid_filepath_abs(pathstr: str) -> str:
 
 def valid_search_string(search_str: str) -> str:
     try:
-        re_invalid_search_string = re_compile(NON_SEARCH_SYMBOLS)
-        if len(search_str) > 0 and re_invalid_search_string.search(search_str):
+        if len(search_str) > 0 and re_non_search_symbols.search(search_str):
             raise ValueError
     except Exception:
         raise ArgumentError
@@ -207,8 +203,7 @@ def log_level(level: str) -> LoggingFlags:
 
 def valid_session_id(sessionid: str) -> str:
     try:
-        re_sessionid = re_compile(r'[a-z0-9]{26}')
-        assert (not sessionid) or re_sessionid.fullmatch(sessionid)
+        assert (not sessionid) or re_session_id.fullmatch(sessionid)
         return sessionid
     except Exception:
         raise ArgumentError

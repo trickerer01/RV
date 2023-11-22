@@ -8,7 +8,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
-from re import compile as re_compile
 from typing import Sequence
 
 from cmdargs import prepare_arglist_pages
@@ -17,6 +16,7 @@ from defs import (
     NamingFlags, QUALITIES,
 )
 from config import Config
+from rex import re_page_entry, re_paginator, re_preview_entry
 from util import at_startup, has_naming_flag
 from logger import Log
 from download import download, at_interrupt
@@ -34,22 +34,23 @@ async def main(args: Sequence[str]) -> None:
     except HelpPrintExitException:
         return
     except Exception:
-        Log.fatal(f'\nUnable to parse cmdline. Exiting.\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
+        import traceback
+        traceback.print_exc()
+        Log.fatal('\nUnable to parse cmdline. Exiting.')
         return
 
     try:
         Config.read(arglist, True)
 
         full_download = Config.quality != QUALITIES[-1]
-        re_page_entry = re_compile(r'videos/(\d+)/')
-        re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
-        re_paginator = re_compile(r'from(?:_(?:albums|videos))?:(\d+)')
         vid_ref_class = 'th' if Config.playlist_name else 'th js-open-popup'
 
         if find_and_resolve_config_conflicts(full_download) is True:
             await sleep(3.0)
     except Exception:
-        Log.fatal(f'\nError reading parsed arglist!\n{sys.exc_info()[0]}: {sys.exc_info()[1]}')
+        import traceback
+        traceback.print_exc()
+        Log.fatal('\nError reading parsed arglist!')
         return
 
     def check_id_bounds(video_id: int) -> bool:
