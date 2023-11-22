@@ -6,23 +6,16 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from base64 import b64decode
-from json import loads
 from re import compile as re_compile
-from typing import List, Dict, Optional, Collection, Iterable, Sequence, Tuple
+from typing import List, Optional, Collection, Iterable, Sequence, Tuple
 
-from bigstrings import TAG_NUMS_ENCODED, ART_NUMS_ENCODED, CAT_NUMS_ENCODED, PLA_NUMS_ENCODED
+from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
 from defs import TAGS_CONCAT_CHAR, Log, LoggingFlags, prefixp, re_replace_symbols
 
 __all__ = (
     'filtered_tags', 'get_matching_tag', 'try_parse_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags',
     'valid_tags', 'valid_artists', 'valid_categories', 'valid_playlist_name', 'valid_playlist_id',
 )
-
-TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED = (
-    {k.replace(' ', '_'): (v[:v.find(',')] if ',' in v else v) for k, v in loads(b64decode(s)).items()}
-    for s in (TAG_NUMS_ENCODED, ART_NUMS_ENCODED, CAT_NUMS_ENCODED, PLA_NUMS_ENCODED)
-)  # type: Dict[str, str]
 
 re_wtag = re_compile(r'^[^?*]*[?*].*?$')
 re_idval = re_compile(r'^id=\d+?$')
@@ -90,76 +83,6 @@ re_tags_to_not_exclude = re_compile(
     r'\d{1,2}\+?_?(?:animal|boy|futa|girl|monster)s?.*?'  # 0-9
     r')$'
 )
-
-TAG_ALIASES = {
-    'aela_the_huntress_(world_of_warcraft)': 'world_of_warcraft',
-    'darnassus_(world_of_warcraft)': 'world_of_warcraft',
-    'deathwing_(world_of_warcraft)': 'world_of_warcraft',
-    'demon_hunter_(world_of_warcraft)': 'world_of_warcraft',
-    'eredar_(world_of_warcraft)': 'world_of_warcraft',
-    'felhunter_(world_of_warcraft)': 'world_of_warcraft',
-    'felina_(world_of_warcraft)': 'world_of_warcraft',
-    'felstalker_(world_of_warcraft)': 'world_of_warcraft',
-    'garrosh_hellscream__(world_of_warcraft)': 'world_of_warcraft',
-    'gnome_(world_of_warcraft)': 'world_of_warcraft',
-    'goblin_(world_of_warcraft)': 'world_of_warcraft',
-    'human_(world_of_warcraft)': 'world_of_warcraft',
-    'illidan_(world_of_warcraft)': 'world_of_warcraft',
-    'jaina_proudmoore_(world_of_warcraft)': 'world_of_warcraft',
-    'lylly_(world_of_warcraft)': 'world_of_warcraft',
-    'sally_whitemane_(world_of_warcraft)': 'world_of_warcraft',
-    'sylvanas_windrunner_(world_of_warcraft)': 'world_of_warcraft',
-    'tess_(world_of_warcraft)': 'world_of_warcraft',
-    'tyrande_whisperwind_(world_of_warcraft)': 'world_of_warcraft',
-    'thrall_(world_of_warcraft)': 'world_of_warcraft',
-    'valeera_(world_of_warcraft)': 'world_of_warcraft',
-    'vulpera_(world_of_warcraft)': 'world_of_warcraft',
-    'worgen_(world_of_warcraft)': 'world_of_warcraft',
-    'wrathion_(world_of_warcraft)': 'world_of_warcraft',
-    'pmv': 'PMV',
-    'hmv': 'HMV',
-    'sfmpmv': 'PMV',
-    'sfmhmv': 'HMV',
-    'tentacle_in_mouth': 'tentacle',
-    'tentacle_monster': 'tentacle',
-    'tentacle_penis': 'tentacle',
-    'tentacle sex': 'tentacle',
-    'tentacle_tongue': 'tentacle',
-    'belly_expansion': 'belly_bulge',
-    'belly_inflation': 'belly_bulge',
-    'bellybulge': 'belly_bulge',
-    'futanari_dominates_female': 'futanari',
-    'futanari_horsecock': 'futanari',
-    'futanari_is_bigger': 'futanari',
-    'futanari_masturbation': 'futanari',
-    'futanari_on_female': 'futanari',
-    'futanari_on_futanari': 'futanari',
-    'futanari_only': 'futanari',
-    'futanari_penetrated': 'futanari',
-    'futanari_penetrating': 'futanari',
-    'futanari_penetrating_female': 'futanari',
-    'futanari_pov': 'futanari',
-    'futanari_transformation': 'futanari',
-    'athletic_futanari': 'futanari',
-    'completely_nude_futanari': 'futanari',
-    'dark skinned_futanari': 'futanari',
-    'dominant_futanari': 'futanari',
-    'female_on_futanari': 'futanari',
-    'futa_penetrated': 'futanari',
-    'futa_pov': 'futanari',
-    'futadom': 'futanari',
-    'futasub': 'futanari',
-    'larger_futanari': 'futanari',
-    'latex_suit': 'latex',
-    'light skinned_futanari': 'futanari',
-    'smaller_futanari': 'futanari',
-    'futanari_dominates_male': 'futa_on_male',
-    'futanari_on_male': 'futa_on_male',
-    'genderswap_(mtf)': 'genderswap_mtf',
-    'genderswap_(ftm)': 'genderswap_ftm',
-    'maggot': 'insect',
-    'worm': 'insect',
-}
 
 
 def valid_playlist_name(plist: str) -> Tuple[int, str]:
