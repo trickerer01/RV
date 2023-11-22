@@ -16,7 +16,9 @@ from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
-from defs import Log, Config, Mem, UTF8, CONNECT_RETRIES_BASE, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE
+from defs import Mem, UTF8, CONNECT_RETRIES_BASE, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE
+from config import Config
+from logger import Log
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
 

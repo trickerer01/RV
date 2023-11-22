@@ -15,10 +15,10 @@ from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable, Un
 
 from aiohttp import ClientSession
 
-from defs import (
-    MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, Log, Config, DownloadResult, Mem, prefixp, calc_sleep_time, get_elapsed_time_i,
-    get_elapsed_time_s, format_time,
-)
+from defs import MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, DownloadResult, Mem, PREFIX
+from config import Config
+from util import format_time, get_elapsed_time_i, get_elapsed_time_s, calc_sleep_time
+from logger import Log
 from fetch_html import make_session
 from vinfo import VideoInfo
 
@@ -61,11 +61,11 @@ class DownloadWorker:
 
     async def _at_task_start(self, vi: VideoInfo) -> None:
         self._downloads_active.append(vi)
-        Log.trace(f'[queue] {prefixp()}{vi.my_id:d}.mp4 added to queue')
+        Log.trace(f'[queue] {PREFIX}{vi.my_id:d}.mp4 added to queue')
 
     async def _at_task_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
         self._downloads_active.remove(vi)
-        Log.trace(f'[queue] {prefixp()}{vi.my_id:d}.mp4 removed from queue')
+        Log.trace(f'[queue] {PREFIX}{vi.my_id:d}.mp4 removed from queue')
         if result == DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS:
             self._filtered_count_after += 1
         elif result == DownloadResult.DOWNLOAD_FAIL_SKIPPED:
@@ -136,7 +136,7 @@ class DownloadWorker:
                         speed_str = f'{d_speed_kb:.1f}' if d_speed_kb >= 0.1 else '???.?'
                         eta_str = (format_time(0) if vi.my_expected_size == cursize else
                                    format_time(int((remsize / Mem.KB) / d_speed_kb)) if remsize and d_speed_kb >= 0.1 else '??:??:??')
-                        item_states.append(f' {vi.my_sfolder}{prefixp()}{vi.my_id:d}:'
+                        item_states.append(f' {vi.my_sfolder}{PREFIX}{vi.my_id:d}:'
                                            f' {cursize_str} / {totalsize_str} Mb ({size_pct}%),'
                                            f' {speed_str} Kb/s, ETA: {eta_str} ({dfull_str})')
                         vi.my_last_check_size = cursize

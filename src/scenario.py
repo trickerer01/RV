@@ -10,9 +10,9 @@ from argparse import ArgumentParser, ZERO_OR_MORE
 from typing import List, Optional
 
 from defs import (
-    Log, LoggingFlags, DEFAULT_QUALITY, QUALITIES, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE,
-    prefixp,
+    LoggingFlags, DEFAULT_QUALITY, QUALITIES, UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, PREFIX,
 )
+from logger import Log
 from tagger import valid_extra_tag, try_parse_id_or_group, is_filtered_out_by_extra_tags
 from validators import valid_int, valid_rating
 
@@ -112,7 +112,7 @@ class DownloadScenario(object):
         return False
 
     def get_matching_subquery(self, idi: int, tags_raw: List[str], score: str, rating: str) -> Optional[SubQueryParams]:
-        sname = f'{prefixp()}{idi:d}.mp4'
+        sname = f'{PREFIX}{idi:d}.mp4'
         for sq in self.queries:
             if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.use_id_sequence, sq.subfolder):
                 sq_skip = False

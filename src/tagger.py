@@ -10,7 +10,8 @@ from re import compile as re_compile
 from typing import List, Optional, Collection, Iterable, Sequence, Tuple
 
 from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
-from defs import TAGS_CONCAT_CHAR, Log, LoggingFlags, prefixp, re_replace_symbols
+from defs import TAGS_CONCAT_CHAR, LoggingFlags, PREFIX, re_replace_symbols
+from logger import Log
 
 __all__ = (
     'filtered_tags', 'get_matching_tag', 'try_parse_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags',
@@ -257,7 +258,7 @@ def trim_undersores(base_str: str) -> str:
 
 def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_tags: List[str], is_extra_seq: bool, subfolder: str) -> bool:
     suc = True
-    sname = f'{prefixp()}{idi:d}.mp4'
+    sname = f'{PREFIX}{idi:d}.mp4'
     sfol = f'[{subfolder}] ' if subfolder else ''
     if len(extra_tags) > 0:
         if is_extra_seq:

@@ -6,20 +6,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-import sys
-from argparse import Namespace
 from base64 import b64decode
 from datetime import datetime
 from enum import IntEnum
-from locale import getpreferredencoding
 from re import compile as re_compile
-from typing import Optional, List
-from urllib.parse import urlparse
-
-from aiohttp import ClientTimeout
-from colorama import init as colorama_init, Fore
-
-colorama_init()
 
 APP_NAME = 'RV'
 APP_VERSION = '1.6.283'
@@ -35,101 +25,12 @@ DOWNLOAD_QUEUE_STALL_CHECK_TIMER = 30
 
 SCREENSHOTS_COUNT = 10
 
+PREFIX = 'rv_'
 SLASH = '/'
 UTF8 = 'utf-8'
 TAGS_CONCAT_CHAR = ','
 EXTENSIONS_V = ('mp4', 'webm')
 START_TIME = datetime.now()
-
-
-class BaseConfig(object):
-    """Parameters container for params used in both **pages** and **ids** modes"""
-    def __init__(self) -> None:
-        self.dest_base = None  # type: Optional[str]
-        self.proxy = None  # type: Optional[str]
-        self.session_id = None  # type: Optional[str]
-        self.min_rating = None  # type: Optional[int]
-        self.min_score = None  # type: Optional[int]
-        self.quality = None  # type: Optional[str]
-        self.un_video_policy = None  # type: Optional[str]
-        self.download_mode = None  # type: Optional[str]
-        self.continue_mode = None  # type: Optional[bool]
-        self.keep_unfinished = None  # type: Optional[bool]
-        self.save_tags = None  # type: Optional[bool]
-        self.save_descriptions = None  # type: Optional[bool]
-        self.save_comments = None  # type: Optional[bool]
-        self.save_screenshots = None  # type: Optional[bool]
-        self.extra_tags = None  # type: Optional[List[str]]
-        self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
-        self.naming_flags = self.logging_flags = 0
-        self.start = self.end = self.start_id = self.end_id = 0
-        self.timeout = None  # type: Optional[ClientTimeout]
-        # module-specific params (pages only or ids only)
-        self.use_id_sequence = None  # type: Optional[bool]
-        self.search = None  # type: Optional[str]
-        self.search_tags, self.search_arts, self.search_cats = None, None, None  # type: Optional[str]
-        self.search_rule_tag, self.search_rule_art, self.search_rule_cat = None, None, None  # type: Optional[str]
-        self.playlist_id = None  # type: Optional[int]
-        self.playlist_name = None  # type: Optional[str]
-        self.uploader = None  # type: Optional[int]
-        self.get_maxid = None  # type: Optional[bool]
-        # extras (can't be set through cmdline arguments)
-        self.nodelay = False
-
-    def read(self, params: Namespace, pages: bool) -> None:
-        self.dest_base = params.path
-        self.proxy = params.proxy
-        # session_id only exists in RV
-        self.session_id = getattr(params, 'session_id') if hasattr(params, 'session_id') else self.session_id
-        self.min_rating = params.minimum_rating
-        self.min_score = params.minimum_score
-        self.quality = params.quality
-        self.un_video_policy = params.untag_video_policy
-        self.download_mode = params.download_mode
-        self.continue_mode = params.continue_mode
-        self.keep_unfinished = params.keep_unfinished
-        self.save_tags = params.dump_tags
-        self.save_descriptions = params.dump_descriptions
-        self.save_comments = params.dump_comments
-        self.save_screenshots = params.dump_screenshots
-        self.extra_tags = params.extra_tags
-        self.scenario = params.download_scenario
-        self.naming_flags = params.naming
-        self.logging_flags = params.log_level
-        self.start = params.start
-        self.end = params.end
-        self.start_id = params.stop_id if pages else self.start
-        self.end_id = params.begin_id if pages else self.end
-        self.timeout = ClientTimeout(total=None, connect=params.timeout or CONNECT_TIMEOUT_BASE)
-        # module-specific params (pages only or ids only)
-        self.use_id_sequence = getattr(params, 'use_id_sequence') if hasattr(params, 'use_id_sequence') else self.use_id_sequence
-        self.search = getattr(params, 'search') if hasattr(params, 'search') else self.search
-        self.search_tags = getattr(params, 'search_tag') if hasattr(params, 'search_tag') else self.search_tags
-        self.search_arts = getattr(params, 'search_art') if hasattr(params, 'search_art') else self.search_arts
-        self.search_cats = getattr(params, 'search_cat') if hasattr(params, 'search_cat') else self.search_cats
-        self.search_rule_tag = getattr(params, 'search_rule_tag') if hasattr(params, 'search_rule_tag') else self.search_rule_tag
-        self.search_rule_art = getattr(params, 'search_rule_art') if hasattr(params, 'search_rule_art') else self.search_rule_art
-        self.search_rule_cat = getattr(params, 'search_rule_cat') if hasattr(params, 'search_rule_cat') else self.search_rule_cat
-        self.playlist_id, self.playlist_name = (
-            getattr(params, 'playlist_id') if getattr(params, 'playlist_id')[0] else getattr(params, 'playlist_name')
-        ) if hasattr(params, 'playlist_id') or hasattr(params, 'playlist_name') else (self.playlist_id, self.playlist_name)
-        self.uploader = getattr(params, 'uploader') if hasattr(params, 'uploader') else self.uploader
-        self.get_maxid = getattr(params, 'get_maxid') if hasattr(params, 'get_maxid') else self.get_maxid
-
-    @property
-    def uvp(self) -> Optional[str]:
-        return self.un_video_policy
-
-    @uvp.setter
-    def uvp(self, value: str) -> None:
-        self.un_video_policy = value
-
-    @property
-    def dm(self) -> Optional[str]:
-        return self.download_mode
-
-
-Config = BaseConfig()
 
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eQ==').decode()
 SITE_AJAX_REQUEST_SEARCH_PAGE = b64decode(
@@ -152,7 +53,6 @@ SITE_AJAX_REQUEST_UPLOADER_PAGE = b64decode(
 Ex. SITE_AJAX_REQUEST_UPLOADER_PAGE % (158018, 1)"""
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.5 Firefox/102.0 PaleMoon/32.5.0'
-HOST = urlparse(SITE).netloc
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
 # language=PythonRegExp
@@ -330,142 +230,6 @@ HELP_ARG_UPLOADER = 'Uploader user id (integer, filters still apply)'
 re_media_filename = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\.(?:{"|".join(EXTENSIONS_V)})$')
 re_replace_symbols = re_compile(REPLACE_SYMBOLS)
 re_ext = re_compile(r'(\.[^&]{3,5})&')
-
-
-class Log:
-    """
-    Basic logger supporting different log levels, colors and extra logging flags\n
-    **Static**
-    """
-    COLORS = {
-        LoggingFlags.LOGGING_TRACE: Fore.WHITE,
-        LoggingFlags.LOGGING_DEBUG: Fore.LIGHTWHITE_EX,
-        LoggingFlags.LOGGING_INFO: Fore.LIGHTCYAN_EX,
-        LoggingFlags.LOGGING_WARN: Fore.LIGHTYELLOW_EX,
-        LoggingFlags.LOGGING_ERROR: Fore.LIGHTYELLOW_EX,
-        LoggingFlags.LOGGING_FATAL: Fore.LIGHTRED_EX
-    }
-
-    @staticmethod
-    def log(text: str, flags: LoggingFlags) -> None:
-        # if flags & LoggingFlags.LOGGING_FATAL == 0 and Config.logging_flags & flags != flags:
-        if flags < Config.logging_flags:
-            return
-
-        for f in reversed(Log.COLORS.keys()):
-            if f & flags:
-                text = f'{Log.COLORS[f]}{text}{Fore.RESET}'
-                break
-
-        try:
-            print(text)
-        except UnicodeError:
-            try:
-                print(text.encode(UTF8).decode())
-            except Exception:
-                try:
-                    print(text.encode(UTF8).decode(getpreferredencoding()))
-                except Exception:
-                    print('<Message was not logged due to UnicodeError>')
-            finally:
-                print('Previous message caused UnicodeError...')
-
-    @staticmethod
-    def fatal(text: str) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_FATAL)
-
-    @staticmethod
-    def error(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_ERROR | extra_flags)
-
-    @staticmethod
-    def warn(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_WARN | extra_flags)
-
-    @staticmethod
-    def info(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_INFO | extra_flags)
-
-    @staticmethod
-    def debug(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_DEBUG | extra_flags)
-
-    @staticmethod
-    def trace(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_TRACE | extra_flags)
-
-
-def prefixp() -> str:
-    return 'rv_'
-
-
-def format_time(seconds: int) -> str:
-    """Formats time from seconds to format: **hh:mm:ss**"""
-    mm, ss = divmod(seconds, 60)
-    hh, mm = divmod(mm, 60)
-    return f'{hh:02d}:{mm:02d}:{ss:02d}'
-
-
-def get_elapsed_time_i() -> int:
-    """Returns time since launch in **seconds**"""
-    return (datetime.now() - START_TIME).seconds
-
-
-def get_elapsed_time_s() -> str:
-    """Returns time since launch in format: **hh:mm:ss**"""
-    return format_time((datetime.now() - START_TIME).seconds)
-
-
-def unquote(string: str) -> str:
-    """Removes all leading/trailing single/double quotes. Non-matching quotes are removed too"""
-    try:
-        while True:
-            found = False
-            if len(string) > 1 and string[0] in ['\'', '"']:
-                string = string[1:]
-                found = True
-            if len(string) > 1 and string[-1] in ['\'', '"']:
-                string = string[:-1]
-                found = True
-            if not found:
-                break
-        return string
-    except Exception:
-        raise ValueError
-
-
-def normalize_path(basepath: str, append_slash=True) -> str:
-    """Converts path string to universal slash-concatenated string, enclosing slash is optional"""
-    normalized_path = basepath.replace('\\', SLASH)
-    if append_slash and len(normalized_path) != 0 and normalized_path[-1] != SLASH:
-        normalized_path += SLASH
-    return normalized_path
-
-
-def normalize_filename(filename: str, base_path: str) -> str:
-    """Returns full path to a file, normalizing base path and removing disallowed symbols from file name"""
-    return normalize_path(base_path) + re_replace_symbols.sub('_', filename)
-
-
-def extract_ext(href: str) -> str:
-    try:
-        return re_ext.search(href).group(1)
-    except Exception:
-        return '.mp4'
-
-
-def has_naming_flag(flag: int) -> bool:
-    return not not (Config.naming_flags & flag)
-
-
-def calc_sleep_time(base_time: float) -> float:
-    """Returns either base_time for full download or shortened time otherwise"""
-    return base_time if Config.download_mode == DOWNLOAD_MODE_FULL else max(1.0, base_time / 3.0)
-
-
-def at_startup() -> None:
-    """Reports python version and run options"""
-    Log.debug(f'Python {sys.version}\nCommand-line args: {" ".join(sys.argv)}')
 
 
 class DownloadResult(IntEnum):

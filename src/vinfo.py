@@ -10,7 +10,9 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Dict, Optional, Callable, Iterable, Union
 
-from defs import Config, normalize_path, normalize_filename, prefixp, UTF8, DEFAULT_QUALITY
+from defs import PREFIX, UTF8, DEFAULT_QUALITY
+from config import Config
+from util import normalize_path, normalize_filename
 
 __all__ = ('VideoInfo', 'export_video_info')
 
@@ -52,7 +54,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
 
     def __repr__(self) -> str:
         return (
-            f'[{self.state_str}] \'{prefixp()}{self.my_id:d}_{self.my_title}.mp4\' ({self.my_quality})'
+            f'[{self.state_str}] \'{PREFIX}{self.my_id:d}_{self.my_title}.mp4\' ({self.my_quality})'
             f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.my_link}\''
         )
 
@@ -91,9 +93,9 @@ async def export_video_info(info_list: Iterable[VideoInfo]) -> None:
             for subfolder, sdct in dct.items():
                 if len(sdct) > 0:
                     min_id, max_id = min(sdct.keys()), max(sdct.keys())
-                    fullpath = f'{normalize_path(f"{Config.dest_base}{subfolder}")}{prefixp()}!{name}_{min_id:d}-{max_id:d}.txt'
+                    fullpath = f'{normalize_path(f"{Config.dest_base}{subfolder}")}{PREFIX}!{name}_{min_id:d}-{max_id:d}.txt'
                     with open(fullpath, 'wt', encoding=UTF8) as sfile:
-                        sfile.writelines(f'{prefixp()}{idi:d}:{proc_cb(elem)}' for idi, elem in sorted(sdct.items(), key=lambda t: t[0]))
+                        sfile.writelines(f'{PREFIX}{idi:d}:{proc_cb(elem)}' for idi, elem in sorted(sdct.items(), key=lambda t: t[0]))
 
 #
 #

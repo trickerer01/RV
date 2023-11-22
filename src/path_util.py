@@ -9,7 +9,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from os import path, listdir
 from typing import List, Optional, Dict, MutableSequence
 
-from defs import Config, Log, MAX_DEST_SCAN_SUB_DEPTH, normalize_path, re_media_filename, prefixp
+from defs import MAX_DEST_SCAN_SUB_DEPTH, re_media_filename, PREFIX
+from config import Config
+from util import normalize_path
+from logger import Log
 from scenario import DownloadScenario
 from vinfo import VideoInfo
 
@@ -97,7 +100,7 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
     for i in reversed(range(len(vi_list))):  # type: int
         fullpath = file_already_exists(vi_list[i].my_id, '')
         if len(fullpath) > 0:
-            Log.info(f'Info: {prefixp()}{vi_list[i].my_id:d}.mp4 found in \'{path.split(fullpath)[0]}/\'. Skipped.')
+            Log.info(f'Info: {PREFIX}{vi_list[i].my_id:d}.mp4 found in \'{path.split(fullpath)[0]}/\'. Skipped.')
             del vi_list[i]
 
 #

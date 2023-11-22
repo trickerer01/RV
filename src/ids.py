@@ -11,7 +11,10 @@ from asyncio import run as run_async, sleep
 from typing import Sequence, List
 
 from cmdargs import prepare_arglist_ids
-from defs import Log, Config, HelpPrintExitException, at_startup
+from defs import HelpPrintExitException
+from config import Config
+from util import at_startup
+from logger import Log
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
 from tagger import try_parse_id_or_group

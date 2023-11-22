@@ -12,9 +12,12 @@ from os import path
 from re import compile as re_compile
 
 from defs import (
-    normalize_path, unquote, Log, NamingFlags, LoggingFlags, SLASH, NON_SEARCH_SYMBOLS, NAMING_FLAGS, LOGGING_FLAGS, Config,
-    DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, SEARCH_RULE_ALL, has_naming_flag,
+    NamingFlags, LoggingFlags, SLASH, NON_SEARCH_SYMBOLS, NAMING_FLAGS, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT,
+    DEFAULT_QUALITY, SEARCH_RULE_ALL,
 )
+from config import Config
+from util import unquote, normalize_path, has_naming_flag
+from logger import Log
 
 
 def find_and_resolve_config_conflicts(full_download=True) -> bool:

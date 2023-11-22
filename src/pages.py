@@ -13,9 +13,12 @@ from typing import Sequence
 
 from cmdargs import prepare_arglist_pages
 from defs import (
-    Log, Config, HelpPrintExitException, prefixp, at_startup, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE,
-    SITE_AJAX_REQUEST_UPLOADER_PAGE, NamingFlags, has_naming_flag, QUALITIES,
+    HelpPrintExitException, PREFIX, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE,
+    NamingFlags, QUALITIES,
 )
+from config import Config
+from util import at_startup, has_naming_flag
+from logger import Log
 from download import download, at_interrupt
 from path_util import prefilter_existing_items
 from fetch_html import make_session, fetch_html
@@ -95,7 +98,7 @@ async def main(args: Sequence[str]) -> None:
             if Config.get_maxid:
                 miref = a_html.find('a', class_=vid_ref_class)
                 max_id = re_page_entry.search(str(miref.get('href'))).group(1)
-                Log.fatal(f'{prefixp()[:2].upper()}: {max_id}')
+                Log.fatal(f'{PREFIX[:2].upper()}: {max_id}')
                 return
 
             Log.info(f'page {pi - 1:d}...{" (this is the last page!)" if (0 < maxpage == pi - 1) else ""}')
@@ -132,7 +135,7 @@ async def main(args: Sequence[str]) -> None:
                         continue
                     v_entries.append(
                         VideoInfo(
-                            cur_id, '', link, '', f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
+                            cur_id, '', link, '', f'{PREFIX if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
                             f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_preview.{cur_ext}',
                         ))
 

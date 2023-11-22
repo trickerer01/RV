@@ -16,9 +16,12 @@ from aiohttp import ClientSession, ClientResponse, ClientPayloadError
 
 from defs import (
     SITE, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
-    DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, Log, Config, DownloadResult, Mem, NamingFlags, has_naming_flag, prefixp, extract_ext,
-    get_elapsed_time_i, re_media_filename,
+    DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, DownloadResult, Mem, NamingFlags, PREFIX,
+    re_media_filename,
 )
+from config import Config
+from util import get_elapsed_time_i, extract_ext, has_naming_flag
+from logger import Log
 from downloader import DownloadWorker
 from fetch_html import fetch_html, wrap_request
 from path_util import file_already_exists
@@ -37,7 +40,7 @@ async def download(sequence: Iterable[VideoInfo], by_id: bool, filtered_count: i
 async def process_id(vi: VideoInfo) -> DownloadResult:
     dwn = DownloadWorker.get()
     scenario = Config.scenario  # type: Optional[DownloadScenario]
-    sname = f'{prefixp()}{vi.my_id:d}.mp4'
+    sname = f'{PREFIX}{vi.my_id:d}.mp4'
     my_tags = 'no_tags'
     rating = vi.my_rating
     score = ''
@@ -167,7 +170,7 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
     extra_len = 5 + 2 + 3  # 3 underscores + 2 brackets + len('2160p') - max len of all qualities
     fname_part2 = extract_ext(vi.my_link)
     fname_part1 = (
-        f'{prefixp() if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
+        f'{PREFIX if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
         f'{vi.my_id:d}'
         f'{f"_score({my_score}{my_rating})" if has_naming_flag(NamingFlags.NAMING_FLAG_SCORE) else ""}'
         f'{f"_{vi.my_title}" if vi.my_title != "" and has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
@@ -193,7 +196,7 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
 
 async def check_video_download_status(idi: int, dest: str, resp: ClientResponse) -> None:
     dwn = DownloadWorker.get()
-    sname = f'{prefixp()}{idi:d}.mp4'
+    sname = f'{PREFIX}{idi:d}.mp4'
     check_timer = float(DOWNLOAD_STATUS_CHECK_TIMER)
     try:
         # Log.trace(f'{sname} status check started...')
@@ -217,9 +220,9 @@ async def check_video_download_status(idi: int, dest: str, resp: ClientResponse)
 
 async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
     dwn = DownloadWorker.get()
-    sname = f'{prefixp()}{vi.my_id:d}_{scr_num:02d}.webp'
-    sfilename = f'{f"{vi.my_subfolder}/" if len(vi.my_subfolder) > 0 else ""}{prefixp()}{vi.my_id:d}/{scr_num:02d}.webp'
-    my_folder = f'{vi.my_folder}{prefixp()}{vi.my_id:d}/'
+    sname = f'{PREFIX}{vi.my_id:d}_{scr_num:02d}.webp'
+    sfilename = f'{f"{vi.my_subfolder}/" if len(vi.my_subfolder) > 0 else ""}{PREFIX}{vi.my_id:d}/{scr_num:02d}.webp'
+    my_folder = f'{vi.my_folder}{PREFIX}{vi.my_id:d}/'
     fullpath = f'{my_folder}{scr_num:02d}.webp'
     my_link = f'{SITE}/contents/videos_screenshots/{vi.my_id - vi.my_id % 1000:d}/{vi.my_id:d}/336x189/{scr_num:d}.jpg'
     ret = DownloadResult.DOWNLOAD_SUCCESS
@@ -266,7 +269,7 @@ async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
 
 async def download_video(vi: VideoInfo) -> DownloadResult:
     dwn = DownloadWorker.get()
-    sname = f'{prefixp()}{vi.my_id:d}.mp4'
+    sname = f'{PREFIX}{vi.my_id:d}.mp4'
     sfilename = f'{vi.my_sfolder}{vi.my_filename}'
     retries = 0
     ret = DownloadResult.DOWNLOAD_SUCCESS
