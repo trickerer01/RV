@@ -29,27 +29,16 @@ async def main(args: Sequence[str]) -> None:
         arglist = prepare_arglist_ids(args)
     except HelpPrintExitException:
         return
-    except Exception:
-        import traceback
-        traceback.print_exc()
-        Log.fatal('\nUnable to parse cmdline. Exiting.')
-        return
 
-    try:
-        Config.read(arglist, False)
+    Config.read(arglist, False)
 
-        id_sequence = try_parse_id_or_group(Config.extra_tags) if Config.use_id_sequence else list()  # type: List[int]
-        if Config.use_id_sequence is True and len(id_sequence) == 0:
-            Log.fatal(f'\nInvalid ID \'or\' group \'{Config.extra_tags[0] if len(Config.extra_tags) > 0 else ""}\'!')
-            raise ValueError
+    id_sequence = try_parse_id_or_group(Config.extra_tags) if Config.use_id_sequence else list()  # type: List[int]
+    if Config.use_id_sequence is True and len(id_sequence) == 0:
+        Log.fatal(f'\nInvalid ID \'or\' group \'{Config.extra_tags[0] if len(Config.extra_tags) > 0 else ""}\'!')
+        raise ValueError
 
-        if find_and_resolve_config_conflicts() is True:
-            await sleep(3.0)
-    except Exception:
-        import traceback
-        traceback.print_exc()
-        Log.fatal('\nError reading parsed arglist!')
-        return
+    if find_and_resolve_config_conflicts() is True:
+        await sleep(3.0)
 
     if len(id_sequence) == 0:
         id_sequence = list(range(Config.start_id, Config.end_id + 1))
@@ -87,9 +76,9 @@ def main_sync(args: Sequence[str]) -> None:
 
     try:
         run_async(run_main(args))
-    except (KeyboardInterrupt, SystemExit, Exception) as e:
-        if isinstance(e, (KeyboardInterrupt, SystemExit)):
-            Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
+    except (KeyboardInterrupt, SystemExit):
+        Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
+    finally:
         at_interrupt()
 
 

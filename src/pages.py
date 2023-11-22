@@ -33,25 +33,14 @@ async def main(args: Sequence[str]) -> None:
         arglist = prepare_arglist_pages(args)
     except HelpPrintExitException:
         return
-    except Exception:
-        import traceback
-        traceback.print_exc()
-        Log.fatal('\nUnable to parse cmdline. Exiting.')
-        return
 
-    try:
-        Config.read(arglist, True)
+    Config.read(arglist, True)
 
-        full_download = Config.quality != QUALITIES[-1]
-        vid_ref_class = 'th' if Config.playlist_name else 'th js-open-popup'
+    full_download = Config.quality != QUALITIES[-1]
+    vid_ref_class = 'th' if Config.playlist_name else 'th js-open-popup'
 
-        if find_and_resolve_config_conflicts(full_download) is True:
-            await sleep(3.0)
-    except Exception:
-        import traceback
-        traceback.print_exc()
-        Log.fatal('\nError reading parsed arglist!')
-        return
+    if find_and_resolve_config_conflicts(full_download) is True:
+        await sleep(3.0)
 
     def check_id_bounds(video_id: int) -> bool:
         if video_id > Config.end_id:
@@ -171,9 +160,9 @@ def main_sync(args: Sequence[str]) -> None:
 
     try:
         run_async(run_main(args))
-    except (KeyboardInterrupt, SystemExit, Exception) as e:
-        if isinstance(e, (KeyboardInterrupt, SystemExit)):
-            Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
+    except (KeyboardInterrupt, SystemExit):
+        Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
+    finally:
         at_interrupt()
 
 
