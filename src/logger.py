@@ -19,6 +19,8 @@ class Log:
     Basic logger supporting different log levels, colors and extra logging flags\n
     **Static**
     """
+    _disabled = False
+
     COLORS = {
         LoggingFlags.LOGGING_TRACE: Fore.WHITE,
         LoggingFlags.LOGGING_DEBUG: Fore.LIGHTWHITE_EX,
@@ -34,7 +36,7 @@ class Log:
 
     @staticmethod
     def should_log(flags: LoggingFlags) -> bool:
-        return flags >= Config.logging_flags
+        return flags >= Config.logging_flags and not Log._disabled
 
     @staticmethod
     def log(text: str, flags: LoggingFlags) -> None:
