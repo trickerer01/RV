@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
-from typing import Sequence, List
+from typing import Sequence
 
 from cmdargs import prepare_arglist_ids
 from defs import HelpPrintExitException
@@ -32,7 +32,7 @@ async def main(args: Sequence[str]) -> None:
 
     Config.read(arglist, False)
 
-    id_sequence = try_parse_id_or_group(Config.extra_tags) if Config.use_id_sequence else list()  # type: List[int]
+    id_sequence = try_parse_id_or_group(Config.extra_tags) if Config.use_id_sequence else [int()] * 0
     if Config.use_id_sequence is True and len(id_sequence) == 0:
         Log.fatal(f'\nInvalid ID \'or\' group \'{Config.extra_tags[0] if len(Config.extra_tags) > 0 else ""}\'!')
         raise ValueError
