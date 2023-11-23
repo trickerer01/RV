@@ -78,9 +78,9 @@ class BaseConfig:
         # module-specific params (pages only or ids only)
         self.use_id_sequence = getattr(params, 'use_id_sequence') if hasattr(params, 'use_id_sequence') else self.use_id_sequence
         self.search = getattr(params, 'search') if hasattr(params, 'search') else self.search
-        self.search_tags = getattr(params, 'search_tag') if hasattr(params, 'search_tag') else self.search_tags
-        self.search_arts = getattr(params, 'search_art') if hasattr(params, 'search_art') else self.search_arts
-        self.search_cats = getattr(params, 'search_cat') if hasattr(params, 'search_cat') else self.search_cats
+        self.search_tags = getattr(params, 'search_tag') if hasattr(params, 'search_tag') else ''
+        self.search_arts = getattr(params, 'search_art') if hasattr(params, 'search_art') else ''
+        self.search_cats = getattr(params, 'search_cat') if hasattr(params, 'search_cat') else ''
         self.search_rule_tag = getattr(params, 'search_rule_tag') if hasattr(params, 'search_rule_tag') else self.search_rule_tag
         self.search_rule_art = getattr(params, 'search_rule_art') if hasattr(params, 'search_rule_art') else self.search_rule_art
         self.search_rule_cat = getattr(params, 'search_rule_cat') if hasattr(params, 'search_rule_cat') else self.search_rule_cat
