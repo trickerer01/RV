@@ -10,7 +10,7 @@ import sys
 from asyncio import run as run_async, sleep
 from typing import Sequence
 
-from cmdargs import prepare_arglist_pages
+from cmdargs import prepare_arglist
 from defs import (
     HelpPrintExitException, PREFIX, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE,
     NamingFlags, QUALITIES,
@@ -30,7 +30,7 @@ __all__ = ('main_sync',)
 
 async def main(args: Sequence[str]) -> None:
     try:
-        arglist = prepare_arglist_pages(args)
+        arglist = prepare_arglist(args, True)
     except HelpPrintExitException:
         return
 

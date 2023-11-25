@@ -10,7 +10,7 @@ import sys
 from asyncio import run as run_async, sleep
 from typing import Sequence
 
-from cmdargs import prepare_arglist_ids
+from cmdargs import prepare_arglist
 from defs import HelpPrintExitException
 from config import Config
 from util import at_startup
@@ -26,7 +26,7 @@ __all__ = ('main_sync',)
 
 async def main(args: Sequence[str]) -> None:
     try:
-        arglist = prepare_arglist_ids(args)
+        arglist = prepare_arglist(args, False)
     except HelpPrintExitException:
         return
 

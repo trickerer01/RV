@@ -14,7 +14,7 @@ from tempfile import gettempdir
 from unittest import main as run_tests, TestCase
 from unittest.mock import patch
 
-from cmdargs import prepare_arglist_pages, prepare_arglist_ids
+from cmdargs import prepare_arglist
 # noinspection PyProtectedMember
 from config import BaseConfig
 from defs import (
@@ -55,19 +55,19 @@ class CmdTests(TestCase):
     # @mock_stderr
     # def test_cmd_base(self, stderr: StringIO):
     #     set_up_test()
-    #     self.assertRaises(HelpPrintExitException, prepare_arglist_pages, ['cmd', '--help'])
-    #     self.assertRaises(HelpPrintExitException, prepare_arglist_pages, ['cmd', '-start', '1'])
-    #     self.assertRaises(HelpPrintExitException, prepare_arglist_pages, ['cmd', '-start', '1', '-pages'])
+    #     self.assertRaises(HelpPrintExitException, prepare_arglist, ['cmd', '--help'], True)
+    #     self.assertRaises(HelpPrintExitException, prepare_arglist, ['cmd', '-start', '1'], True)
+    #     self.assertRaises(HelpPrintExitException, prepare_arglist, ['cmd', '-start', '1', '-pages'], True)
     #     self.assertNotEqual('', stderr.getvalue().strip('\n'))
 
     def test_cmd_pages(self):
         set_up_test()
-        parsed1 = prepare_arglist_pages(['cmd', '-get_maxid'])
+        parsed1 = prepare_arglist(['cmd', '-get_maxid'], True)
         c1 = BaseConfig()
         c1.read(parsed1, True)
         self.assertTrue(c1.get_maxid)
-        parsed2 = prepare_arglist_pages(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~3d)', '-script',
-                                         'a: 2d; b: 3d; c: 4k -60fps; d: * -uvp always', '-naming', 'prefix|quality', '-log', 'warn'])
+        parsed2 = prepare_arglist(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~3d)', '-script',
+                                   'a: 2d; b: 3d; c: 4k -60fps; d: * -uvp always', '-naming', 'prefix|quality', '-log', 'warn'], True)
         c2 = BaseConfig()
         c2.read(parsed2, True)
         self.assertEqual(17, c2.naming_flags)
@@ -82,12 +82,12 @@ class CmdTests(TestCase):
 
     def test_cmd_ids(self):
         set_up_test()
-        parsed1 = prepare_arglist_ids(['cmd', '-seq'])
+        parsed1 = prepare_arglist(['cmd', '-seq'], False)
         c1 = BaseConfig()
         c1.read(parsed1, False)
         self.assertTrue(c1.use_id_sequence)
-        parsed2 = prepare_arglist_ids(['-start', '1000', '-end', '999', '(a~b)', '(2d~3d)', '-dmode', 'touch', '-script',
-                                       'a: 2d; b: 3d; c: 4k -60fps; d: * -uvp always', '-naming', '0x10', '-log', 'trace'])
+        parsed2 = prepare_arglist(['-start', '1000', '-end', '999', '(a~b)', '(2d~3d)', '-dmode', 'touch', '-script',
+                                   'a: 2d; b: 3d; c: 4k -60fps; d: * -uvp always', '-naming', '0x10', '-log', 'trace'], False)
         c2 = BaseConfig()
         c2.read(parsed2, False)
         self.assertEqual(16, c2.naming_flags)
