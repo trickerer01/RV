@@ -93,7 +93,7 @@ def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Se
                 elif parsed.end < parsed.start + parsed.count - 1:
                     parsed.end = parsed.start + parsed.count - 1
         while is_parsed_cmdfile(parsed):
-            parsed = prepare_arglist_pages(read_cmdfile(parsed.path))
+            parsed = (prepare_arglist_pages if pages else prepare_arglist_ids)(read_cmdfile(parsed.path))
         return parsed
     except SystemExit:
         raise HelpPrintExitException
@@ -162,7 +162,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     arggr_pl_upl = par_cmd.add_mutually_exclusive_group()
     arggr_pl_upl.add_argument('-playlist_name', metavar='#name', default=(0, ''), help='', type=valid_playlist_name)
     arggr_pl_upl.add_argument('-playlist_id', metavar='#number', default=(0, ''), help=HELP_ARG_PLAYLIST, type=valid_playlist_id)
-    arggr_pl_upl.add_argument('-uploader', metavar='#user_id', default=0, help=HELP_ARG_UPLOADER, type=valid_int)
+    arggr_pl_upl.add_argument('-uploader', metavar='#user_id', default=0, help=HELP_ARG_UPLOADER, type=positive_nonzero_int)
     par_cmd.add_argument('-search', metavar='#string', default='', help=HELP_ARG_SEARCH_STR, type=valid_search_string)
     par_cmd.add_argument('-search_tag', metavar='#tag[,tag...]', default='', help='', type=valid_tags)
     par_cmd.add_argument('-search_art', metavar='#artist[,artist...]', default='', help='', type=valid_artists)

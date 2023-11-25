@@ -145,7 +145,7 @@ class DownloadWorker:
 
     async def _after_download(self) -> None:
         newline = '\n'
-        Log.info(f'\nDone. {self._downloaded_count:d} / {self._orig_count:d}+{self._filtered_count_pre:d} files downloaded, '
+        Log.info(f'\nDone. {self._downloaded_count:d} / {self._orig_count:d}+{self._filtered_count_pre:d} file(s) downloaded, '
                  f'{self._filtered_count_after:d}+{self._filtered_count_pre:d} already existed, '
                  f'{self._skipped_count:d} skipped')
         if len(self._seq) > 0:
@@ -165,9 +165,9 @@ class DownloadWorker:
         if len(self._writes_active) > 0:
             if Config.keep_unfinished:
                 unfinished_str = '\n '.join(f'{i + 1:d}) {s}' for i, s in enumerate(sorted(self._writes_active)))
-                Log.debug(f'at_interrupt: keeping {len(self._writes_active):d} unfinished files:\n {unfinished_str}')
+                Log.debug(f'at_interrupt: keeping {len(self._writes_active):d} unfinished file(s):\n {unfinished_str}')
                 return
-            Log.debug(f'at_interrupt: cleaning {len(self._writes_active):d} unfinished files...')
+            Log.debug(f'at_interrupt: cleaning {len(self._writes_active):d} unfinished file(s)...')
             for unfinished in sorted(self._writes_active):
                 Log.debug(f'at_interrupt: trying to remove \'{unfinished}\'...')
                 if path.isfile(unfinished):
