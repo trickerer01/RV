@@ -54,12 +54,9 @@ Ex. SITE_AJAX_REQUEST_UPLOADER_PAGE % (158018, 1)"""
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.5 Firefox/102.0 PaleMoon/32.5.0'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
-# language=PythonRegExp
-REPLACE_SYMBOLS = r'[^0-9a-zA-Z.,_+%\-()\[\] ]+'
-# language=PythonRegExp
-NON_SEARCH_SYMBOLS = r'[^\da-zA-Z._+\-\[\]]'
-
 QUALITIES = ('2160p', '1080p', '720p', '480p', '360p', 'preview')
+# QUALITY_STARTS = ('h264/', 'h264/', 'hd/', 'h264/', 'h264/', 'h264/', 'iphone/')
+# QUALITY_ENDS = ('_1080p', '_720p', '_hi', '_480p', '_360p', '_SD', '')
 
 DEFAULT_QUALITY = QUALITIES[4]
 """'360p'"""

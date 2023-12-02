@@ -9,11 +9,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from re import compile as re_compile
 from typing import Pattern
 
-from defs import QUALITIES, EXTENSIONS_V, REPLACE_SYMBOLS, NON_SEARCH_SYMBOLS
+from defs import QUALITIES, EXTENSIONS_V
 
 # common
 re_media_filename = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\.(?:{"|".join(EXTENSIONS_V)})$')
-re_replace_symbols = re_compile(REPLACE_SYMBOLS)
+re_replace_symbols = re_compile(r'[^0-9a-zA-Z.,_+%\-()\[\] ]+')
 re_ext = re_compile(r'(\.[^&]{3,5})&')
 # re_private_video = re_compile(r'^This is a private video\..*?$')
 # pages
@@ -21,7 +21,7 @@ re_page_entry = re_compile(r'videos/(\d+)/')
 re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
 re_paginator = re_compile(r'from(?:_(?:albums|videos))?:(\d+)')
 # validators
-re_non_search_symbols = re_compile(NON_SEARCH_SYMBOLS)
+re_non_search_symbols = re_compile(r'[^\da-zA-Z._+\-\[\]]')
 re_session_id = re_compile(r'[a-z0-9]{26}')
 # tagger
 re_wtag = re_compile(r'^[^?*]*[?*].*?$')

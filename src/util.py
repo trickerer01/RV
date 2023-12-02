@@ -29,25 +29,7 @@ def get_elapsed_time_i() -> int:
 
 def get_elapsed_time_s() -> str:
     """Returns time since launch in format: **hh:mm:ss**"""
-    return format_time((datetime.now() - START_TIME).seconds)
-
-
-def unquote(string: str) -> str:
-    """Removes all leading/trailing single/double quotes. Non-matching quotes are removed too"""
-    try:
-        while True:
-            found = False
-            if len(string) > 1 and string[0] in ['\'', '"']:
-                string = string[1:]
-                found = True
-            if len(string) > 1 and string[-1] in ['\'', '"']:
-                string = string[:-1]
-                found = True
-            if not found:
-                break
-        return string
-    except Exception:
-        raise ValueError
+    return format_time(get_elapsed_time_i())
 
 
 def normalize_path(basepath: str, append_slash=True) -> str:

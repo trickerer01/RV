@@ -13,7 +13,7 @@ from os import path
 from defs import NamingFlags, LoggingFlags, SLASH, NAMING_FLAGS, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, SEARCH_RULE_ALL
 from config import Config
 from rex import re_non_search_symbols, re_session_id
-from util import unquote, normalize_path, has_naming_flag
+from util import normalize_path, has_naming_flag
 from logger import Log
 
 
@@ -98,54 +98,44 @@ def positive_nonzero_int(val: str) -> int:
     try:
         val = int(val)
         assert val > 0
+        return val
     except Exception:
         raise ArgumentError
-
-    return val
 
 
 def valid_rating(val: str) -> int:
     try:
         val = int(val)
         assert 100 >= val >= 0
+        return val
     except Exception:
         raise ArgumentError
-
-    return val
 
 
 def valid_path(pathstr: str) -> str:
     try:
-        newpath = normalize_path(unquote(pathstr))
-        if not path.isdir(newpath[:(newpath.find(SLASH) + 1)]):
-            raise ValueError
+        newpath = normalize_path(path.expanduser(pathstr.strip('\'"')))
+        assert path.isdir(newpath[:(newpath.find(SLASH) + 1)])
+        return newpath
     except Exception:
         raise ArgumentError
-
-    return newpath
 
 
 def valid_filepath_abs(pathstr: str) -> str:
     try:
-        newpath = normalize_path(unquote(pathstr), False)
-        if not path.isfile(newpath):
-            raise ValueError
-        if not path.isabs(newpath):
-            raise ValueError
+        newpath = normalize_path(path.expanduser(pathstr.strip('\'"')), False)
+        assert path.isfile(newpath) and path.isabs(newpath)
+        return newpath
     except Exception:
         raise ArgumentError
-
-    return newpath
 
 
 def valid_search_string(search_str: str) -> str:
     try:
-        if len(search_str) > 0 and re_non_search_symbols.search(search_str):
-            raise ValueError
+        assert len(search_str) == 0 or re_non_search_symbols.search(search_str) is None
+        return search_str
     except Exception:
         raise ArgumentError
-
-    return search_str
 
 
 def valid_proxy(prox: str) -> str:
@@ -174,10 +164,9 @@ def valid_proxy(prox: str) -> str:
         except (ValueError, AssertionError,):
             Log.error(f'Invalid proxy ip port value \'{pp}\'!')
             raise
+        return f'{pt}://{str(pva)}:{ppi:d}'
     except Exception:
         raise ArgumentError
-
-    return f'{pt}://{str(pva)}:{ppi:d}'
 
 
 def naming_flags(flags: str) -> int:
