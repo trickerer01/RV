@@ -10,11 +10,11 @@ from argparse import ArgumentError
 from ipaddress import IPv4Address
 from os import path
 
-from defs import NamingFlags, LoggingFlags, SLASH, NAMING_FLAGS, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, SEARCH_RULE_ALL
 from config import Config
+from defs import NamingFlags, LoggingFlags, SLASH, NAMING_FLAGS, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, SEARCH_RULE_ALL
+from logger import Log
 from rex import re_non_search_symbols, re_session_id
 from util import normalize_path, has_naming_flag
-from logger import Log
 
 
 def find_and_resolve_config_conflicts(full_download=True) -> bool:
@@ -151,7 +151,7 @@ def valid_proxy(prox: str) -> str:
         try:
             pv, pp = tuple(pv.split(':', 1))
         except ValueError:
-            Log.error('Failed to split proxy value and port!')
+            Log.error('Failed to split proxy address and port!')
             raise
         try:
             pva = IPv4Address(pv)

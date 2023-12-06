@@ -15,11 +15,11 @@ from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable, Un
 
 from aiohttp import ClientSession
 
-from defs import MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, DownloadResult, Mem, PREFIX
 from config import Config
-from util import format_time, get_elapsed_time_i, get_elapsed_time_s, calc_sleep_time
-from logger import Log
+from defs import MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, DownloadResult, Mem, PREFIX
 from fetch_html import make_session
+from logger import Log
+from util import format_time, get_elapsed_time_i, get_elapsed_time_s, calc_sleep_time
 from vinfo import VideoInfo
 
 __all__ = ('DownloadWorker',)

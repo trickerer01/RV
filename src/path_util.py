@@ -9,12 +9,12 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from os import path, listdir
 from typing import List, Optional, Dict, MutableSequence
 
-from defs import MAX_DEST_SCAN_SUB_DEPTH, PREFIX
-from rex import re_media_filename
 from config import Config
-from util import normalize_path
+from defs import MAX_DEST_SCAN_SUB_DEPTH, PREFIX
 from logger import Log
+from rex import re_media_filename
 from scenario import DownloadScenario
+from util import normalize_path
 from vinfo import VideoInfo
 
 __all__ = ('file_already_exists', 'prefilter_existing_items')

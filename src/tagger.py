@@ -10,12 +10,12 @@ from typing import List, Optional, Collection, Iterable, Sequence, Tuple
 
 from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
 from defs import TAGS_CONCAT_CHAR, LoggingFlags, PREFIX
+from logger import Log
 from rex import (
     re_replace_symbols, re_wtag, re_idval, re_uscore_mult, re_not_a_letter, re_numbered_or_counted_tag, re_or_group,
     re_neg_and_group, re_tags_to_process, re_bracketed_tag, re_tags_exclude_major1, re_tags_exclude_major2, re_tags_to_not_exclude,
     prepare_regex_fullmatch,
 )
-from logger import Log
 
 __all__ = (
     'filtered_tags', 'get_matching_tag', 'try_parse_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags',
@@ -109,12 +109,12 @@ def valid_categories(categories_str: str) -> str:
     return ','.join(sorted(category_ids))
 
 
-def is_non_wtag(tag: str) -> bool:
-    return not re_wtag.fullmatch(tag)
+def is_wtag(tag: str) -> bool:
+    return not not re_wtag.fullmatch(tag)
 
 
 def is_valid_extra_tag(extag: str) -> bool:
-    return (not is_non_wtag(extag)) or is_valid_tag(extag) or is_valid_artist(extag) or is_valid_category(extag)
+    return is_wtag(extag) or is_valid_tag(extag) or is_valid_artist(extag) or is_valid_category(extag)
 
 
 def get_tag_num(tag: str) -> Optional[str]:
@@ -122,7 +122,7 @@ def get_tag_num(tag: str) -> Optional[str]:
 
 
 def is_valid_tag(tag: str) -> bool:
-    return (not not get_tag_num(tag))
+    return not not get_tag_num(tag)
 
 
 def get_artist_num(artist: str) -> Optional[str]:
@@ -130,7 +130,7 @@ def get_artist_num(artist: str) -> Optional[str]:
 
 
 def is_valid_artist(artist: str) -> bool:
-    return (not not get_artist_num(artist))
+    return not not get_artist_num(artist)
 
 
 def get_category_num(category: str) -> Optional[str]:
@@ -138,7 +138,7 @@ def get_category_num(category: str) -> Optional[str]:
 
 
 def is_valid_category(category: str) -> bool:
-    return (not not get_category_num(category))
+    return not not get_category_num(category)
 
 
 def is_valid_neg_and_group(andgr: str) -> bool:
@@ -156,7 +156,7 @@ def normalize_wtag(wtag: str) -> str:
 
 
 def get_matching_tag(wtag: str, mtags: Iterable[str]) -> Optional[str]:
-    if is_non_wtag(wtag):
+    if not is_wtag(wtag):
         return wtag if wtag in mtags else None
     pat = prepare_regex_fullmatch(normalize_wtag(wtag))
     for htag in mtags:
@@ -241,26 +241,23 @@ def filtered_tags(tags_list: Collection[str]) -> str:
 
     for tag in tags_list:
         tag = re_replace_symbols.sub('_', tag.replace('-', '').replace('\'', '').replace('.', ''))
-        if TAG_ALIASES.get(tag) is None and re_tags_to_process.match(tag) is None:
+        alias = TAG_ALIASES.get(tag)
+        if alias is None and re_tags_to_process.match(tag) is None:
             continue
 
-        alias = TAG_ALIASES.get(tag)
-        if alias:
-            tag = alias
+        tag = alias or tag
 
         # digital_media_(artwork)
         aser_match = re_bracketed_tag.match(tag)
-        aser_valid = False
+        aser_valid = not not aser_match
         if aser_match:
             major_skip_match1 = re_tags_exclude_major1.match(aser_match.group(1))
             major_skip_match2 = re_tags_exclude_major2.match(aser_match.group(2))
             if major_skip_match1 or major_skip_match2:
                 continue
-            stag = trim_undersores(aser_match.group(1))
-            if len(stag) >= 17:
+            tag = trim_undersores(aser_match.group(1))
+            if len(tag) >= 17:
                 continue
-            tag = stag
-            aser_valid = True
         elif re_tags_to_not_exclude.match(tag) is None:
             continue
 

@@ -11,13 +11,13 @@ from asyncio import run as run_async, sleep
 from typing import Sequence
 
 from cmdargs import prepare_arglist
-from defs import HelpPrintExitException
 from config import Config
-from util import at_startup
-from logger import Log
+from defs import HelpPrintExitException
 from download import download, at_interrupt
+from logger import Log
 from path_util import prefilter_existing_items
 from tagger import try_parse_id_or_group
+from util import at_startup
 from validators import find_and_resolve_config_conflicts
 from vinfo import VideoInfo
 
