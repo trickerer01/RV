@@ -43,14 +43,14 @@ class CmdTests(TestCase):
         with patch('sys.stdout', new_callable=StringIO) as stdout:
             run_async(pages_main(['--version']))
             self.assertEqual(f'{APP_NAME} {APP_VERSION}', stdout.getvalue().strip('\n'))
-        print('test_output_version_pages passed')
+        print(f'{self._testMethodName} passed')
 
     def test_output_version_ids(self):
         set_up_test()
         with patch('sys.stdout', new_callable=StringIO) as stdout:
             run_async(ids_main(['--version']))
             self.assertEqual(f'{APP_NAME} {APP_VERSION}', stdout.getvalue().strip('\n'))
-        print('test_output_version_ids passed')
+        print(f'{self._testMethodName} passed')
 
     # @mock_stderr
     # def test_cmd_base(self, stderr: StringIO):
@@ -78,7 +78,7 @@ class CmdTests(TestCase):
         self.assertEqual('', c2.search)
         self.assertEqual(SEARCH_RULE_DEFAULT, c2.search_rule_art)
         self.assertIsNone(c2.use_id_sequence)
-        print('test_cmd_pages passed')
+        print(f'{self._testMethodName} passed')
 
     def test_cmd_ids(self):
         set_up_test()
@@ -95,7 +95,7 @@ class CmdTests(TestCase):
         self.assertEqual(2, len(c2.extra_tags))
         self.assertEqual(4, len(c2.scenario))
         self.assertEqual(DOWNLOAD_MODE_TOUCH, c2.download_mode)
-        print('test_cmd_ids passed')
+        print(f'{self._testMethodName} passed')
 
 
 class DownloadTests(TestCase):
@@ -111,7 +111,7 @@ class DownloadTests(TestCase):
         st = stat(tempfile_fullpath)
         self.assertEqual(0, st.st_size)
         remove_file(tempfile_fullpath)
-        print('test_ids_touch passed')
+        print(f'{self._testMethodName} passed')
 
     def test_pages_touch(self):
         set_up_test()
@@ -126,7 +126,7 @@ class DownloadTests(TestCase):
         st = stat(tempfile_fullpath)
         self.assertEqual(0, st.st_size)
         remove_file(tempfile_fullpath)
-        print('test_pages_touch passed')
+        print(f'{self._testMethodName} passed')
 
     def test_ids_full(self):
         set_up_test()
@@ -140,7 +140,7 @@ class DownloadTests(TestCase):
         st = stat(tempfile_fullpath)
         self.assertGreater(st.st_size, 0)
         remove_file(tempfile_fullpath)
-        print('test_ids_full passed')
+        print(f'{self._testMethodName} passed')
 
     def test_pages_full(self):
         set_up_test()
@@ -155,7 +155,7 @@ class DownloadTests(TestCase):
         st = stat(tempfile_fullpath)
         self.assertGreater(st.st_size, 0)
         remove_file(tempfile_fullpath)
-        print('test_pages_full passed')
+        print(f'{self._testMethodName} passed')
 
 
 def run_all_tests() -> None:

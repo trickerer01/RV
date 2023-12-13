@@ -54,7 +54,7 @@ class BaseConfig:
         self.dest_base = params.path
         self.proxy = params.proxy
         # session_id only exists in RV
-        self.session_id = getattr(params, 'session_id') if hasattr(params, 'session_id') else self.session_id
+        self.session_id = getattr(params, 'session_id', self.session_id)
         self.min_rating = params.minimum_rating
         self.min_score = params.minimum_score
         self.quality = params.quality
@@ -76,19 +76,19 @@ class BaseConfig:
         self.end_id = params.begin_id if pages else self.end
         self.timeout = ClientTimeout(total=None, connect=params.timeout or CONNECT_TIMEOUT_BASE)
         # module-specific params (pages only or ids only)
-        self.use_id_sequence = getattr(params, 'use_id_sequence') if hasattr(params, 'use_id_sequence') else self.use_id_sequence
-        self.search = getattr(params, 'search') if hasattr(params, 'search') else self.search
-        self.search_tags = getattr(params, 'search_tag') if hasattr(params, 'search_tag') else ''
-        self.search_arts = getattr(params, 'search_art') if hasattr(params, 'search_art') else ''
-        self.search_cats = getattr(params, 'search_cat') if hasattr(params, 'search_cat') else ''
-        self.search_rule_tag = getattr(params, 'search_rule_tag') if hasattr(params, 'search_rule_tag') else self.search_rule_tag
-        self.search_rule_art = getattr(params, 'search_rule_art') if hasattr(params, 'search_rule_art') else self.search_rule_art
-        self.search_rule_cat = getattr(params, 'search_rule_cat') if hasattr(params, 'search_rule_cat') else self.search_rule_cat
+        self.use_id_sequence = getattr(params, 'use_id_sequence', self.use_id_sequence)
+        self.search = getattr(params, 'search', self.search)
+        self.search_tags = getattr(params, 'search_tag', '')
+        self.search_arts = getattr(params, 'search_art', '')
+        self.search_cats = getattr(params, 'search_cat', '')
+        self.search_rule_tag = getattr(params, 'search_rule_tag', self.search_rule_tag)
+        self.search_rule_art = getattr(params, 'search_rule_art', self.search_rule_art)
+        self.search_rule_cat = getattr(params, 'search_rule_cat', self.search_rule_cat)
         self.playlist_id, self.playlist_name = (
             getattr(params, 'playlist_id') if getattr(params, 'playlist_id')[0] else getattr(params, 'playlist_name')
         ) if hasattr(params, 'playlist_id') or hasattr(params, 'playlist_name') else (self.playlist_id, self.playlist_name)
-        self.uploader = getattr(params, 'uploader') if hasattr(params, 'uploader') else self.uploader
-        self.get_maxid = getattr(params, 'get_maxid') if hasattr(params, 'get_maxid') else self.get_maxid
+        self.uploader = getattr(params, 'uploader', self.uploader)
+        self.get_maxid = getattr(params, 'get_maxid', self.get_maxid)
 
     @property
     def uvp(self) -> Optional[str]:

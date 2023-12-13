@@ -101,15 +101,7 @@ class DownloadScenario(object):
         self.queries.append(subquery)
 
     def has_subquery(self, **kwargs) -> bool:
-        for sq in self.queries:
-            all_matched = True
-            for k, v in kwargs.items():
-                if not (hasattr(sq, k) and getattr(sq, k) == v):
-                    all_matched = False
-                    break
-            if all_matched is True:
-                return True
-        return False
+        return any(all(getattr(sq, k, ...) == v for k, v in kwargs.items()) for sq in self.queries)
 
     def get_matching_subquery(self, idi: int, tags_raw: List[str], score: str, rating: str) -> Optional[SubQueryParams]:
         sname = f'{PREFIX}{idi:d}.mp4'
