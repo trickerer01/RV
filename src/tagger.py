@@ -19,7 +19,7 @@ from rex import (
 
 __all__ = (
     'filtered_tags', 'get_matching_tag', 'try_parse_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags',
-    'valid_tags', 'valid_artists', 'valid_categories', 'valid_playlist_name', 'valid_playlist_id',
+    'valid_playlist_name', 'valid_playlist_id', 'valid_tags', 'valid_artists', 'valid_categories',
 )
 
 

@@ -18,7 +18,7 @@ from cmdargs import prepare_arglist
 # noinspection PyProtectedMember
 from config import BaseConfig
 from defs import (
-    APP_NAME, APP_VERSION, DOWNLOAD_MODE_TOUCH, SEARCH_RULE_DEFAULT,
+    APP_NAME, APP_VERSION, DOWNLOAD_MODE_TOUCH, SEARCH_RULE_DEFAULT, QUALITIES,
 )
 from downloader import DownloadWorker
 # noinspection PyProtectedMember
@@ -78,6 +78,22 @@ class CmdTests(TestCase):
         self.assertEqual('', c2.search)
         self.assertEqual(SEARCH_RULE_DEFAULT, c2.search_rule_art)
         self.assertIsNone(c2.use_id_sequence)
+        parsed3 = prepare_arglist(['-playlist_name', 'commodified', '-start', '3', '-pages', '2', '-quality', '480p',
+                                   '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
+        c3 = BaseConfig()
+        c3.read(parsed3, True)
+        self.assertEqual('commodified', c3.playlist_name)
+        self.assertEqual(3, c3.start)
+        self.assertEqual(4, c3.end)
+        self.assertEqual(QUALITIES[3], c3.quality)
+        self.assertEqual('480p', c3.quality)
+        self.assertEqual(12, c3.min_score)
+        self.assertTrue(c3.continue_mode)
+        self.assertTrue(c3.keep_unfinished)
+        self.assertTrue(c3.save_tags)
+        self.assertTrue(c3.save_descriptions)
+        self.assertTrue(c3.save_comments)
+        self.assertTrue(c3.save_screenshots)
         print(f'{self._testMethodName} passed')
 
     def test_cmd_ids(self):

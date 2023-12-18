@@ -20,7 +20,7 @@ from defs import (
 )
 from logger import Log
 from scenario import DownloadScenario
-from tagger import valid_extra_tag, valid_tags, valid_artists, valid_categories, valid_playlist_name, valid_playlist_id
+from tagger import valid_extra_tag, valid_playlist_name, valid_playlist_id, valid_tags, valid_artists, valid_categories
 from validators import (
     valid_int, positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
     log_level, valid_session_id,
@@ -40,6 +40,7 @@ LOGGING_DEFAULT = LOGGING_FLAGS_DEFAULT
 PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
 EXISTING_PARSERS = {PARSER_TITLE_CMD, PARSER_TITLE_FILE}
+"""'file','cmd'"""
 
 
 def read_cmdfile(cmdfile_path: str) -> List[str]:

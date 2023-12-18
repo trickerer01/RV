@@ -130,6 +130,7 @@ class LoggingFlags(IntEnum):
     """0x004"""
     LOGGING_EX_LOW_SCORE = LOGGING_INFO
     """0x004"""
+    # unused
     LOGGING_ALL = LOGGING_FATAL | LOGGING_ERROR | LOGGING_WARN | LOGGING_INFO | LOGGING_DEBUG | LOGGING_TRACE
     """0x81F"""
 

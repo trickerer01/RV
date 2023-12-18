@@ -36,9 +36,9 @@ re_neg_and_group = re_compile(r'^-\([^,]+(?:,[^,]+)+\)$')
 re_tags_to_process = re_compile(
     r'^(?:.+?_warc.+?|(?:[a-z]+?_)?elf|drae.{3}|tent[a-z]{3}es|(?:bell[a-z]|sto[a-z]{4})_bul[a-z]{2,3}|inf[a-z]{5}n|egg(?:_[a-z]{3,9}|s)?|'
     r'[a-z]{4}hral_i.+?|(?:\d{1,2}\+?)?(?:boys?|girls?|fu[a-z]{2}(?:[a-z]{4}|s)?|in[d-v]{2}cts?|monsters?)|succ[a-z]{4}|'
-    r'bbw|dog|f(?:acesitting|ur)|hmv|pmv|tar|c(?:\.c\.|um)|monster_girl|gender_.+?|'
+    r'bbw|dog|eel|f(?:acesitting|ur)|orc|hmv|pmv|tar|c(?:\.c\.|um)|d\.va|na\'vi|kai\'sa|gender.+?|'
     r'[^(]+\([^)]+\).*?|[a-z_\-]+\d+?|\d{2,4}[a-z_\-]+?|[a-z_]{2,15}sfm|[^_]+_pov|(?:fu|s)[a-z]{6}(?:/|_(?:on|with)_)[a-z]{4}(?:oy)?|'
-    r'[a-z][a-z_]{3,11}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$'
+    r'[a-z][a-z_]{3,12}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$'
 )
 re_tags_exclude_major1 = re_compile(
     r'^(?:[234][dk]|h(?:d|ero_outfit)|level_up|p(?:ainting|rotagonist)|tagme|'

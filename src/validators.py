@@ -106,7 +106,7 @@ def positive_nonzero_int(val: str) -> int:
 def valid_rating(val: str) -> int:
     try:
         val = int(val)
-        assert 100 >= val >= 0
+        assert 0 <= val <= 100
         return val
     except Exception:
         raise ArgumentError
@@ -139,6 +139,7 @@ def valid_search_string(search_str: str) -> str:
 
 
 def valid_proxy(prox: str) -> str:
+    from ctypes import sizeof, c_uint16
     try:
         try:
             pt, pv = tuple(prox.split('://', 1))
@@ -160,9 +161,9 @@ def valid_proxy(prox: str) -> str:
             raise
         try:
             ppi = int(pp)
-            assert 20 < ppi < 65535
-        except (ValueError, AssertionError,):
-            Log.error(f'Invalid proxy ip port value \'{pp}\'!')
+            assert 20 < ppi < 2 ** (8 * sizeof(c_uint16))
+        except (ValueError, AssertionError):
+            Log.error(f'Invalid proxy port value \'{pp}\'!')
             raise
         return f'{pt}://{str(pva)}:{ppi:d}'
     except Exception:
@@ -183,9 +184,9 @@ def naming_flags(flags: str) -> int:
         raise ArgumentError
 
 
-def log_level(level: str) -> LoggingFlags:
+def log_level(level: str) -> int:
     try:
-        return LoggingFlags(int(LOGGING_FLAGS[level], 16))
+        return int(LOGGING_FLAGS[level], 16)
     except Exception:
         raise ArgumentError
 

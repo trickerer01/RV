@@ -85,7 +85,7 @@ class BaseConfig:
         self.search_rule_art = getattr(params, 'search_rule_art', self.search_rule_art)
         self.search_rule_cat = getattr(params, 'search_rule_cat', self.search_rule_cat)
         self.playlist_id, self.playlist_name = (
-            getattr(params, 'playlist_id') if getattr(params, 'playlist_id')[0] else getattr(params, 'playlist_name')
+            getattr(params, 'playlist_id') if getattr(params, 'playlist_id', (0,))[0] else getattr(params, 'playlist_name')
         ) if hasattr(params, 'playlist_id') or hasattr(params, 'playlist_name') else (self.playlist_id, self.playlist_name)
         self.uploader = getattr(params, 'uploader', self.uploader)
         self.get_maxid = getattr(params, 'get_maxid', self.get_maxid)

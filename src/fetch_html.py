@@ -59,7 +59,6 @@ async def make_session() -> ClientSession:
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1'})
     if Config.session_id:
         s.cookie_jar.update_cookies({'PHPSESSID': Config.session_id, 'kt_member': '1'})
-        pass
     return s
 
 
