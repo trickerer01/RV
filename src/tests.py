@@ -31,10 +31,10 @@ from path_util import found_filenames_dict
 from util import normalize_path
 
 
-def set_up_test() -> None:
+def set_up_test(log=False) -> None:
     DownloadWorker._instance = None
     found_filenames_dict.clear()
-    Log._disabled = True
+    Log._disabled = not log
 
 
 class CmdTests(TestCase):
@@ -132,11 +132,11 @@ class DownloadTests(TestCase):
     def test_pages_touch(self):
         set_up_test()
         tempdir = normalize_path(gettempdir())
-        tempfile_id = '3148098'
+        tempfile_id = '3119234'
         tempfile_ext = 'mp4'
         tempfile_fullpath = f'{tempdir}{tempfile_id}.{tempfile_ext}'
         arglist1 = ['-path', tempdir, '-pages', '999', '-dmode', 'touch', '-naming', 'none', '-quality', '360p', '-log', 'trace',
-                    '-begin_id', tempfile_id, '-stop_id', tempfile_id, '-search_tag', 'redhead', '-search_art', 'dragk']
+                    '-begin_id', tempfile_id, '-stop_id', tempfile_id, '-search_tag', 'fangs', '-search_art', 'ayasz']
         pages_main_sync(arglist1)
         self.assertTrue(path.isfile(tempfile_fullpath))
         st = stat(tempfile_fullpath)
