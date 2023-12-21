@@ -22,12 +22,12 @@ class Log:
     _disabled = False
 
     COLORS = {
-        LoggingFlags.LOGGING_TRACE: Fore.WHITE,
-        LoggingFlags.LOGGING_DEBUG: Fore.LIGHTWHITE_EX,
-        LoggingFlags.LOGGING_INFO: Fore.LIGHTCYAN_EX,
-        LoggingFlags.LOGGING_WARN: Fore.LIGHTYELLOW_EX,
-        LoggingFlags.LOGGING_ERROR: Fore.LIGHTYELLOW_EX,
-        LoggingFlags.LOGGING_FATAL: Fore.LIGHTRED_EX
+        LoggingFlags.TRACE: Fore.WHITE,
+        LoggingFlags.DEBUG: Fore.LIGHTWHITE_EX,
+        LoggingFlags.INFO: Fore.LIGHTCYAN_EX,
+        LoggingFlags.WARN: Fore.LIGHTYELLOW_EX,
+        LoggingFlags.ERROR: Fore.LIGHTYELLOW_EX,
+        LoggingFlags.FATAL: Fore.LIGHTRED_EX
     }
 
     @staticmethod
@@ -40,7 +40,7 @@ class Log:
 
     @staticmethod
     def log(text: str, flags: LoggingFlags) -> None:
-        # if flags & LoggingFlags.LOGGING_FATAL == 0 and Config.logging_flags & flags != flags:
+        # if flags & LoggingFlags.FATAL == 0 and Config.logging_flags & flags != flags:
         if not Log.should_log(flags):
             return
 
@@ -64,27 +64,27 @@ class Log:
 
     @staticmethod
     def fatal(text: str) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_FATAL)
+        return Log.log(text, LoggingFlags.FATAL)
 
     @staticmethod
-    def error(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_ERROR | extra_flags)
+    def error(text: str, extra_flags=LoggingFlags.NONE) -> None:
+        return Log.log(text, LoggingFlags.ERROR | extra_flags)
 
     @staticmethod
-    def warn(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_WARN | extra_flags)
+    def warn(text: str, extra_flags=LoggingFlags.NONE) -> None:
+        return Log.log(text, LoggingFlags.WARN | extra_flags)
 
     @staticmethod
-    def info(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_INFO | extra_flags)
+    def info(text: str, extra_flags=LoggingFlags.NONE) -> None:
+        return Log.log(text, LoggingFlags.INFO | extra_flags)
 
     @staticmethod
-    def debug(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_DEBUG | extra_flags)
+    def debug(text: str, extra_flags=LoggingFlags.NONE) -> None:
+        return Log.log(text, LoggingFlags.DEBUG | extra_flags)
 
     @staticmethod
-    def trace(text: str, extra_flags=LoggingFlags.LOGGING_NONE) -> None:
-        return Log.log(text, LoggingFlags.LOGGING_TRACE | extra_flags)
+    def trace(text: str, extra_flags=LoggingFlags.NONE) -> None:
+        return Log.log(text, LoggingFlags.TRACE | extra_flags)
 
 #
 #

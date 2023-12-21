@@ -125,8 +125,8 @@ async def main(args: Sequence[str]) -> None:
                         continue
                     v_entries.append(
                         VideoInfo(
-                            cur_id, '', link, '', f'{PREFIX if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}{cur_id:d}'
-                            f'{f"_{title}" if has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}_preview.{cur_ext}',
+                            cur_id, '', link, '', f'{PREFIX if has_naming_flag(NamingFlags.PREFIX) else ""}{cur_id:d}'
+                            f'{f"_{title}" if has_naming_flag(NamingFlags.TITLE) else ""}_preview.{cur_ext}',
                         ))
 
         v_entries.reverse()

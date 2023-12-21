@@ -49,11 +49,11 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
     i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.my_id}?popup_id={2 + vi.my_id % 10:d}', session=dwn.session)
     if i_html is None:
         Log.error(f'Error: unable to retreive html for {sname}! Aborted!')
-        return DownloadResult.DOWNLOAD_FAIL_RETRIES
+        return DownloadResult.FAIL_RETRIES
 
     if i_html.find('title', string='404 Not Found'):
         Log.error(f'Got error 404 for {sname}, skipping...')
-        return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+        return DownloadResult.FAIL_SKIPPED
 
     if vi.my_title in (None, ''):
         titleh1 = i_html.find('h1', class_='title_video')
@@ -85,13 +85,13 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
             tags_raw.append(add_tag)
     if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, Config.extra_tags, False, vi.my_subfolder):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
-        return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+        return DownloadResult.FAIL_SKIPPED
     for vsrs, csri, srn, pc in zip((score, rating), (Config.min_score, Config.min_rating), ('score', 'rating'), ('', '%')):
         if len(vsrs) > 0 and csri is not None:
             try:
                 if int(vsrs) < csri:
                     Log.info(f'Info: video {sname} has low {srn} \'{vsrs}{pc}\' (required {csri:d}), skipping...')
-                    return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+                    return DownloadResult.FAIL_SKIPPED
             except Exception:
                 pass
     if scenario is not None:
@@ -105,10 +105,10 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
             vi.my_quality = uvpalways_sq.quality
         else:
             Log.info(f'Info: unable to find matching or uvp scenario subquery for {sname}, skipping...')
-            return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+            return DownloadResult.FAIL_SKIPPED
     elif tdiv is None and len(Config.extra_tags) > 0 and Config.uvp != DOWNLOAD_POLICY_ALWAYS:
         Log.warn(f'Warning: could not extract tags from {sname}, skipping due to untagged videos download policy...')
-        return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+        return DownloadResult.FAIL_SKIPPED
     if Config.save_tags:
         vi.my_tags = ' '.join(sorted(tags_raw))
     if Config.save_descriptions or Config.save_comments:
@@ -140,10 +140,10 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
         message_span = i_html.find('span', class_='message')
         if message_span:
             Log.warn(f'Cannot find download section for {sname}, reason: \'{message_span.text}\', skipping...')
-            return DownloadResult.DOWNLOAD_FAIL_SKIPPED
+            return DownloadResult.FAIL_SKIPPED
         elif tries >= 5:
             Log.error(f'Cannot find download section for {sname} after {tries:d} tries, failed!')
-            return DownloadResult.DOWNLOAD_FAIL_RETRIES
+            return DownloadResult.FAIL_RETRIES
         tries += 1
         Log.debug(f'No download section for {sname}, retry #{tries:d}...')
         i_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.my_id}?popup_id={2 + tries + vi.my_id % 10:d}', session=dwn.session)
@@ -170,12 +170,12 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
     extra_len = 5 + 2 + 3  # 3 underscores + 2 brackets + len('2160p') - max len of all qualities
     fname_part2 = extract_ext(vi.my_link)
     fname_part1 = (
-        f'{PREFIX if has_naming_flag(NamingFlags.NAMING_FLAG_PREFIX) else ""}'
+        f'{PREFIX if has_naming_flag(NamingFlags.PREFIX) else ""}'
         f'{vi.my_id:d}'
-        f'{f"_score({my_score}{my_rating})" if has_naming_flag(NamingFlags.NAMING_FLAG_SCORE) else ""}'
-        f'{f"_{vi.my_title}" if vi.my_title != "" and has_naming_flag(NamingFlags.NAMING_FLAG_TITLE) else ""}'
+        f'{f"_score({my_score}{my_rating})" if has_naming_flag(NamingFlags.SCORE) else ""}'
+        f'{f"_{vi.my_title}" if vi.my_title != "" and has_naming_flag(NamingFlags.TITLE) else ""}'
     )
-    if has_naming_flag(NamingFlags.NAMING_FLAG_TAGS):
+    if has_naming_flag(NamingFlags.TAGS):
         while len(my_tags) > max(0, 240 - (len(vi.my_folder) + len(fname_part1) + len(fname_part2) + extra_len)):
             my_tags = my_tags[:max(0, my_tags.rfind(TAGS_CONCAT_CHAR))]
         fname_part1 = f'{fname_part1}{f"_({my_tags})" if len(my_tags) > 0 else ""}'
@@ -183,12 +183,12 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
     if len(my_tags) == 0 and len(fname_part1) > max(0, 240 - (len(vi.my_folder) + len(fname_part2) + extra_len)):
         fname_part1 = fname_part1[:max(0, 240 - (len(vi.my_folder) + len(fname_part2) + extra_len))]
 
-    fname_mid = f'_{vi.my_quality}' if has_naming_flag(NamingFlags.NAMING_FLAG_QUALITY) else ''
+    fname_mid = f'_{vi.my_quality}' if has_naming_flag(NamingFlags.QUALITY) else ''
 
     vi.my_filename = f'{fname_part1}{fname_mid}{fname_part2}'
 
     res = await download_video(vi)
-    if res != DownloadResult.DOWNLOAD_SUCCESS:
+    if res != DownloadResult.SUCCESS:
         vi.set_state(VideoInfo.VIState.FAILED)
 
     return res
@@ -225,7 +225,7 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
     my_folder = f'{vi.my_folder}{PREFIX}{vi.my_id:d}/'
     fullpath = f'{my_folder}{scr_num:02d}.webp'
     my_link = f'{SITE}/contents/videos_screenshots/{vi.my_id - vi.my_id % 1000:d}/{vi.my_id:d}/336x189/{scr_num:d}.jpg'
-    ret = DownloadResult.DOWNLOAD_SUCCESS
+    ret = DownloadResult.SUCCESS
 
     if not path.isdir(my_folder):
         try:
@@ -237,10 +237,10 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
         async with await wrap_request(dwn.session, 'GET', my_link) as r:
             if r.status == 404:
                 Log.error(f'Got 404 for {sname}...!')
-                ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
+                ret = DownloadResult.FAIL_NOT_FOUND
             elif r.content_type and r.content_type.find('text') != -1:
                 Log.error(f'File not found at {my_link}!')
-                ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
+                ret = DownloadResult.FAIL_NOT_FOUND
 
             expected_size = r.content_length
             async with async_open(fullpath, 'wb') as outf:
@@ -250,19 +250,19 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
             file_size = stat(fullpath).st_size
             if expected_size and file_size != expected_size:
                 Log.error(f'Error: file size mismatch for {sfilename}: {file_size:d} / {expected_size:d}')
-                ret = DownloadResult.DOWNLOAD_FAIL_RETRIES
+                ret = DownloadResult.FAIL_RETRIES
     except Exception:
-        ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
+        ret = DownloadResult.FAIL_NOT_FOUND
 
     return ret
 
 
 async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
-    ret = DownloadResult.DOWNLOAD_SUCCESS
+    ret = DownloadResult.SUCCESS
     for t in [get_running_loop().create_task(download_sceenshot(vi, scr_idx + 1))
               for scr_idx in range(SCREENSHOTS_COUNT)]:  # type: Task[DownloadResult]
         res = await t
-        if res not in (DownloadResult.DOWNLOAD_SUCCESS, ret):
+        if res not in (DownloadResult.SUCCESS, ret):
             ret = res
     return ret
 
@@ -272,7 +272,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
     sname = f'{PREFIX}{vi.my_id:d}.mp4'
     sfilename = f'{vi.my_sfolder}{vi.my_filename}'
     retries = 0
-    ret = DownloadResult.DOWNLOAD_SUCCESS
+    ret = DownloadResult.SUCCESS
     skip = Config.dm == DOWNLOAD_MODE_SKIP
     status_checker = None  # type: Optional[Task]
 
@@ -296,7 +296,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                         rename(rv_curfile, vi.my_fullpath)
                 else:
                     Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
-                    return DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS
+                    return DownloadResult.FAIL_ALREADY_EXISTS
 
     while (not skip) and retries < CONNECT_RETRIES_BASE:
         try:
@@ -320,7 +320,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 if r.status == 404:
                     Log.error(f'Got 404 for {sname}...!')
                     retries = CONNECT_RETRIES_BASE - 1
-                    ret = DownloadResult.DOWNLOAD_FAIL_NOT_FOUND
+                    ret = DownloadResult.FAIL_NOT_FOUND
                 if r.content_type and r.content_type.find('text') != -1:
                     Log.error(f'File not found at {vi.my_link}!')
                     raise FileNotFoundError(vi.my_link)
@@ -368,13 +368,13 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 Log.error(f'Failed to download {sfilename}. Removing unfinished file...')
                 remove(vi.my_fullpath)
 
-    ret = (ret if ret == DownloadResult.DOWNLOAD_FAIL_NOT_FOUND else
-           DownloadResult.DOWNLOAD_SUCCESS if retries < CONNECT_RETRIES_BASE else
-           DownloadResult.DOWNLOAD_FAIL_RETRIES)
+    ret = (ret if ret == DownloadResult.FAIL_NOT_FOUND else
+           DownloadResult.SUCCESS if retries < CONNECT_RETRIES_BASE else
+           DownloadResult.FAIL_RETRIES)
 
     if Config.save_screenshots:
         sret = await download_sceenshots(vi)
-        if sret != DownloadResult.DOWNLOAD_SUCCESS:
+        if sret != DownloadResult.SUCCESS:
             Log.warn(f'{sfilename}: `download_sceenshots()` has failed items (ret = {str(sret)})')
 
     return ret

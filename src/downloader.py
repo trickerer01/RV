@@ -66,13 +66,13 @@ class DownloadWorker:
     async def _at_task_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
         self._downloads_active.remove(vi)
         Log.trace(f'[queue] {PREFIX}{vi.my_id:d}.mp4 removed from queue')
-        if result == DownloadResult.DOWNLOAD_FAIL_ALREADY_EXISTS:
+        if result == DownloadResult.FAIL_ALREADY_EXISTS:
             self._filtered_count_after += 1
-        elif result == DownloadResult.DOWNLOAD_FAIL_SKIPPED:
+        elif result == DownloadResult.FAIL_SKIPPED:
             self._skipped_count += 1
-        elif result == DownloadResult.DOWNLOAD_FAIL_RETRIES:
+        elif result == DownloadResult.FAIL_RETRIES:
             self._failed_items.append(vi.my_id)
-        elif result == DownloadResult.DOWNLOAD_SUCCESS:
+        elif result == DownloadResult.SUCCESS:
             self._downloaded_count += 1
 
     async def _prod(self) -> None:

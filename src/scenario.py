@@ -113,7 +113,7 @@ class DownloadScenario(object):
                         try:
                             if int(vsrs) < csri:
                                 Log.info(f'[{sq.subfolder}] Video {sname} has low {srn} \'{vsrs}{pc}\' (required {csri:d})!',
-                                         LoggingFlags.LOGGING_EX_LOW_SCORE)
+                                         LoggingFlags.EX_LOW_SCORE)
                                 sq_skip = True
                         except Exception:
                             pass

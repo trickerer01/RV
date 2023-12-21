@@ -88,50 +88,50 @@ SEARCH_RULE_DEFAULT = SEARCH_RULE_ALL
 
 
 class NamingFlags:
-    NAMING_FLAG_NONE = 0x00
-    NAMING_FLAG_PREFIX = 0x01
-    NAMING_FLAG_SCORE = 0x02
-    NAMING_FLAG_TITLE = 0x04
-    NAMING_FLAG_TAGS = 0x08
-    NAMING_FLAG_QUALITY = 0x10
-    NAMING_FLAGS_ALL = NAMING_FLAG_PREFIX | NAMING_FLAG_SCORE | NAMING_FLAG_TITLE | NAMING_FLAG_TAGS | NAMING_FLAG_QUALITY
+    NONE = 0x00
+    PREFIX = 0x01
+    SCORE = 0x02
+    TITLE = 0x04
+    TAGS = 0x08
+    QUALITY = 0x10
+    ALL = PREFIX | SCORE | TITLE | TAGS | QUALITY
     """0x1F"""
 
 
 NAMING_FLAGS = {
-    'none': f'0x{NamingFlags.NAMING_FLAG_NONE:02X}',
-    'prefix': f'0x{NamingFlags.NAMING_FLAG_PREFIX:02X}',
-    'score': f'0x{NamingFlags.NAMING_FLAG_SCORE:02X}',
-    'title': f'0x{NamingFlags.NAMING_FLAG_TITLE:02X}',
-    'tags': f'0x{NamingFlags.NAMING_FLAG_TAGS:02X}',
-    'quality': f'0x{NamingFlags.NAMING_FLAG_QUALITY:02X}',
-    'full': f'0x{NamingFlags.NAMING_FLAGS_ALL:02X}'
+    'none': f'0x{NamingFlags.NONE:02X}',
+    'prefix': f'0x{NamingFlags.PREFIX:02X}',
+    'score': f'0x{NamingFlags.SCORE:02X}',
+    'title': f'0x{NamingFlags.TITLE:02X}',
+    'tags': f'0x{NamingFlags.TAGS:02X}',
+    'quality': f'0x{NamingFlags.QUALITY:02X}',
+    'full': f'0x{NamingFlags.ALL:02X}'
 }
 """
 {\n\n'none': '0x00',\n\n'prefix': '0x01',\n\n'score': '0x02',\n\n'title': '0x04',\n\n'tags': '0x08',\n\n'quality': '0x10',
 \n\n'full': '0x1F'\n\n}
 """
-NAMING_FLAGS_DEFAULT = NamingFlags.NAMING_FLAGS_ALL
+NAMING_FLAGS_DEFAULT = NamingFlags.ALL
 """0x1F"""
 
 
 class LoggingFlags(IntEnum):
-    LOGGING_NONE = 0x000
-    LOGGING_TRACE = 0x001
-    LOGGING_DEBUG = 0x002
-    LOGGING_INFO = 0x004
-    LOGGING_WARN = 0x008
-    LOGGING_ERROR = 0x010
-    LOGGING_FATAL = 0x800
+    NONE = 0x000
+    TRACE = 0x001
+    DEBUG = 0x002
+    INFO = 0x004
+    WARN = 0x008
+    ERROR = 0x010
+    FATAL = 0x800
     # some extra logging flags are merged into normal flags for now
-    LOGGING_EX_MISSING_TAGS = LOGGING_TRACE
+    EX_MISSING_TAGS = TRACE
     """0x001"""
-    LOGGING_EX_EXCLUDED_TAGS = LOGGING_INFO
+    EX_EXCLUDED_TAGS = INFO
     """0x004"""
-    LOGGING_EX_LOW_SCORE = LOGGING_INFO
+    EX_LOW_SCORE = INFO
     """0x004"""
     # unused
-    LOGGING_ALL = LOGGING_FATAL | LOGGING_ERROR | LOGGING_WARN | LOGGING_INFO | LOGGING_DEBUG | LOGGING_TRACE
+    ALL = FATAL | ERROR | WARN | INFO | DEBUG | TRACE
     """0x81F"""
 
     def __str__(self) -> str:
@@ -139,14 +139,14 @@ class LoggingFlags(IntEnum):
 
 
 LOGGING_FLAGS = {
-    'error': f'0x{LoggingFlags.LOGGING_ERROR.value:03X}',
-    'warn': f'0x{LoggingFlags.LOGGING_WARN.value:03X}',
-    'info': f'0x{LoggingFlags.LOGGING_INFO.value:03X}',
-    'debug': f'0x{LoggingFlags.LOGGING_DEBUG.value:03X}',
-    'trace': f'0x{LoggingFlags.LOGGING_TRACE.value:03X}',
+    'error': f'0x{LoggingFlags.ERROR.value:03X}',
+    'warn': f'0x{LoggingFlags.WARN.value:03X}',
+    'info': f'0x{LoggingFlags.INFO.value:03X}',
+    'debug': f'0x{LoggingFlags.DEBUG.value:03X}',
+    'trace': f'0x{LoggingFlags.TRACE.value:03X}',
 }
 """{\n\n'error': '0x010',\n\n'warn': '0x008',\n\n'info': '0x004',\n\n'debug': '0x002',\n\n'trace': '0x001'\n\n}"""
-LOGGING_FLAGS_DEFAULT = LoggingFlags.LOGGING_INFO
+LOGGING_FLAGS_DEFAULT = LoggingFlags.INFO
 """0x004"""
 
 ACTION_STORE_TRUE = 'store_true'
@@ -226,11 +226,11 @@ HELP_ARG_UPLOADER = 'Uploader user id (integer, filters still apply)'
 
 
 class DownloadResult(IntEnum):
-    DOWNLOAD_SUCCESS = 0
-    DOWNLOAD_FAIL_NOT_FOUND = 1
-    DOWNLOAD_FAIL_RETRIES = 2
-    DOWNLOAD_FAIL_ALREADY_EXISTS = 3
-    DOWNLOAD_FAIL_SKIPPED = 4
+    SUCCESS = 0
+    FAIL_NOT_FOUND = 1
+    FAIL_RETRIES = 2
+    FAIL_ALREADY_EXISTS = 3
+    FAIL_SKIPPED = 4
 
     def __str__(self) -> str:
         return f'{self._name_} (0x{self.value:d})'

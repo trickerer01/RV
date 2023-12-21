@@ -205,7 +205,7 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_tag
             if idi not in id_sequence:
                 suc = False
                 Log.trace(f'{sfol}Video {sname} isn\'t contained in id list \'{str(id_sequence)}\'. Skipped!',
-                          LoggingFlags.LOGGING_EX_MISSING_TAGS)
+                          LoggingFlags.EX_MISSING_TAGS)
             return not suc
 
         for extag in extra_tags:
@@ -213,23 +213,23 @@ def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_tag
                 if get_or_group_matching_tag(extag, tags_raw) is None:
                     suc = False
                     Log.trace(f'{sfol}Video {sname} misses required tag matching \'{extag}\'. Skipped!',
-                              LoggingFlags.LOGGING_EX_MISSING_TAGS)
+                              LoggingFlags.EX_MISSING_TAGS)
             elif extag.startswith('-('):
                 if is_neg_and_group_matches(extag, tags_raw):
                     suc = False
                     Log.info(f'{sfol}Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
-                             LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
+                             LoggingFlags.EX_EXCLUDED_TAGS)
             else:
                 my_extag = extag[1:] if extag[0] == '-' else extag
                 mtag = get_matching_tag(my_extag, tags_raw)
                 if mtag is not None and extag[0] == '-':
                     suc = False
                     Log.info(f'{sfol}Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
-                             LoggingFlags.LOGGING_EX_EXCLUDED_TAGS)
+                             LoggingFlags.EX_EXCLUDED_TAGS)
                 elif mtag is None and extag[0] != '-':
                     suc = False
                     Log.trace(f'{sfol}Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
-                              LoggingFlags.LOGGING_EX_MISSING_TAGS)
+                              LoggingFlags.EX_MISSING_TAGS)
     return not suc
 
 

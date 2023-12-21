@@ -16,7 +16,7 @@ from rex import re_replace_symbols, re_ext
 
 
 def format_time(seconds: int) -> str:
-    """Formats time from seconds to format: **hh:mm:ss**"""
+    """Formats time from seconds to: **hh:mm:ss**"""
     mm, ss = divmod(seconds, 60)
     hh, mm = divmod(mm, 60)
     return f'{hh:02d}:{mm:02d}:{ss:02d}'
@@ -42,7 +42,7 @@ def normalize_path(basepath: str, append_slash=True) -> str:
 
 def normalize_filename(filename: str, base_path: str) -> str:
     """Returns full path to a file, normalizing base path and removing disallowed symbols from file name"""
-    return normalize_path(base_path) + re_replace_symbols.sub('_', filename)
+    return f'{normalize_path(base_path)}{re_replace_symbols.sub("_", filename)}'
 
 
 def extract_ext(href: str) -> str:
