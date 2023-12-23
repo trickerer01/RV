@@ -6,12 +6,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-import sys
 from asyncio import run as run_async
 from io import StringIO
 from os import path, remove as remove_file, stat
 from tempfile import gettempdir
-from unittest import main as run_tests, TestCase
+from unittest import TestCase
 from unittest.mock import patch
 
 from cmdargs import prepare_arglist
@@ -172,17 +171,6 @@ class DownloadTests(TestCase):
         self.assertGreater(st.st_size, 0)
         remove_file(tempfile_fullpath)
         print(f'{self._testMethodName} passed')
-
-
-def run_all_tests() -> None:
-    res = run_tests(module='tests', exit=False)
-    if not res.result.wasSuccessful():
-        print('Fail')
-        sys.exit()
-
-
-if __name__ == '__main__':
-    run_all_tests()
 
 #
 #

@@ -135,7 +135,7 @@ class LoggingFlags(IntEnum):
     """0x81F"""
 
     def __str__(self) -> str:
-        return f'{self._name_} (0x{self.value:03X})'
+        return f'{self.name} (0x{self.value:03X})'
 
 
 LOGGING_FLAGS = {
@@ -233,17 +233,13 @@ class DownloadResult(IntEnum):
     FAIL_SKIPPED = 4
 
     def __str__(self) -> str:
-        return f'{self._name_} (0x{self.value:d})'
+        return f'{self.name} (0x{self.value:d})'
 
 
 class Mem:
     KB = 1024
     MB = KB * 1024
     GB = MB * 1024
-
-
-class HelpPrintExitException(Exception):
-    pass
 
 #
 #

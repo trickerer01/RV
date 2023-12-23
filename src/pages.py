@@ -10,11 +10,10 @@ import sys
 from asyncio import run as run_async, sleep
 from typing import Sequence
 
-from cmdargs import prepare_arglist
+from cmdargs import prepare_arglist, HelpPrintExitException
 from config import Config
 from defs import (
-    HelpPrintExitException, PREFIX, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE,
-    NamingFlags, QUALITIES,
+    PREFIX, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE, QUALITIES, NamingFlags,
 )
 from download import download, at_interrupt
 from fetch_html import make_session, fetch_html
@@ -123,11 +122,10 @@ async def main(args: Sequence[str]) -> None:
                     elif cur_id in v_entries:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
-                    v_entries.append(
-                        VideoInfo(
-                            cur_id, '', link, '', f'{PREFIX if has_naming_flag(NamingFlags.PREFIX) else ""}{cur_id:d}'
-                            f'{f"_{title}" if has_naming_flag(NamingFlags.TITLE) else ""}_preview.{cur_ext}',
-                        ))
+                    v_entries.append(VideoInfo(
+                        cur_id, '', link, '', f'{PREFIX if has_naming_flag(NamingFlags.PREFIX) else ""}{cur_id:d}'
+                        f'{f"_{title}" if has_naming_flag(NamingFlags.TITLE) else ""}_preview.{cur_ext}',
+                    ))
 
         v_entries.reverse()
         orig_count = len(v_entries)

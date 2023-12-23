@@ -53,12 +53,9 @@ class Log:
             print(text)
         except UnicodeError:
             try:
-                print(text.encode(UTF8).decode())
+                print(text.encode(UTF8).decode(getpreferredencoding()))
             except Exception:
-                try:
-                    print(text.encode(UTF8).decode(getpreferredencoding()))
-                except Exception:
-                    print('<Message was not logged due to UnicodeError>')
+                print('<Message was not logged due to UnicodeError>')
             finally:
                 print('Previous message caused UnicodeError...')
 

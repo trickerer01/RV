@@ -11,7 +11,7 @@ from os import path
 from typing import List, Sequence, Tuple
 
 from defs import (
-    HelpPrintExitException, UTF8, APP_NAME, APP_VERSION, ACTION_STORE_TRUE, HELP_ARG_PATH, HELP_ARG_SEARCH_STR, QUALITIES,
+    UTF8, APP_NAME, APP_VERSION, ACTION_STORE_TRUE, HELP_ARG_PATH, HELP_ARG_SEARCH_STR, QUALITIES,
     DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PROXY, HELP_ARG_BEGIN_STOP_ID, HELP_ARG_GET_MAXID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY,
     UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT,
     HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING,
@@ -26,7 +26,7 @@ from validators import (
     log_level, valid_session_id,
 )
 
-__all__ = ('prepare_arglist',)
+__all__ = ('prepare_arglist', 'HelpPrintExitException')
 
 UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 """'nofilters'"""
@@ -41,6 +41,10 @@ PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
 EXISTING_PARSERS = {PARSER_TITLE_CMD, PARSER_TITLE_FILE}
 """'file','cmd'"""
+
+
+class HelpPrintExitException(Exception):
+    pass
 
 
 def read_cmdfile(cmdfile_path: str) -> List[str]:
