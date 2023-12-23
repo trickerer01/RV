@@ -79,7 +79,7 @@ re_tags_to_not_exclude = re_compile(
     r'p(?:i(?:der|troast|zzy)|l(?:atoon|ucky.*?)|o(?:ks|nty))|t(?:a(?:lkek|r(?:_.+?|craft|fox))|ra(?:ight|pon)|udio34)|'  # s
     r'uccubus|ylveon)|'  # s
     r't(?:a(?:ga|ker_pov)|e(?:k(?:ken|tah.+?)|ntacles?|xelnaut)|he(?:_sims|count|hoaxxx)|ied|o(?:gruta|rture|uhou)|'  # t
-    r'r(?:a(?:ns|ps?)|inity)|soni|y(?:viania))|'  # t
+    r'r(?:a(?:ns|ps?)|inity)|soni|utorial|y(?:viania))|'  # t
     r'u(?:g(?:ly(?:_man)?|oira)|n(?:birth|de(?:ad|rtale))|r(?:ethral|iel))|'  # u
     r'v(?:a(?:lorant|mpire)|i(?:cer34|olence|rgin)|o(?:mit|re))|'  # v
     r'w(?:ar(?:craft|frame|hammer)|eebu.*?|hip|or(?:ld_of_warcraft|ms?))|'  # w
