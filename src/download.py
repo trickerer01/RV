@@ -64,7 +64,7 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
         rating = f'{(likes_int * 100) // (dislikes_int + likes_int):d}' if (dislikes_int + likes_int) > 999999 else rating
         score = f'{likes_int - dislikes_int:d}'
     except Exception:
-        pass
+        Log.warn(f'Warning: cannot extract score for {sname}.')
     try:
         my_authors = [str(a.string).lower() for a in i_html.find('div', string='Artist:').parent.find_all('span')]
     except Exception:
