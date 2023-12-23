@@ -60,7 +60,7 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
         vi.my_title = titleh1.text if titleh1 else ''
     try:
         dislikes_int = 0
-        likes_int = int(i_html.find('span', class_='voters count').text.replace(' likes', ''))
+        likes_int = int(i_html.find('span', class_='voters count').text.replace(' likes', '').replace(' like', ''))
         rating = f'{(likes_int * 100) // (dislikes_int + likes_int):d}' if (dislikes_int + likes_int) > 999999 else rating
         score = f'{likes_int - dislikes_int:d}'
     except Exception:
