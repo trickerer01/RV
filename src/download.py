@@ -172,7 +172,7 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
     fname_part1 = (
         f'{PREFIX if has_naming_flag(NamingFlags.PREFIX) else ""}'
         f'{vi.my_id:d}'
-        f'{f"_score({my_score}{my_rating})" if has_naming_flag(NamingFlags.SCORE) else ""}'
+        f'{f"_({my_score}{my_rating})" if has_naming_flag(NamingFlags.SCORE) else ""}'
         f'{f"_{vi.my_title}" if vi.my_title != "" and has_naming_flag(NamingFlags.TITLE) else ""}'
     )
     if has_naming_flag(NamingFlags.TAGS):
