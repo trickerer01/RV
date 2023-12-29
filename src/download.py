@@ -238,7 +238,7 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
             if r.status == 404:
                 Log.error(f'Got 404 for {sname}...!')
                 ret = DownloadResult.FAIL_NOT_FOUND
-            elif r.content_type and r.content_type.find('text') != -1:
+            elif r.content_type and 'text' in r.content_type:
                 Log.error(f'File not found at {my_link}!')
                 ret = DownloadResult.FAIL_NOT_FOUND
 
@@ -321,7 +321,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     Log.error(f'Got 404 for {sname}...!')
                     retries = CONNECT_RETRIES_BASE - 1
                     ret = DownloadResult.FAIL_NOT_FOUND
-                if r.content_type and r.content_type.find('text') != -1:
+                if r.content_type and 'text' in r.content_type:
                     Log.error(f'File not found at {vi.my_link}!')
                     raise FileNotFoundError(vi.my_link)
 

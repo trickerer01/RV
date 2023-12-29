@@ -32,11 +32,11 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
         Config.logging_flags = LoggingFlags.FATAL
         Config.start = Config.end = Config.start_id = Config.end_id = 1
 
-    if Config.search_tags.find(',') != -1 and Config.search_rule_tag == SEARCH_RULE_ALL:
+    if ',' in Config.search_tags and Config.search_rule_tag == SEARCH_RULE_ALL:
         Config.search_tags = f'{SEARCH_RULE_ALL},{Config.search_tags}'
-    if Config.search_arts.find(',') != -1 and Config.search_rule_art == SEARCH_RULE_ALL:
+    if ',' in Config.search_arts and Config.search_rule_art == SEARCH_RULE_ALL:
         Config.search_arts = f'{SEARCH_RULE_ALL},{Config.search_arts}'
-    if Config.search_cats.find(',') != -1 and Config.search_rule_cat == SEARCH_RULE_ALL:
+    if ',' in Config.search_cats and Config.search_rule_cat == SEARCH_RULE_ALL:
         Config.search_cats = f'{SEARCH_RULE_ALL},{Config.search_cats}'
 
     delay_for_message = False
