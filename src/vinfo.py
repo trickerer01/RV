@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from __future__ import annotations
 from enum import IntEnum
-from typing import Dict, Optional, Callable, Iterable, Union
+from typing import Dict, Iterable, Union
 
 from defs import PREFIX, UTF8, DEFAULT_QUALITY
 from config import Config
@@ -18,7 +18,7 @@ __all__ = ('VideoInfo', 'export_video_info')
 
 
 class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
-    class VIState(IntEnum):
+    class State(IntEnum):
         NEW = 0
         QUEUED = 1
         ACTIVE = 2
@@ -44,9 +44,9 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         self.my_start_time = 0
         self.my_last_check_size = 0
         self.my_last_check_time = 0
-        self._state = VideoInfo.VIState.NEW
+        self._state = VideoInfo.State.NEW
 
-    def set_state(self, state: VideoInfo.VIState) -> None:
+    def set_state(self, state: VideoInfo.State) -> None:
         self._state = state
 
     def __eq__(self, other: Union[VideoInfo, int]) -> bool:
@@ -75,7 +75,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         return self._state.name
 
 
-async def export_video_info(info_list: Iterable[VideoInfo]) -> None:
+def export_video_info(info_list: Iterable[VideoInfo]) -> None:
     """Saves tags, descriptions and comments for each subfolder in scenario and base dest folder based on video info"""
     tags_dict, desc_dict, comm_dict = dict(), dict(), dict()  # type: Dict[str, Dict[int, str]]
     for vi in info_list:
@@ -84,18 +84,22 @@ async def export_video_info(info_list: Iterable[VideoInfo]) -> None:
                 if vi.my_subfolder not in d:
                     d[vi.my_subfolder] = dict()
                 d[vi.my_subfolder][vi.my_id] = s
-    for conf, dct, name, proc_cb in (
-        (Config.save_tags, tags_dict, 'tags', lambda tags: f' {tags.strip()}\n'),
-        (Config.save_descriptions, desc_dict, 'descriptions', lambda description: f'{description}\n'),
-        (Config.save_comments, comm_dict, 'comments', lambda comment: f'{comment}\n')
-    ):  # type: Optional[bool], Dict[str, Dict[int, str]], str, Callable[[str], str]
-        if conf is True:
-            for subfolder, sdct in dct.items():
-                if len(sdct) > 0:
-                    min_id, max_id = min(sdct.keys()), max(sdct.keys())
-                    fullpath = f'{normalize_path(f"{Config.dest_base}{subfolder}")}{PREFIX}!{name}_{min_id:d}-{max_id:d}.txt'
-                    with open(fullpath, 'wt', encoding=UTF8) as sfile:
-                        sfile.writelines(f'{PREFIX}{idi:d}:{proc_cb(elem)}' for idi, elem in sorted(sdct.items(), key=lambda t: t[0]))
+    for conf, dct, name, proc_cb in zip(
+        (Config.save_tags, Config.save_descriptions, Config.save_comments),
+        (tags_dict, desc_dict, comm_dict),
+        ('tags', 'descriptions', 'comments'),
+        (lambda tags: f' {tags.strip()}\n', lambda description: f'{description}\n', lambda comment: f'{comment}\n')
+    ):
+        if not conf:
+            continue
+        for subfolder, sdct in dct.items():
+            if not sdct:
+                continue
+            keys = sorted(sdct.keys())
+            min_id, max_id = keys[0], keys[-1]
+            fullpath = f'{normalize_path(f"{Config.dest_base}{subfolder}")}{PREFIX}!{name}_{min_id:d}-{max_id:d}.txt'
+            with open(fullpath, 'wt', encoding=UTF8) as sfile:
+                sfile.writelines(f'{PREFIX}{idi:d}:{proc_cb(sdct[idi])}' for idi in keys)
 
 #
 #

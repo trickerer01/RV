@@ -19,7 +19,7 @@ from config import BaseConfig
 from defs import (
     APP_NAME, APP_VERSION, DOWNLOAD_MODE_TOUCH, SEARCH_RULE_DEFAULT, QUALITIES,
 )
-from downloader import DownloadWorker
+from downloader import VideoDownloadWorker
 # noinspection PyProtectedMember
 from ids import main as ids_main, main_sync as ids_main_sync
 from logger import Log
@@ -31,7 +31,7 @@ from util import normalize_path
 
 
 def set_up_test(log=False) -> None:
-    DownloadWorker._instance = None
+    VideoDownloadWorker._instance = None
     found_filenames_dict.clear()
     Log._disabled = not log
 
@@ -66,7 +66,7 @@ class CmdTests(TestCase):
         c1.read(parsed1, True)
         self.assertTrue(c1.get_maxid)
         parsed2 = prepare_arglist(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~3d)', '-script',
-                                   'a: 2d; b: 3d; c: 4k -60fps; d: * -uvp always', '-naming', 'prefix|quality', '-log', 'warn'], True)
+                                   'a: 2d; b: 3d; c: 4k -60fps; d: * -utp always', '-naming', 'prefix|quality', '-log', 'warn'], True)
         c2 = BaseConfig()
         c2.read(parsed2, True)
         self.assertEqual(17, c2.naming_flags)
@@ -102,7 +102,7 @@ class CmdTests(TestCase):
         c1.read(parsed1, False)
         self.assertTrue(c1.use_id_sequence)
         parsed2 = prepare_arglist(['-start', '1000', '-end', '999', '(a~b)', '(2d~3d)', '-dmode', 'touch', '-script',
-                                   'a: 2d; b: 3d; c: 4k -60fps; d: * -uvp always', '-naming', '0x10', '-log', 'trace'], False)
+                                   'a: 2d; b: 3d; c: 4k -60fps; d: * -utp always', '-naming', '0x10', '-log', 'trace'], False)
         c2 = BaseConfig()
         c2.read(parsed2, False)
         self.assertEqual(16, c2.naming_flags)

@@ -17,29 +17,28 @@ from aiohttp import ClientSession
 
 from config import Config
 from defs import MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, DownloadResult, Mem, PREFIX
-from fetch_html import make_session
 from logger import Log
 from util import format_time, get_elapsed_time_i, get_elapsed_time_s, calc_sleep_time
 from vinfo import VideoInfo
 
-__all__ = ('DownloadWorker',)
+__all__ = ('VideoDownloadWorker',)
 
 
-class DownloadWorker:
+class VideoDownloadWorker:
     """
     Async queue wrapper which binds list of lists of arguments to a download function call and processes them
     asynchronously with a limit of simulteneous downloads defined by MAX_VIDEOS_QUEUE_SIZE
     """
-    _instance = None  # type: Optional[DownloadWorker]
+    _instance = None  # type: Optional[VideoDownloadWorker]
 
     @staticmethod
-    def get() -> Optional[DownloadWorker]:
-        return DownloadWorker._instance
+    def get() -> Optional[VideoDownloadWorker]:
+        return VideoDownloadWorker._instance
 
     def __init__(self, sequence: Iterable[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
-                 filtered_count: int, session: ClientSession = None) -> None:
-        assert DownloadWorker._instance is None
-        DownloadWorker._instance = self
+                 filtered_count: int, session: ClientSession) -> None:
+        assert VideoDownloadWorker._instance is None
+        VideoDownloadWorker._instance = self
 
         self._func = func
         self._seq = [vi for vi in sequence]  # form our own container to erase from
@@ -78,7 +77,7 @@ class DownloadWorker:
     async def _prod(self) -> None:
         while len(self._seq) > 0:
             if self._queue.full() is False:
-                self._seq[0].set_state(VideoInfo.VIState.QUEUED)
+                self._seq[0].set_state(VideoInfo.State.QUEUED)
                 await self._queue.put((self._seq[0], self._func(self._seq[0])))
                 del self._seq[0]
             else:
@@ -156,9 +155,8 @@ class DownloadWorker:
             Log.fatal(f'Failed items:\n{newline.join(str(fi) for fi in sorted(self._failed_items))}')
 
     async def run(self) -> None:
-        async with self._session or await make_session() as self._session:
-            for cv in as_completed([self._prod(), self._state_reporter()] + [self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE)]):
-                await cv
+        for cv in as_completed([self._prod(), self._state_reporter()] + [self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE)]):
+            await cv
         await self._after_download()
 
     def at_interrupt(self) -> None:

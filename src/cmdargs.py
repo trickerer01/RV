@@ -6,17 +6,17 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from argparse import ArgumentParser, Namespace, ArgumentError, ZERO_OR_MORE
+from argparse import ArgumentParser, Namespace, ZERO_OR_MORE
 from os import path
 from typing import List, Sequence, Tuple
 
 from defs import (
-    UTF8, APP_NAME, APP_VERSION, ACTION_STORE_TRUE, HELP_ARG_PATH, HELP_ARG_SEARCH_STR, QUALITIES,
-    DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PROXY, HELP_ARG_BEGIN_STOP_ID, HELP_ARG_GET_MAXID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UVPOLICY,
-    UVIDEO_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES, DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT,
-    HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING, HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING,
-    HELP_ARG_IDSEQUENCE, HELP_ARG_PLAYLIST, HELP_ARG_CONTINUE, HELP_ARG_UNFINISH, HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER,
-    HELP_ARG_VERSION, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, SEARCH_RULES, SEARCH_RULE_DEFAULT, HELP_ARG_SESSION_ID,
+    UTF8, APP_NAME, APP_VERSION, ACTION_STORE_TRUE, HELP_ARG_PATH, HELP_ARG_SEARCH_STR, HELP_ARG_PROXY, HELP_ARG_BEGIN_STOP_ID,
+    HELP_ARG_GET_MAXID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UTPOLICY, UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES,
+    DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING,
+    HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, HELP_ARG_CONTINUE, HELP_ARG_UNFINISH,
+    HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER, HELP_ARG_VERSION, HELP_ARG_SESSION_ID, SEARCH_RULES, SEARCH_RULE_DEFAULT,
+    QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -28,7 +28,7 @@ from validators import (
 
 __all__ = ('prepare_arglist', 'HelpPrintExitException')
 
-UVP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
+UTP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 """'nofilters'"""
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
 """'full'"""
@@ -53,7 +53,7 @@ def read_cmdfile(cmdfile_path: str) -> List[str]:
         args = list()
         for line in cmdfile.readlines():
             line = line.strip(' \n\ufeff')
-            if line != '':
+            if line:
                 args.append(line)
         return args
 
@@ -64,22 +64,22 @@ def is_parsed_cmdfile(parse_result: Namespace) -> bool:
 
 
 def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: ArgumentParser) -> Namespace:
-    error_to_print = ''
+    errors_to_print = [''] * 0
     try:
         parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
         if not is_parsed_cmdfile(parsed):
             for tag in unks:
                 try:
-                    assert valid_extra_tag(tag)
-                except Exception:
-                    error_to_print = f'\nInvalid extra tag: \'{tag}\'\n'
-                    raise
-            parsed.extra_tags += [tag.lower().replace(' ', '_') for tag in unks]
-    except (ArgumentError, TypeError, Exception):
+                    assert valid_extra_tag(tag, False)
+                except (AssertionError, ValueError):
+                    errors_to_print.append(f'\nInvalid extra tag: \'{tag}\'')
+            if errors_to_print:
+                Log.fatal(''.join(errors_to_print))
+                raise ValueError
+            parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
+    except Exception:
         # print('\n', e)
         parser.print_help()
-        if error_to_print != '':
-            Log.error(error_to_print)
         raise
 
     return parsed
@@ -121,7 +121,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_ARG_QUALITY, choices=QUALITIES)
     parser_or_group.add_argument('-minrating', '--minimum-rating', metavar='#rating', default=0, help=HELP_ARG_MINRATING, type=valid_rating)
     parser_or_group.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
-    parser_or_group.add_argument('-uvp', '--untag-video-policy', default=UVP_DEFAULT, help=HELP_ARG_UVPOLICY, choices=UVIDEO_POLICIES)
+    parser_or_group.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, help=HELP_ARG_UTPOLICY, choices=UNTAGGED_POLICIES)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', default=None, help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-timeout', metavar='#seconds', default=0, help=HELP_ARG_TIMEOUT, type=positive_nonzero_int)
     parser_or_group.add_argument('-continue', '--continue-mode', action=ACTION_STORE_TRUE, help=HELP_ARG_CONTINUE)
@@ -165,8 +165,8 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     par_cmd.add_argument('-stop_id', metavar='#number', default=1, help='', type=positive_nonzero_int)
     par_cmd.add_argument('-begin_id', metavar='#number', default=10**9, help=HELP_ARG_BEGIN_STOP_ID, type=positive_nonzero_int)
     arggr_pl_upl = par_cmd.add_mutually_exclusive_group()
-    arggr_pl_upl.add_argument('-playlist_name', metavar='#name', default=(0, ''), help='', type=valid_playlist_name)
-    arggr_pl_upl.add_argument('-playlist_id', metavar='#number', default=(0, ''), help=HELP_ARG_PLAYLIST, type=valid_playlist_id)
+    arggr_pl_upl.add_argument('-playlist_id', metavar='#number', default=(0, ''), help='', type=valid_playlist_id)
+    arggr_pl_upl.add_argument('-playlist_name', metavar='#name', default=(0, ''), help=HELP_ARG_PLAYLIST, type=valid_playlist_name)
     arggr_pl_upl.add_argument('-uploader', metavar='#user_id', default=0, help=HELP_ARG_UPLOADER, type=positive_nonzero_int)
     par_cmd.add_argument('-search', metavar='#string', default='', help=HELP_ARG_SEARCH_STR, type=valid_search_string)
     par_cmd.add_argument('-search_tag', metavar='#tag[,tag...]', default='', help='', type=valid_tags)
@@ -175,7 +175,6 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     par_cmd.add_argument('-search_rule_tag', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_art', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_cat', default=SEARCH_RULE_DEFAULT, help=HELP_ARG_SEARCH_RULE, choices=SEARCH_RULES)
-    par_cmd.epilog = 'Note that search obeys \'AND\' rule: (ANY/ALL tag(s)) AND (ANY/ALL artist(s)) AND (ANY/ALL category(ies))'
 
     add_common_args(par_cmd)
     return execute_parser(parser, par_cmd, args, True)

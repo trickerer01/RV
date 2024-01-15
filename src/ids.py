@@ -31,29 +31,30 @@ async def main(args: Sequence[str]) -> None:
 
     Config.read(arglist, False)
 
-    id_sequence = try_parse_id_or_group(Config.extra_tags) if Config.use_id_sequence else [int()] * 0
-    if Config.use_id_sequence is True and len(id_sequence) == 0:
-        Log.fatal(f'\nInvalid ID \'or\' group \'{Config.extra_tags[0] if len(Config.extra_tags) > 0 else ""}\'!')
-        raise ValueError
+    if Config.use_id_sequence:
+        Config.id_sequence = try_parse_id_or_group(Config.extra_tags)
+        if not Config.id_sequence:
+            Log.fatal('\nNo ID \'or\' group provided!' if not Config.extra_tags else
+                      f'\nInvalid ID \'or\' group: \'{Config.extra_tags[0]}\'!' if len(Config.extra_tags) == 1 else
+                      '\nID \'or\' group must be the only extra tag used!')
+            raise ValueError
+        Config.extra_tags.clear()
+    else:
+        Config.id_sequence = list(range(Config.start_id, Config.end_id + 1))
 
     if find_and_resolve_config_conflicts() is True:
         await sleep(3.0)
 
-    if len(id_sequence) == 0:
-        id_sequence = list(range(Config.start_id, Config.end_id + 1))
-    else:
-        Config.extra_tags.clear()
-
-    v_entries = [VideoInfo(idi) for idi in id_sequence]
+    v_entries = [VideoInfo(idi) for idi in Config.id_sequence]
     orig_count = len(v_entries)
 
-    if len(v_entries) > 0:
+    if orig_count > 0:
         prefilter_existing_items(v_entries)
 
     removed_count = orig_count - len(v_entries)
 
-    if len(v_entries) == 0:
-        if 0 < orig_count == removed_count:
+    if orig_count == removed_count:
+        if orig_count > 0:
             Log.fatal(f'\nAll {orig_count:d} videos already exist. Aborted.')
         else:
             Log.fatal('\nNo videos found. Aborted.')

@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 from config import Config
-from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL
+from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL, DEFAULT_EXT
 from logger import Log
 from rex import re_replace_symbols, re_ext
 
@@ -35,7 +35,7 @@ def get_elapsed_time_s() -> str:
 def normalize_path(basepath: str, append_slash=True) -> str:
     """Converts path string to universal slash-concatenated string, enclosing slash is optional"""
     normalized_path = basepath.replace('\\', SLASH)
-    if append_slash and len(normalized_path) != 0 and normalized_path[-1] != SLASH:
+    if append_slash and normalized_path and not normalized_path.endswith(SLASH):
         normalized_path += SLASH
     return normalized_path
 
@@ -47,7 +47,7 @@ def normalize_filename(filename: str, base_path: str) -> str:
 
 def extract_ext(href: str) -> str:
     ext_match = re_ext.search(href)
-    return ext_match.group(1) if ext_match else '.mp4'
+    return ext_match.group(1) if ext_match else f'.{DEFAULT_EXT}'
 
 
 def has_naming_flag(flag: int) -> bool:

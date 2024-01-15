@@ -36,7 +36,7 @@ re_neg_and_group = re_compile(r'^-\([^,]+(?:,[^,]+)+\)$')
 re_tags_to_process = re_compile(
     r'^(?:.+?_warc.+?|(?:[a-z]+?_)?elf|drae.{3}|tent[a-z]{3}es|(?:bell[a-z]|sto[a-z]{4})_bul[a-z]{2,3}|inf[a-z]{5}n|egg(?:_[a-z]{3,9}|s)?|'
     r'[a-z]{4}hral_i.+?|(?:\d{1,2}\+?)?(?:boys?|girls?|fu[a-z]{2}(?:[a-z]{4}|s)?|in[d-v]{2}cts?|monsters?)|succ[a-z]{4}|'
-    r'bbw|dog|eel|f(?:acesitting|ur)|orc|hmv|pmv|tar|c(?:\.c\.|um)|d\.va|na\'vi|kai\'sa|gender.+?|'
+    r'bbw|dog|eel|f(?:acesitting|ur)|orc|hmv|pmv|tar|c(?:\.c\.|um)|d\.va|na\'vi|kai\'sa|monster_girl|gender.+?|'
     r'[^(]+\([^)]+\).*?|[a-z_\-]+\d+?|\d{2,4}[a-z_\-]+?|[a-z_]{2,15}sfm|[^_]+_pov|(?:fu|s)[a-z]{6}(?:/|_(?:on|with)_)[a-z]{4}(?:oy)?|'
     r'[a-z][a-z_]{3,12}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$'
 )
@@ -61,7 +61,7 @@ re_tags_to_not_exclude = re_compile(
     r'u(?:rry|ta(?:_on_[a-p]{4}|holic|nari(?:_on_[a-p]{4})?)))|'  # f
     r'g(?:a(?:ngbang|p(?:e|ing))|craw|en(?:der.+|nariel)|i(?:ant(?:ess)?|fdoozer)|o(?:blins?|o_girl|re|th)|r(?:an(?:d.+?|ny)|eatb8)|'  # g
     r'u(?:il(?:mon|tyk)|robase))|'  # g
-    r'h(?:a(?:iry|l(?:f_elf|o)|ndjob)|e(?:lena|tero)|i(?:gh_elf|nca_p|ve)|mv|'  # h
+    r'h(?:a(?:iry(?:_.*?)?|l(?:f_elf|o)|ndjob)|e(?:lena|tero)|i(?:gh_elf|nca_p|ve)|mv|'  # h
     r'o(?:ovesart|r(?:ror|se(?:_?(?:cock|girl|s(?:ex)?))?)|usewife)|rfidy|ulk|v54rdsl|ydrafxx)|'  # h
     r'i(?:cedev|demi|n(?:c(?:est|ubus)|justice|sect(?:oids?|s)?)|tsmort.+?)|'  # i
     r'j(?:a(?:ckerman|il)|uicyneko)|'  # j
@@ -79,8 +79,8 @@ re_tags_to_not_exclude = re_compile(
     r'p(?:i(?:der|troast|zzy)|l(?:atoon|ucky.*?)|o(?:ks|nty))|t(?:a(?:lkek|r(?:_.+?|craft|fox))|ra(?:ight|pon)|udio34)|'  # s
     r'uccubus|ylveon)|'  # s
     r't(?:a(?:ga|ker_pov)|e(?:k(?:ken|tah.+?)|ntacles?|xelnaut)|he(?:_sims|count|hoaxxx)|ied|o(?:gruta|rture|uhou)|'  # t
-    r'r(?:a(?:ns|ps?)|inity)|soni|utorial|y(?:viania))|'  # t
-    r'u(?:g(?:ly(?:_man)?|oira)|n(?:birth|de(?:ad|rtale))|r(?:ethral|iel))|'  # u
+    r'r(?:a(?:ns|ps?)|inity)|soni|u(?:be|torial)|y(?:viania))|'  # t
+    r'u(?:g(?:ly(?:_man)?|oira)|n(?:birth|de(?:ad|rtale))|r(?:ethral?|iel))|'  # u
     r'v(?:a(?:lorant|mpire)|i(?:cer34|olence|rgin)|o(?:mit|re))|'  # v
     r'w(?:ar(?:craft|frame|hammer)|eebu.*?|hip|or(?:ld_of_warcraft|ms?))|'  # w
     r'x(?:_(?:com(?:_\d)?|ray)|enomorph)|'  # x

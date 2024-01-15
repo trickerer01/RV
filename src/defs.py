@@ -28,7 +28,8 @@ PREFIX = 'rv_'
 SLASH = '/'
 UTF8 = 'utf-8'
 TAGS_CONCAT_CHAR = ','
-EXTENSIONS_V = ('mp4', 'webm')
+DEFAULT_EXT = 'mp4'
+EXTENSIONS_V = (DEFAULT_EXT, 'webm')
 START_TIME = datetime.now()
 
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eQ==').decode()
@@ -51,7 +52,7 @@ SITE_AJAX_REQUEST_UPLOADER_PAGE = b64decode(
 """Params required: **user_id**, **page** - **int**, **int**\n
 Ex. SITE_AJAX_REQUEST_UPLOADER_PAGE % (158018, 1)"""
 
-USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.5 Firefox/102.0 PaleMoon/32.5.0'
+USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.5 Firefox/102.0 PaleMoon/32.5.2'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
 QUALITIES = ('2160p', '1080p', '720p', '480p', '360p', 'preview')
@@ -64,7 +65,7 @@ DEFAULT_QUALITY = QUALITIES[4]
 # untagged videos download policy
 DOWNLOAD_POLICY_NOFILTERS = 'nofilters'
 DOWNLOAD_POLICY_ALWAYS = 'always'
-UVIDEO_POLICIES = (DOWNLOAD_POLICY_NOFILTERS, DOWNLOAD_POLICY_ALWAYS)
+UNTAGGED_POLICIES = (DOWNLOAD_POLICY_NOFILTERS, DOWNLOAD_POLICY_ALWAYS)
 """('nofilters','always')"""
 DOWNLOAD_POLICY_DEFAULT = DOWNLOAD_POLICY_NOFILTERS
 """'nofilters'"""
@@ -170,13 +171,14 @@ HELP_ARG_SEARCH_RULE = (
 )
 HELP_ARG_SEARCH_ACT = (
     'Native search by tag(s) / artist(s) / category(ies). Spaces must be replced with \'_\', concatenate with \',\'.'
-    ' Example: \'-search_tag 1girl,side_view -search_art artist_name -search_cat category_name\''
+    ' Example: \'-search_tag 1girl,side_view -search_art artist_name -search_cat category_name\'.'
+    ' Note that search obeys \'AND\' rule: search string AND ANY_OF/ALL the tags AND ANY_OF/ALL the artists AND ANY_OF/ALL the categories'
 )
 HELP_ARG_PLAYLIST = 'Playlist to download (filters still apply)'
 HELP_ARG_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'after-hours\''
 HELP_ARG_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
-HELP_ARG_UVPOLICY = (
+HELP_ARG_UTPOLICY = (
     f'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'
     f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'
 )
@@ -192,17 +194,17 @@ HELP_ARG_DWN_SCENARIO = (
     ' Useful when you have several queries you need to process for same id range.'
     ' Format:'
     ' "{SUBDIR1}: tag1 tag2; {SUBDIR2}: tag3 tag4".'
-    ' You can also use following arguments in each subquery: -quality, -minscore, -minrating, -uvp, -seq.'
+    ' You can also use following arguments in each subquery: -quality, -minscore, -minrating, -utp, -seq.'
     ' Example:'
     ' \'python ids.py -path ... -start ... -end ... --download-scenario'
-    ' "1g: 1girl -quality 480p; 2g: 2girls -quality 720p -minscore 150 -uvp always"\''
+    ' "1g: 1girl -quality 480p; 2g: 2girls -quality 720p -minscore 150 -utp always"\''
 )
 HELP_ARG_MINRATING = (
-    '[DEPRECATED, DO NOT USE] Rating percentage filter for videos, 0-100.'
+    '[DEPRECATED, DO NOT USE] Rating percentage filter, 0-100.'
     ' Videos having rating below this value will be skipped, unless rating extraction fails - in that case video always gets a pass'
 )
 HELP_ARG_MINSCORE = (
-    'Score filter for videos (likes minus dislikes).'
+    'Score filter (likes minus dislikes).'
     ' Videos having score below this value will be skipped, unless score extraction fails - in that case video always gets a pass'
 )
 HELP_ARG_CMDFILE = (
