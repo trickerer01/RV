@@ -192,27 +192,26 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
     return res
 
 
-async def check_video_download_status(idi: int, dest: str, resp: ClientResponse) -> None:
+async def check_video_download_status(idi: int, dest: str, init_size: int, resp: ClientResponse) -> None:
     dwn = VideoDownloadWorker.get()
     sname = f'{PREFIX}{idi:d}.mp4'
     check_timer = float(DOWNLOAD_STATUS_CHECK_TIMER)
+    slow_con_dwn_threshold = max(1, DOWNLOAD_STATUS_CHECK_TIMER * Config.throttle * Mem.KB)
+    last_size = init_size
     try:
-        # Log.trace(f'{sname} status check started...')
-        last_size = -1
         while True:
             await sleep(check_timer)
             if not dwn.is_writing(dest):  # finished already
                 Log.error(f'{sname} status checker is still running for finished download!')
                 break
             file_size = stat(dest).st_size if path.isfile(dest) else 0
-            if file_size in (0, last_size):
-                Log.error(f'{sname} status check failed (download stalled at {file_size:d})! Interrupting current try...')
+            if file_size < last_size + slow_con_dwn_threshold:
+                last_speed = (file_size - last_size) / Mem.KB / DOWNLOAD_STATUS_CHECK_TIMER
+                Log.warn(f'{sname} status check failed at {file_size:d} ({last_speed:.2f} KB/s)! Interrupting current try...')
                 resp.connection.transport.abort()  # abort download task (forcefully - close connection)
                 break
-            # Log.trace(f'{sname} status check passed at {file_size:d}...')
             last_size = file_size
     except CancelledError:
-        # Log.trace(f'{sname} status check cancelled...')
         pass
 
 
@@ -332,7 +331,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
 
                 dwn.add_to_writes(vi)
                 vi.set_state(VideoInfo.State.WRITING)
-                status_checker = get_running_loop().create_task(check_video_download_status(vi.my_id, vi.my_fullpath, r))
+                status_checker = get_running_loop().create_task(check_video_download_status(vi.my_id, vi.my_fullpath, file_size, r))
                 async with async_open(vi.my_fullpath, 'ab') as outf:
                     async for chunk in r.content.iter_chunked(1 * Mem.MB):
                         await outf.write(chunk)

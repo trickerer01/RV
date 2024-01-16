@@ -39,6 +39,7 @@ class BaseConfig:
         self.naming_flags = self.logging_flags = 0
         self.start = self.end = self.start_id = self.end_id = 0
         self.timeout = None  # type: Optional[ClientTimeout]
+        self.throttle = None  # type: Optional[int]
         # module-specific params (pages only or ids only)
         self.use_id_sequence = None  # type: Optional[bool]
         self.search = None  # type: Optional[str]
@@ -77,6 +78,7 @@ class BaseConfig:
         self.start_id = params.stop_id if pages else self.start
         self.end_id = params.begin_id if pages else self.end
         self.timeout = ClientTimeout(total=None, connect=params.timeout or CONNECT_TIMEOUT_BASE)
+        self.throttle = params.throttle
         # module-specific params (pages only or ids only)
         self.use_id_sequence = getattr(params, 'use_id_sequence', self.use_id_sequence)
         self.search = getattr(params, 'search', self.search)
