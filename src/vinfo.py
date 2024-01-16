@@ -10,8 +10,8 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Dict, Iterable, Union
 
-from defs import PREFIX, UTF8, DEFAULT_QUALITY
 from config import Config
+from defs import PREFIX, UTF8, DEFAULT_QUALITY
 from util import normalize_path, normalize_filename
 
 __all__ = ('VideoInfo', 'export_video_info')
