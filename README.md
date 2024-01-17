@@ -85,8 +85,16 @@ RV is a video downloader with a lot of features, most of which are filters for f
 6. Unfinished files policy
   - Unexpected fatal errors, Ctrl-C and other mishaps will cause download(s) to end abruptly
   - By default, when app manages to exit gracefully, all unfinished files get deleted, and all existing files are automatically considered completed
-  - To check and resume existing unfinished files use `--continue-mode` (or `-continue`). This may be slower for non-empty folders due to additional network requests but safer in case of complex queries
-  - To keep unfinished files use `--keep-unfinished` (or `-unfinish`). It acts as `--continue-mode` helper so it's recommended to use either both or none at all
+  - To check and resume existing unfinished files use `--continue-mode` (or `-continue`) option. This may be slower for non-empty folders due to additional network requests but safer in case of complex queries
+  - To keep unfinished files use `--keep-unfinished` (or `-unfinish`) option. It acts as `--continue-mode` helper so it's recommended to use either both or none at all
+
+7. Downloading in large amounts, interrupt & continue
+  - When downloading at large sometimes resulting download queue is so big it's impossible to process within reasonable time period and the process will be inevitably interrupted
+  - To be able to continue without running the whole search process again use `--store-continue-cmdfile` option. After initial video queue was formed a special 'continue' file will be stored and periodically updated in base download destination folder
+  - Continue file contains cmdline arguments required to continue the download process about the point of interruption, all provided parameters / options / download scenario / extra tags are preserved
+  - It is strongly recommended to also include `--continue-mode` and `--keep-unfinished` options when using continue file
+  - If download actually finishes without interruption stored continue file is automatically deleted
+  - Continue file has to be used with `ids` module, `file` mode (see `using 'file' mode` above)
 
 #### Examples
 1. Pages
@@ -96,8 +104,8 @@ RV is a video downloader with a lot of features, most of which are filters for f
     - `python pages.py -pages 2 -path PATH -quality 1080p -search_art ARTIST -search_tag TAG1,TAG2`
   - Up to 24 videos on page 3 with any of 3 tags from any of 2 authors under any of 2 categories, exclude any kind of `vore` or `fart`, in best quality, with minimum score of 100 and minimum rating of 90%, use proxy, save to a custom location, save tags, log everything, use shortest names for files:
     - `python pages.py -log trace -start 3 -pages 1 -path PATH -proxy https://127.0.0.1:222 -tdump -quality 2160p -minscore 100 -minrating 90 -search_cat CATEGORY1,CAT_EGORY2 -search_art ART_IST1,ARTIST2 -search_tag TAG1,TAG2,TAG3 -search_rule_cat any -search_rule_art any -search_rule_tag any -naming 0 -*vore -fart*`
-  - All videos uploaded by a user, if tagged with either of 2 desired tags, in best quality, sorted into subfolders by several desired (known) authors, putting remaining videos into a separate folder:
-    - `python pages.py -pages 9999 -path PATH -quality 2160p -uploader USER_ID (TAG1~TAG2) -script "name1: AUTHOR1; name2: AUTHOR2; name3: AUTHOR3; rest: * -utp always"`
+  - All videos uploaded by a user, if tagged with either of 2 desired tags, in best quality, sorted into subfolders by several desired (known) authors, putting remaining videos into a separate folder, setup for interrupt & continue:
+    - `python pages.py -pages 9999 -path PATH --store-continue-cmdfile -quality 2160p -uploader USER_ID (TAG1~TAG2) -script "name1: AUTHOR1; name2: AUTHOR2; name3: AUTHOR3; rest: * -utp always"`
 
 2. Ids
   - Minimal example - all existing videos in range:

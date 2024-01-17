@@ -84,7 +84,7 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
     for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
         if add_tag not in tags_raw:
             tags_raw.append(add_tag)
-    if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, Config.extra_tags or Config.id_sequence, vi.my_subfolder):
+    if is_filtered_out_by_extra_tags(vi.my_id, tags_raw, Config.extra_tags, Config.id_sequence, vi.my_subfolder):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
         return DownloadResult.FAIL_SKIPPED
     for vsrs, csri, srn, pc in zip((score, rating), (Config.min_score, Config.min_rating), ('score', 'rating'), ('', '%')):

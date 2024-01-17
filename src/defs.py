@@ -21,6 +21,7 @@ MAX_DEST_SCAN_SUB_DEPTH = 1
 MAX_VIDEOS_QUEUE_SIZE = 8
 DOWNLOAD_STATUS_CHECK_TIMER = 60
 DOWNLOAD_QUEUE_STALL_CHECK_TIMER = 30
+DOWNLOAD_CONTINUE_FILE_CHECK_TIMER = 30
 
 SCREENSHOTS_COUNT = 10
 
@@ -156,7 +157,7 @@ HELP_ARG_VERSION = 'Show program\'s version number and exit'
 HELP_ARG_GET_MAXID = 'Print maximum id and exit'
 HELP_ARG_BEGIN_STOP_ID = 'Video id lower / upper bounds filter to only download videos where \'begin_id >= video_id >= stop_id\''
 HELP_ARG_IDSEQUENCE = (
-    'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence instead of'
+    'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence among'
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
 HELP_ARG_PATH = 'Download destination. Default is current folder'
@@ -198,6 +199,9 @@ HELP_ARG_DWN_SCENARIO = (
     ' Example:'
     ' \'python ids.py -path ... -start ... -end ... --download-scenario'
     ' "1g: 1girl -quality 480p; 2g: 2girls -quality 720p -minscore 150 -utp always"\''
+)
+HELP_ARG_STORE_CONTINUE_CMDFILE = (
+    'Store and automatically update cmd file which allows to later continue with unfinished download queue (using ids module, file mode)'
 )
 HELP_ARG_MINRATING = (
     '[DEPRECATED, DO NOT USE] Rating percentage filter, 0-100.'

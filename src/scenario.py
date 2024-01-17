@@ -13,7 +13,7 @@ from defs import (
     LoggingFlags, DEFAULT_QUALITY, QUALITIES, UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, PREFIX,
 )
 from logger import Log
-from tagger import valid_extra_tag, try_parse_id_or_group, is_filtered_out_by_extra_tags
+from tagger import valid_extra_tag, extract_id_or_group, is_filtered_out_by_extra_tags
 from validators import valid_int, valid_rating
 
 __all__ = ('DownloadScenario',)
@@ -55,6 +55,7 @@ class DownloadScenario(object):
     def __init__(self, fmt_str: str) -> None:
         assert fmt_str
 
+        self.fmt_str = fmt_str
         self.queries = list()  # type: List[SubQueryParams]
 
         parser = ArgumentParser(add_help=False)
@@ -77,15 +78,11 @@ class DownloadScenario(object):
                         errors_to_print.append(f'\nInvalid extra tag: \'{tag}\'')
                 parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
                 if parsed.use_id_sequence is True:
-                    id_sequence = try_parse_id_or_group(parsed.extra_tags)
+                    id_sequence = extract_id_or_group(parsed.extra_tags)
                     if not id_sequence:
-                        error_to_print = (
-                            '\nNo ID \'or\' group provided!' if not parsed.extra_tags else
-                            f'\nInvalid ID \'or\' group: \'{parsed.extra_tags[0]}\'!' if len(parsed.extra_tags) == 1 else
-                            '\nID \'or\' group must be the only extra tag used!'
-                        )
+                        error_to_print = ('\nNo ID \'or\' group provided!' if not parsed.extra_tags else
+                                          f'\nNo valid ID \'or\' group found in \'{str(parsed.extra_tags)}\'!')
                         errors_to_print.append(error_to_print)
-                    parsed.extra_tags.clear()
                 else:
                     id_sequence = []
                 if parsed.untagged_policy == UTP_ALWAYS and self.has_subquery(utp=UTP_ALWAYS):
@@ -115,7 +112,7 @@ class DownloadScenario(object):
     def get_matching_subquery(self, idi: int, tags_raw: List[str], score: str, rating: str) -> Optional[SubQueryParams]:
         sname = f'{PREFIX}{idi:d}.mp4'
         for sq in self.queries:
-            if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags or sq.id_sequence, sq.subfolder):
+            if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.id_sequence, sq.subfolder):
                 sq_skip = False
                 for vsrs, csri, srn, pc in zip((score, rating), (sq.minscore, sq.minrating), ('score', 'rating'), ('', '%')):
                     if len(vsrs) > 0 and csri is not None and sq_skip is False:

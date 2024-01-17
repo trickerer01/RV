@@ -8,13 +8,13 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from __future__ import annotations
 from enum import IntEnum
-from typing import Dict, Iterable, Union
+from typing import Dict, Iterable, Union, List, Tuple
 
 from config import Config
 from defs import PREFIX, UTF8, DEFAULT_QUALITY
 from util import normalize_path, normalize_filename
 
-__all__ = ('VideoInfo', 'export_video_info')
+__all__ = ('VideoInfo', 'get_min_max_ids', 'export_video_info')
 
 
 class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
@@ -73,6 +73,10 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
     @property
     def state_str(self) -> str:
         return self._state.name
+
+
+def get_min_max_ids(seq: List[VideoInfo]) -> Tuple[int, int]:
+    return min(seq, key=lambda x: x.my_id).my_id, max(seq, key=lambda x: x.my_id).my_id
 
 
 def export_video_info(info_list: Iterable[VideoInfo]) -> None:

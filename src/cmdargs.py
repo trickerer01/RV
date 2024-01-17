@@ -17,7 +17,7 @@ from defs import (
     HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, HELP_ARG_CONTINUE, HELP_ARG_UNFINISH,
     HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER, HELP_ARG_VERSION, HELP_ARG_SESSION_ID, SEARCH_RULES, SEARCH_RULE_DEFAULT,
     QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE,
-    HELP_ARG_THROTTLE,
+    HELP_ARG_THROTTLE, HELP_ARG_STORE_CONTINUE_CMDFILE,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -38,6 +38,7 @@ NAMING_DEFAULT = NAMING_FLAGS_DEFAULT
 LOGGING_DEFAULT = LOGGING_FLAGS_DEFAULT
 """0x004"""
 
+PARSER_TYPE_PARAM = 'zzzparser_type'
 PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
 EXISTING_PARSERS = {PARSER_TITLE_CMD, PARSER_TITLE_FILE}
@@ -59,9 +60,12 @@ def read_cmdfile(cmdfile_path: str) -> List[str]:
         return args
 
 
-def is_parsed_cmdfile(parse_result: Namespace) -> bool:
-    """Determines if parsed cmdline points to a text file"""
-    return hasattr(parse_result, 'path') and not hasattr(parse_result, 'extra_tags')
+def is_parsed_file(parsed_result: Namespace) -> bool:
+    return getattr(parsed_result, PARSER_TYPE_PARAM) == PARSER_TITLE_FILE
+
+
+def is_parsed_cmdfile(parsed_result: Namespace) -> bool:
+    return is_parsed_file(parsed_result)
 
 
 def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: ArgumentParser) -> Namespace:
@@ -114,6 +118,7 @@ def create_parsers() -> Tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
     par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
     [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
     [p.add_argument('--version', action='version', help=HELP_ARG_VERSION, version=f'{APP_NAME} {APP_VERSION}') for p in (par_file, par_cmd)]
+    [p.set_defaults(**{PARSER_TYPE_PARAM: t}) for p, t in zip((par_file, par_cmd), (PARSER_TITLE_FILE, PARSER_TITLE_CMD))]
     return parser, par_file, par_cmd
 
 
@@ -137,6 +142,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
     parser_or_group.add_argument('-session_id', default=None, help=HELP_ARG_SESSION_ID, type=valid_session_id)
     parser_or_group.add_argument('-script', '--download-scenario', default=None, help=HELP_ARG_DWN_SCENARIO, type=DownloadScenario)
+    parser_or_group.add_argument('--store-continue-cmdfile', action=ACTION_STORE_TRUE, help=HELP_ARG_STORE_CONTINUE_CMDFILE)
     parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=valid_extra_tag)
 
 

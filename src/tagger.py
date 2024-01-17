@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from typing import List, Optional, Collection, Iterable, Sequence, Tuple, Union
+from typing import List, Optional, Collection, Iterable, MutableSequence, Tuple
 
 from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
 from defs import TAGS_CONCAT_CHAR, LoggingFlags, PREFIX
@@ -18,7 +18,7 @@ from rex import (
 )
 
 __all__ = (
-    'filtered_tags', 'get_matching_tag', 'try_parse_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags',
+    'filtered_tags', 'get_matching_tag', 'extract_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags',
     'valid_playlist_name', 'valid_playlist_id', 'valid_tags', 'valid_artists', 'valid_categories',
 )
 
@@ -182,10 +182,12 @@ def is_valid_id_or_group(orgr: str) -> bool:
     return is_valid_or_group(orgr) and all(re_idval.fullmatch(tag) for tag in orgr[1:-1].split('~'))
 
 
-def try_parse_id_or_group(ex_tags: Sequence[str]) -> List[int]:
-    if len(ex_tags) == 1:
-        orgr = ex_tags[0]
+def extract_id_or_group(ex_tags: MutableSequence[str]) -> List[int]:
+    """May alter the input container!"""
+    for i in range(len(ex_tags)):
+        orgr = ex_tags[i]
         if is_valid_id_or_group(orgr):
+            del ex_tags[i]
             return [int(tag.replace('id=', '')) for tag in orgr[1:-1].split('~')]
     return []
 
@@ -194,41 +196,37 @@ def trim_undersores(base_str: str) -> str:
     return re_uscore_mult.sub('_', base_str).strip('_')
 
 
-def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_seq: Union[List[str], List[int]], subfolder: str) -> bool:
+def is_filtered_out_by_extra_tags(idi: int, tags_raw: Collection[str], extra_tags: List[str], id_seq: List[int], subfolder: str) -> bool:
     suc = True
     sname = f'{PREFIX}{idi:d}.mp4'
     sfol = f'[{subfolder}] ' if subfolder else ''
-    if extra_seq:
-        if isinstance(extra_seq[0], int):
-            if idi not in extra_seq:
+    if id_seq and idi not in id_seq:
+        suc = False
+        Log.trace(f'{sfol}Video {sname} isn\'t contained in id list \'{str(id_seq)}\'. Skipped!',
+                  LoggingFlags.EX_MISSING_TAGS)
+    for extag in extra_tags:
+        if extag.startswith('('):
+            if get_or_group_matching_tag(extag, tags_raw) is None:
                 suc = False
-                Log.trace(f'{sfol}Video {sname} isn\'t contained in id list \'{str(extra_seq)}\'. Skipped!',
+                Log.trace(f'{sfol}Video {sname} misses required tag matching \'{extag}\'. Skipped!',
                           LoggingFlags.EX_MISSING_TAGS)
-            return not suc
-
-        for extag in extra_seq:
-            if extag.startswith('('):
-                if get_or_group_matching_tag(extag, tags_raw) is None:
-                    suc = False
-                    Log.trace(f'{sfol}Video {sname} misses required tag matching \'{extag}\'. Skipped!',
-                              LoggingFlags.EX_MISSING_TAGS)
-            elif extag.startswith('-('):
-                if is_neg_and_group_matches(extag, tags_raw):
-                    suc = False
-                    Log.info(f'{sfol}Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
-                             LoggingFlags.EX_EXCLUDED_TAGS)
-            else:
-                negative = extag.startswith('-')
-                my_extag = extag[1:] if negative else extag
-                mtag = get_matching_tag(my_extag, tags_raw)
-                if mtag is not None and negative:
-                    suc = False
-                    Log.info(f'{sfol}Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
-                             LoggingFlags.EX_EXCLUDED_TAGS)
-                elif mtag is None and not negative:
-                    suc = False
-                    Log.trace(f'{sfol}Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
-                              LoggingFlags.EX_MISSING_TAGS)
+        elif extag.startswith('-('):
+            if is_neg_and_group_matches(extag, tags_raw):
+                suc = False
+                Log.info(f'{sfol}Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
+                         LoggingFlags.EX_EXCLUDED_TAGS)
+        else:
+            negative = extag.startswith('-')
+            my_extag = extag[1:] if negative else extag
+            mtag = get_matching_tag(my_extag, tags_raw)
+            if mtag is not None and negative:
+                suc = False
+                Log.info(f'{sfol}Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
+                         LoggingFlags.EX_EXCLUDED_TAGS)
+            elif mtag is None and not negative:
+                suc = False
+                Log.trace(f'{sfol}Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
+                          LoggingFlags.EX_MISSING_TAGS)
     return not suc
 
 

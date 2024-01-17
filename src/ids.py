@@ -15,10 +15,10 @@ from config import Config
 from download import download, at_interrupt
 from logger import Log
 from path_util import prefilter_existing_items
-from tagger import try_parse_id_or_group
+from tagger import extract_id_or_group
 from util import at_startup
 from validators import find_and_resolve_config_conflicts
-from vinfo import VideoInfo
+from vinfo import VideoInfo, get_min_max_ids
 
 __all__ = ('main_sync',)
 
@@ -32,13 +32,11 @@ async def main(args: Sequence[str]) -> None:
     Config.read(arglist, False)
 
     if Config.use_id_sequence:
-        Config.id_sequence = try_parse_id_or_group(Config.extra_tags)
+        Config.id_sequence = extract_id_or_group(Config.extra_tags)
         if not Config.id_sequence:
             Log.fatal('\nNo ID \'or\' group provided!' if not Config.extra_tags else
-                      f'\nInvalid ID \'or\' group: \'{Config.extra_tags[0]}\'!' if len(Config.extra_tags) == 1 else
-                      '\nID \'or\' group must be the only extra tag used!')
+                      f'\nNo valid ID \'or\' group found in \'{str(Config.extra_tags)}\'!')
             raise ValueError
-        Config.extra_tags.clear()
     else:
         Config.id_sequence = list(range(Config.start_id, Config.end_id + 1))
 
@@ -60,7 +58,7 @@ async def main(args: Sequence[str]) -> None:
             Log.fatal('\nNo videos found. Aborted.')
         return
 
-    minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
+    minid, maxid = get_min_max_ids(v_entries)
     Log.info(f'\nOk! {len(v_entries):d} ids (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
     await download(v_entries, True, removed_count)

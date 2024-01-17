@@ -16,10 +16,14 @@ from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable, Un
 from aiohttp import ClientSession
 
 from config import Config
-from defs import MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, DownloadResult, Mem, PREFIX
+from defs import (
+    DownloadResult, Mem, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, DOWNLOAD_CONTINUE_FILE_CHECK_TIMER, PREFIX,
+    START_TIME, UTF8, LOGGING_FLAGS, CONNECT_TIMEOUT_BASE, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DEFAULT_QUALITY,
+    DOWNLOAD_MODE_DEFAULT,
+)
 from logger import Log
 from util import format_time, get_elapsed_time_i, get_elapsed_time_s, calc_sleep_time
-from vinfo import VideoInfo
+from vinfo import VideoInfo, get_min_max_ids
 
 __all__ = ('VideoDownloadWorker',)
 
@@ -142,6 +146,54 @@ class VideoDownloadWorker:
                         vi.my_last_check_time = elapsed_seconds
                     Log.debug('\n'.join(item_states))
 
+    async def _continue_file_checker(self, minmax_id: Tuple[int, int]) -> None:
+        if not Config.store_continue_cmdfile:
+            return
+        continue_file_path = (
+            f'{Config.dest_base}{PREFIX}{START_TIME.strftime("%Y-%m-%d_%H_%M_%S")}_{minmax_id[0]:d}-{minmax_id[1]:d}.continue.conf'
+        )
+        arglist_base = [
+            '-path', Config.dest_base, '-continue', '--store-continue-cmdfile',
+            '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == Config.logging_flags, LOGGING_FLAGS.keys())),
+            *(('-quality', Config.quality) if Config.quality != DEFAULT_QUALITY and not Config.scenario else ()),
+            *(('-utp', Config.utp) if Config.utp != DOWNLOAD_POLICY_DEFAULT and not Config.scenario else ()),
+            *(('-minrating', Config.min_rating) if Config.min_rating else ()),
+            *(('-minscore', Config.min_score) if Config.min_score else ()),
+            *(('-naming', Config.naming_flags) if Config.naming_flags != NAMING_FLAGS_DEFAULT else ()),
+            *(('-dmode', Config.download_mode) if Config.download_mode != DOWNLOAD_MODE_DEFAULT else ()),
+            *(('-proxy', Config.proxy) if Config.proxy else ()),
+            *(('-throttle', Config.throttle) if Config.throttle else ()),
+            *(('-timeout', int(Config.timeout.connect)) if int(Config.timeout.connect) != CONNECT_TIMEOUT_BASE else ()),
+            *(('-unfinish',) if Config.keep_unfinished else ()),
+            *(('-tdump',) if Config.save_tags else ()),
+            *(('-ddump',) if Config.save_descriptions else ()),
+            *(('-cdump',) if Config.save_comments else ()),
+            *(('-sdump',) if Config.save_screenshots else ()),
+            *(('-session_id', Config.session_id,) if Config.session_id else ()),
+            *Config.extra_tags,
+            *(('-script', Config.scenario.fmt_str) if Config.scenario else ())
+        ]
+        base_sleep_time = calc_sleep_time(3.0)
+        write_delay = DOWNLOAD_CONTINUE_FILE_CHECK_TIMER
+        last_check_seconds = 0
+        while len(self._seq) + self._queue.qsize() + len(self._downloads_active) > 0:
+            elapsed_seconds = get_elapsed_time_i()
+            if elapsed_seconds >= write_delay and elapsed_seconds - last_check_seconds >= write_delay:
+                last_check_seconds = elapsed_seconds
+                v_ids = sorted(vi.my_id for vi in self._seq + [qvi[0] for qvi in getattr(self._queue, '_queue')] + self._downloads_active)
+                arglist = ['-seq', f'({"~".join(f"id={idi:d}" for idi in v_ids)})'] if len(v_ids) > 1 else ['-start', str(v_ids[0])]
+                arglist.extend(arglist_base)
+                try:
+                    Log.trace(f'Storing continue file to \'{continue_file_path}\'...')
+                    with open(continue_file_path, 'wt', encoding=UTF8, buffering=1) as cfile:
+                        cfile.write('\n'.join(str(e) for e in arglist))
+                except (OSError, IOError):
+                    Log.error(f'Unable to save continue file to {continue_file_path}!')
+            await sleep(base_sleep_time)
+        if path.isfile(continue_file_path):
+            Log.trace(f'All files downloaded. Removing continue file \'{continue_file_path}\'...')
+            remove(continue_file_path)
+
     async def _after_download(self) -> None:
         newline = '\n'
         Log.info(f'\nDone. {self._downloaded_count:d} / {self._orig_count:d}+{self._filtered_count_pre:d} file(s) downloaded, '
@@ -155,7 +207,8 @@ class VideoDownloadWorker:
             Log.fatal(f'Failed items:\n{newline.join(str(fi) for fi in sorted(self._failed_items))}')
 
     async def run(self) -> None:
-        for cv in as_completed([self._prod(), self._state_reporter()] + [self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE)]):
+        for cv in as_completed([self._prod(), self._state_reporter(), self._continue_file_checker(get_min_max_ids(self._seq)),
+                                *(self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE))]):
             await cv
         await self._after_download()
 

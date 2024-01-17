@@ -22,7 +22,7 @@ from path_util import prefilter_existing_items
 from rex import re_page_entry, re_paginator, re_preview_entry
 from util import at_startup, has_naming_flag
 from validators import find_and_resolve_config_conflicts
-from vinfo import VideoInfo
+from vinfo import VideoInfo, get_min_max_ids
 
 __all__ = ('main_sync',)
 
@@ -142,7 +142,7 @@ async def main(args: Sequence[str]) -> None:
                 Log.fatal('\nNo videos found. Aborted.')
             return
 
-        minid, maxid = min(v_entries, key=lambda x: x.my_id).my_id, max(v_entries, key=lambda x: x.my_id).my_id
+        minid, maxid = get_min_max_ids(v_entries)
         Log.info(f'\nOk! {len(v_entries):d} ids (+{removed_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
 
         await download(v_entries, full_download, removed_count, s)
