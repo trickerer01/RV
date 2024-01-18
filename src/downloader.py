@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import sleep, as_completed
-from os import path, remove, stat
+from os import path, remove, makedirs, stat
 from typing import List, Tuple, Coroutine, Any, Callable, Optional, Iterable, Union
 
 from aiohttp import ClientSession
@@ -185,6 +185,8 @@ class VideoDownloadWorker:
                 arglist.extend(arglist_base)
                 try:
                     Log.trace(f'Storing continue file to \'{continue_file_path}\'...')
+                    if not path.isdir(Config.dest_base):
+                        makedirs(Config.dest_base)
                     with open(continue_file_path, 'wt', encoding=UTF8, buffering=1) as cfile:
                         cfile.write('\n'.join(str(e) for e in arglist))
                 except (OSError, IOError):

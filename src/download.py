@@ -293,6 +293,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                         rename(rv_curfile, vi.my_fullpath)
                 else:
                     Log.info(f'{vi.my_filename} (or similar) already exists. Skipped.')
+                    vi.set_state(VideoInfo.State.DONE)
                     return DownloadResult.FAIL_ALREADY_EXISTS
 
     while (not skip) and retries < CONNECT_RETRIES_BASE:
