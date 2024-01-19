@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import sleep, get_running_loop, Lock as AsyncLock
+from asyncio import Lock as AsyncLock, sleep, get_running_loop
 from random import uniform as frand
 from typing import Optional, List
 from urllib.parse import urlparse

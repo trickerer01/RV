@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from typing import List, Optional, Collection, Iterable, MutableSequence, Tuple
 
 from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
-from defs import TAGS_CONCAT_CHAR, LoggingFlags, PREFIX
+from defs import LoggingFlags, TAGS_CONCAT_CHAR, PREFIX
 from logger import Log
 from rex import (
     re_replace_symbols, re_wtag, re_idval, re_uscore_mult, re_not_a_letter, re_numbered_or_counted_tag, re_or_group,

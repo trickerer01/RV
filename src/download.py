@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import sleep, get_running_loop, Task, CancelledError
+from asyncio import Task, CancelledError, sleep, get_running_loop
 from os import path, stat, remove, makedirs, rename
 from random import uniform as frand
 from typing import Optional, Iterable, Dict
@@ -129,7 +129,7 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
         if Config.save_comments:
             comments_list = [f'{cudivs[i].text}:\n' + cbdivs[i].get_text('\n').strip() for i in range(len(cbdivs) - int(has_description))]
             vi.my_comments = ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else ''
-    my_tags = filtered_tags(list(sorted(tags_raw))) or my_tags
+    my_tags = filtered_tags(sorted(tags_raw)) or my_tags
 
     tries = 0
     while True:

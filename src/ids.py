@@ -10,7 +10,7 @@ import sys
 from asyncio import run as run_async, sleep
 from typing import Sequence
 
-from cmdargs import prepare_arglist, HelpPrintExitException
+from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from download import download, at_interrupt
 from logger import Log

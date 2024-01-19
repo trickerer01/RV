@@ -7,7 +7,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from __future__ import annotations
-
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import sleep, as_completed
 from os import path, remove, makedirs, stat
