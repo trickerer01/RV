@@ -13,7 +13,7 @@ from defs import QUALITIES, EXTENSIONS_V
 
 # common
 re_media_filename = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\.(?:{"|".join(EXTENSIONS_V)})$')
-re_replace_symbols = re_compile(r'[^0-9a-zA-Z.,_+%\-()\[\] ]+')
+re_replace_symbols = re_compile(r'[^0-9a-zA-Z.,_+%!\-()\[\] ]+')
 re_ext = re_compile(r'(\.[^&]{3,5})&')
 # re_private_video = re_compile(r'^This is a private video\..*?$')
 # pages
