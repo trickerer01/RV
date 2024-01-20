@@ -52,6 +52,7 @@ class VideoDownloadWorker:
         self._filtered_count_pre = filtered_count
         self._filtered_count_after = 0
         self._skipped_count = 0
+        self._minmax_id = get_min_max_ids(self._seq)
 
         self._downloads_active = list()  # type: List[VideoInfo]
         self._writes_active = list()  # type: List[str]
@@ -145,9 +146,10 @@ class VideoDownloadWorker:
                         vi.my_last_check_time = elapsed_seconds
                     Log.debug('\n'.join(item_states))
 
-    async def _continue_file_checker(self, minmax_id: Tuple[int, int]) -> None:
+    async def _continue_file_checker(self) -> None:
         if not Config.store_continue_cmdfile:
             return
+        minmax_id = self._minmax_id
         continue_file_path = (
             f'{Config.dest_base}{PREFIX}{START_TIME.strftime("%Y-%m-%d_%H_%M_%S")}_{minmax_id[0]:d}-{minmax_id[1]:d}.continue.conf'
         )
@@ -208,8 +210,8 @@ class VideoDownloadWorker:
             Log.fatal(f'Failed items:\n{newline.join(str(fi) for fi in sorted(self._failed_items))}')
 
     async def run(self) -> None:
-        for cv in as_completed([self._prod(), self._state_reporter(), self._continue_file_checker(get_min_max_ids(self._seq)),
-                                *(self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE))]):
+        for cv in as_completed([self._prod(), self._state_reporter(), self._continue_file_checker(),
+                               *(self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE))]):
             await cv
         await self._after_download()
 

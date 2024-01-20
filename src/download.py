@@ -16,8 +16,8 @@ from aiohttp import ClientSession, ClientResponse, ClientPayloadError
 
 from config import Config
 from defs import (
-    SITE, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR,
-    DOWNLOAD_STATUS_CHECK_TIMER, SCREENSHOTS_COUNT, DownloadResult, Mem, NamingFlags, PREFIX,
+    Mem, NamingFlags, DownloadResult, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
+    DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, DOWNLOAD_STATUS_CHECK_TIMER, SITE, SCREENSHOTS_COUNT,
 )
 from downloader import VideoDownloadWorker
 from fetch_html import fetch_html, wrap_request, make_session
@@ -26,19 +26,19 @@ from path_util import file_already_exists
 from rex import re_media_filename
 from scenario import DownloadScenario
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
-from util import get_elapsed_time_i, extract_ext, has_naming_flag
-from vinfo import export_video_info, VideoInfo
+from util import has_naming_flag, get_elapsed_time_i, extract_ext
+from vinfo import VideoInfo, export_video_info
 
 __all__ = ('download', 'at_interrupt')
 
 
 async def download(sequence: Iterable[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
     async with session or make_session() as session:
-        await VideoDownloadWorker(sequence, (download_video, process_id)[by_id], filtered_count, session).run()
+        await VideoDownloadWorker(sequence, (download_video, process_video)[by_id], filtered_count, session).run()
     export_video_info(sequence)
 
 
-async def process_id(vi: VideoInfo) -> DownloadResult:
+async def process_video(vi: VideoInfo) -> DownloadResult:
     dwn = VideoDownloadWorker.get()
     scenario = Config.scenario  # type: Optional[DownloadScenario]
     sname = f'{PREFIX}{vi.my_id:d}.mp4'
@@ -115,19 +115,19 @@ async def process_id(vi: VideoInfo) -> DownloadResult:
     if Config.save_descriptions or Config.save_comments:
         cidivs = a_html.find_all('div', class_='comment-info')
         cudivs = [cidiv.find('a') for cidiv in cidivs]
-        cbdivs = [cidiv.find('div', class_='coment-text') for cidiv in cidivs]
+        ctdivs = [cidiv.find('div', class_='coment-text') for cidiv in cidivs]
         desc_em = a_html.find('em')  # exactly one
         uploader_div = a_html.find('div', string=' Uploaded By: ')
         my_uploader = uploader_div.parent.find('a', class_='name').text.lower().strip() if uploader_div else 'unknown'
-        has_description = (cudivs[-1].text.lower() == my_uploader) if (cudivs and cbdivs) else False  # first comment by uploader
-        if cudivs and cbdivs:
-            assert len(cbdivs) == len(cudivs)
+        has_description = (cudivs[-1].text.lower() == my_uploader) if (cudivs and ctdivs) else False  # first comment by uploader
+        if cudivs and ctdivs:
+            assert len(ctdivs) == len(cudivs)
         if Config.save_descriptions:
-            desc_comment = (f'{cudivs[-1].text}:\n' + cbdivs[-1].get_text('\n').strip()) if has_description else ''
+            desc_comment = (f'{cudivs[-1].text}:\n' + ctdivs[-1].get_text('\n').strip()) if has_description else ''
             desc_base = (f'\n{my_uploader}:\n' + desc_em.get_text('\n') + '\n') if desc_em else ''
             vi.my_description = desc_base or (f'\n{desc_comment}\n' if desc_comment else '')
         if Config.save_comments:
-            comments_list = [f'{cudivs[i].text}:\n' + cbdivs[i].get_text('\n').strip() for i in range(len(cbdivs) - int(has_description))]
+            comments_list = [f'{cudivs[i].text}:\n' + ctdivs[i].get_text('\n').strip() for i in range(len(ctdivs) - int(has_description))]
             vi.my_comments = ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else ''
     my_tags = filtered_tags(sorted(tags_raw)) or my_tags
 

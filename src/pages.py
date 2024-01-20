@@ -36,7 +36,7 @@ async def main(args: Sequence[str]) -> None:
     Config.read(arglist, True)
 
     full_download = Config.quality != QUALITIES[-1]
-    vid_ref_class = 'th' if Config.playlist_name else 'th js-open-popup'
+    video_ref_class = 'th' if Config.playlist_name else 'th js-open-popup'
 
     if find_and_resolve_config_conflicts(full_download) is True:
         await sleep(3.0)
@@ -85,7 +85,7 @@ async def main(args: Sequence[str]) -> None:
                     Log.debug(f'Extracted max page: {maxpage:d}')
 
             if Config.get_maxid:
-                miref = a_html.find('a', class_=vid_ref_class)
+                miref = a_html.find('a', class_=video_ref_class)
                 max_id = re_page_entry.search(str(miref.get('href'))).group(1)
                 Log.fatal(f'{PREFIX[:2].upper()}: {max_id}')
                 return
@@ -93,7 +93,7 @@ async def main(args: Sequence[str]) -> None:
             Log.info(f'page {pi - 1:d}...{" (this is the last page!)" if (0 < maxpage == pi - 1) else ""}')
 
             if full_download:
-                arefs = a_html.find_all('a', class_=vid_ref_class)
+                arefs = a_html.find_all('a', class_=video_ref_class)
                 for aref in arefs:
                     cur_id = int(re_page_entry.search(str(aref.get('href'))).group(1))
                     if check_id_bounds(cur_id) is False:
