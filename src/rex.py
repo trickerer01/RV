@@ -17,7 +17,7 @@ re_replace_symbols = re_compile(r'[^0-9a-zA-Z.,_+%!\-()\[\] ]+')
 re_ext = re_compile(r'(\.[^&]{3,5})&')
 # re_private_video = re_compile(r'^This is a private video\..*?$')
 # pages
-re_page_entry = re_compile(r'videos/(\d+)/')
+re_page_entry = re_compile(r'video/(\d+)/')
 re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
 re_paginator = re_compile(r'from(?:_(?:albums|videos))?:(\d+)')
 # validators
