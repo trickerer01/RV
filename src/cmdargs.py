@@ -73,7 +73,7 @@ def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: Ar
     try:
         parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
         if not is_parsed_cmdfile(parsed):
-            for tag in unks:
+            for tag in parsed.extra_tags + unks:
                 try:
                     assert valid_extra_tag(tag, False)
                 except (AssertionError, ValueError):
@@ -143,7 +143,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-session_id', default=None, help=HELP_ARG_SESSION_ID, type=valid_session_id)
     parser_or_group.add_argument('-script', '--download-scenario', default=None, help=HELP_ARG_DWN_SCENARIO, type=DownloadScenario)
     parser_or_group.add_argument('--store-continue-cmdfile', action=ACTION_STORE_TRUE, help=HELP_ARG_STORE_CONTINUE_CMDFILE)
-    parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS, type=valid_extra_tag)
+    parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS)
 
 
 def prepare_arglist_ids(args: Sequence[str]) -> Namespace:

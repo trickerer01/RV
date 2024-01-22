@@ -48,6 +48,7 @@ def valid_extra_tag(tag: str, log=True) -> str:
     try:
         if tag.startswith('('):
             assert is_valid_or_group(tag)
+            assert valid_tags(','.join(tag[1:-1].split('~')))
         elif tag.startswith('-('):
             assert is_valid_neg_and_group(tag)
         else:

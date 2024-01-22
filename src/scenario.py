@@ -64,14 +64,14 @@ class DownloadScenario(object):
         parser.add_argument('-minrating', '--minimum-rating', metavar='#0-100', default=0, help='', type=valid_rating)
         parser.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help='', type=valid_int)
         parser.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, help='', choices=UNTAGGED_POLICIES)
-        parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help='', type=valid_extra_tag)
+        parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help='')
 
         errors_to_print = [''] * 0
         for query_raw in fmt_str.split('; '):
             try:
                 subfolder, args = query_raw.split(': ')
                 parsed, unks = parser.parse_known_args(args.split())
-                for tag in unks:
+                for tag in parsed.extra_tags + unks:
                     try:
                         assert valid_extra_tag(tag, False)
                     except (AssertionError, ValueError):

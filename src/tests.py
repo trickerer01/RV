@@ -29,6 +29,8 @@ from pages import main as pages_main, main_sync as pages_main_sync
 from path_util import found_filenames_dict
 from util import normalize_path
 
+RUN_CONN_TESTS = 1
+
 
 def set_up_test(log=False) -> None:
     VideoDownloadWorker._instance = None
@@ -116,6 +118,8 @@ class CmdTests(TestCase):
 
 class DownloadTests(TestCase):
     def test_ids_touch(self):
+        if not RUN_CONN_TESTS:
+            return
         set_up_test()
         tempdir = normalize_path(gettempdir())
         tempfile_id = '3146165'
@@ -130,6 +134,8 @@ class DownloadTests(TestCase):
         print(f'{self._testMethodName} passed')
 
     def test_pages_touch(self):
+        if not RUN_CONN_TESTS:
+            return
         set_up_test()
         tempdir = normalize_path(gettempdir())
         tempfile_id = '3119234'
@@ -145,6 +151,8 @@ class DownloadTests(TestCase):
         print(f'{self._testMethodName} passed')
 
     def test_ids_full(self):
+        if not RUN_CONN_TESTS:
+            return
         set_up_test()
         tempdir = normalize_path(gettempdir())
         tempfile_id = '3055235'
@@ -159,6 +167,8 @@ class DownloadTests(TestCase):
         print(f'{self._testMethodName} passed')
 
     def test_pages_full(self):
+        if not RUN_CONN_TESTS:
+            return
         set_up_test()
         tempdir = normalize_path(gettempdir())
         tempfile_id = '3144801'
