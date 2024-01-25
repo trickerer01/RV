@@ -10,7 +10,7 @@ from os import path, listdir
 from typing import List, Optional, Dict, MutableSequence
 
 from config import Config
-from defs import MAX_DEST_SCAN_SUB_DEPTH, PREFIX
+from defs import MAX_DEST_SCAN_SUB_DEPTH
 from logger import Log
 from rex import re_media_filename
 from scenario import DownloadScenario
@@ -101,7 +101,7 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
     for i in reversed(range(len(vi_list))):  # type: int
         fullpath = file_already_exists(vi_list[i].my_id, '')
         if len(fullpath) > 0:
-            Log.info(f'Info: {PREFIX}{vi_list[i].my_id:d}.mp4 found in \'{path.split(fullpath)[0]}/\'. Skipped.')
+            Log.info(f'Info: {vi_list[i].sname} found in \'{path.split(fullpath)[0]}/\'. Skipped.')
             del vi_list[i]
 
 #

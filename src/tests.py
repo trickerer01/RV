@@ -67,7 +67,7 @@ class CmdTests(TestCase):
         c1 = BaseConfig()
         c1.read(parsed1, True)
         self.assertTrue(c1.get_maxid)
-        parsed2 = prepare_arglist(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~3d)', '-script',
+        parsed2 = prepare_arglist(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~vr)', '-script',
                                    'a: 2d; b: 3d; c: a2 -2d; d: * -utp always', '-naming', 'prefix|quality', '-log', 'warn'], True)
         c2 = BaseConfig()
         c2.read(parsed2, True)
@@ -103,7 +103,7 @@ class CmdTests(TestCase):
         c1 = BaseConfig()
         c1.read(parsed1, False)
         self.assertTrue(c1.use_id_sequence)
-        parsed2 = prepare_arglist(['-start', '1000', '-end', '999', '(a~b)', '(2d~3d)', '-dmode', 'touch', '--store-continue-cmdfile',
+        parsed2 = prepare_arglist(['-start', '1000', '-end', '999', '(a2~4k)', '(2d~vr)', '-dmode', 'touch', '--store-continue-cmdfile',
                                    '-script', 'a: 2d; b: 3d; c: a2 -2d; d: * -utp always', '-naming', '0x8', '-log', 'trace'], False)
         c2 = BaseConfig()
         c2.read(parsed2, False)

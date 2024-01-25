@@ -11,7 +11,7 @@ from enum import IntEnum
 from typing import Dict, Iterable, Union, List, Tuple
 
 from config import Config
-from defs import PREFIX, UTF8, DEFAULT_QUALITY
+from defs import PREFIX, UTF8, DEFAULT_QUALITY, DEFAULT_EXT
 from util import normalize_path, normalize_filename
 
 __all__ = ('VideoInfo', 'get_min_max_ids', 'export_video_info')
@@ -54,9 +54,13 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
 
     def __repr__(self) -> str:
         return (
-            f'[{self.state_str}] \'{PREFIX}{self.my_id:d}_{self.my_title}.mp4\' ({self.my_quality})'
+            f'[{self.state_str}] \'{PREFIX}{self.my_id:d}_{self.my_title}.{DEFAULT_EXT}\' ({self.my_quality})'
             f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.my_link}\''
         )
+
+    @property
+    def sname(self) -> str:
+        return f'{PREFIX}{self.my_id:d}.{DEFAULT_EXT}'
 
     @property
     def my_sfolder(self) -> str:

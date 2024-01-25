@@ -10,11 +10,12 @@ from argparse import ArgumentParser, ZERO_OR_MORE
 from typing import List, Optional
 
 from defs import (
-    LoggingFlags, UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, PREFIX, DEFAULT_QUALITY, QUALITIES,
+    LoggingFlags, UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, DEFAULT_QUALITY, QUALITIES,
 )
 from logger import Log
 from tagger import valid_extra_tag, extract_id_or_group, is_filtered_out_by_extra_tags
 from validators import valid_int, valid_rating
+from vinfo import VideoInfo
 
 __all__ = ('DownloadScenario',)
 
@@ -109,16 +110,15 @@ class DownloadScenario(object):
     def has_subquery(self, **kwargs) -> bool:
         return any(all(getattr(sq, k, ...) == kwargs[k] for k in kwargs) for sq in self.queries)
 
-    def get_matching_subquery(self, idi: int, tags_raw: List[str], score: str, rating: str) -> Optional[SubQueryParams]:
-        sname = f'{PREFIX}{idi:d}.mp4'
+    def get_matching_subquery(self, vi: VideoInfo, tags_raw: List[str], score: str, rating: str) -> Optional[SubQueryParams]:
         for sq in self.queries:
-            if not is_filtered_out_by_extra_tags(idi, tags_raw, sq.extra_tags, sq.id_sequence, sq.subfolder):
+            if not is_filtered_out_by_extra_tags(vi, tags_raw, sq.extra_tags, sq.id_sequence, sq.subfolder):
                 sq_skip = False
                 for vsrs, csri, srn, pc in zip((score, rating), (sq.minscore, sq.minrating), ('score', 'rating'), ('', '%')):
                     if len(vsrs) > 0 and csri is not None and sq_skip is False:
                         try:
                             if int(vsrs) < csri:
-                                Log.info(f'[{sq.subfolder}] Video {sname} has low {srn} \'{vsrs}{pc}\' (required {csri:d})!',
+                                Log.info(f'[{sq.subfolder}] Video {vi.sname} has low {srn} \'{vsrs}{pc}\' (required {csri:d})!',
                                          LoggingFlags.EX_LOW_SCORE)
                                 sq_skip = True
                         except Exception:
