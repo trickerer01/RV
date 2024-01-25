@@ -7,8 +7,9 @@ RV is a video downloader with a lot of features, most of which are filters for f
 ##### Python 3.7 or greater required
 - RV is a cmdline tool, no GUI
 - It consists of 2 main download modules: `pages.py` for pages scanning, `ids.py` - for video ids traversal
-- Invoke `python pages.py --help` or `python ids.py --help` for possible arguments for each module (the differences are minimal)
-- See `requirements.txt` for additional module dependencies
+- See `requirements.txt` for additional dependencies. Install with:
+  - `python -m pip install -r requirements.txt`
+- Invoke `python pages.py --help` or `python ids.py --help` to list possible arguments for each module (the differences are minimal)
 - For bug reports, questions and feature requests use our [issue tracker](https://github.com/trickerer01/RV/issues)
 
 #### Search & filters
@@ -56,7 +57,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
 
 4. File naming
   - File names are generated based on video *title* and *tags*:
-  - Base template: ***rv\_\<video_id>\_\<score>_\<title>\_(\<tags>).\<ext>***. It can be adjusted it using `-naming` argument
+  - Base template: ***rv\_\<video_id>\_\<score>_\<title>\_(\<tags>).\<ext>***. It can be adjusted using `-naming` argument
   - Non-descriptive or way-too-long tags will be dropped
   - If resulting file full path is too long to fit into 240 symbols, first the tags will be gradually dropped; if not enough, title will be shrunk to fit; general advice: do not download to folders way too deep down the folder tree
 
