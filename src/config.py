@@ -17,7 +17,7 @@ __all__ = ('Config',)
 
 
 class BaseConfig:
-    """Parameters container for params used in both **pages** and **ids** modes"""
+    """Parameters container for params used in both **pages** and **ids** modules"""
     def __init__(self) -> None:
         self.dest_base = None  # type: Optional[str]
         self.proxy = None  # type: Optional[str]
