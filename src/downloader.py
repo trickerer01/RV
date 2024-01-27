@@ -150,9 +150,8 @@ class VideoDownloadWorker:
         if not Config.store_continue_cmdfile:
             return
         minmax_id = self._minmax_id
-        continue_file_path = (
-            f'{Config.dest_base}{PREFIX}{START_TIME.strftime("%Y-%m-%d_%H_%M_%S")}_{minmax_id[0]:d}-{minmax_id[1]:d}.continue.conf'
-        )
+        continue_file_name = f'{PREFIX}{START_TIME.strftime("%Y-%m-%d_%H_%M_%S")}_{minmax_id[0]:d}-{minmax_id[1]:d}.continue.conf'
+        continue_file_fullpath = f'{Config.dest_base}{continue_file_name}'
         arglist_base = [
             '-path', Config.dest_base, '-continue', '--store-continue-cmdfile',
             '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == Config.logging_flags, LOGGING_FLAGS.keys())),
@@ -185,17 +184,17 @@ class VideoDownloadWorker:
                 arglist = ['-seq', f'({"~".join(f"id={idi:d}" for idi in v_ids)})'] if len(v_ids) > 1 else ['-start', str(v_ids[0])]
                 arglist.extend(arglist_base)
                 try:
-                    Log.trace(f'Storing continue file to \'{continue_file_path}\'...')
+                    Log.trace(f'Storing continue file to \'{continue_file_name}\'...')
                     if not path.isdir(Config.dest_base):
                         makedirs(Config.dest_base)
-                    with open(continue_file_path, 'wt', encoding=UTF8, buffering=1) as cfile:
+                    with open(continue_file_fullpath, 'wt', encoding=UTF8, buffering=1) as cfile:
                         cfile.write('\n'.join(str(e) for e in arglist))
                 except (OSError, IOError):
-                    Log.error(f'Unable to save continue file to {continue_file_path}!')
+                    Log.error(f'Unable to save continue file to \'{continue_file_name}\'!')
             await sleep(base_sleep_time)
-        if path.isfile(continue_file_path):
-            Log.trace(f'All files downloaded. Removing continue file \'{continue_file_path}\'...')
-            remove(continue_file_path)
+        if path.isfile(continue_file_fullpath):
+            Log.trace(f'All files downloaded. Removing continue file \'{continue_file_name}\'...')
+            remove(continue_file_fullpath)
 
     async def _after_download(self) -> None:
         newline = '\n'
