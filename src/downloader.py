@@ -169,7 +169,7 @@ class VideoDownloadWorker:
             *(('-ddump',) if Config.save_descriptions else ()),
             *(('-cdump',) if Config.save_comments else ()),
             *(('-sdump',) if Config.save_screenshots else ()),
-            *(('-session_id', Config.session_id,) if Config.session_id else ()),
+            *(('-session_id', Config.session_id) if Config.session_id else ()),
             *Config.extra_tags,
             *(('-script', Config.scenario.fmt_str) if Config.scenario else ())
         ]
