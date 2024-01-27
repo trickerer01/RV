@@ -47,13 +47,16 @@ def valid_playlist_id(plist: str) -> Tuple[int, str]:
 
 def valid_extra_tag(tag: str, log=True) -> str:
     try:
+        all_valid = True
         if tag.startswith('('):
             assert is_valid_or_group(tag)
-            assert valid_tags(','.join(tag[1:-1].split('~')))
+            all_valid &= all_extra_tags_valid(tag[1:-1].split('~'))
         elif tag.startswith('-('):
             assert is_valid_neg_and_group(tag)
+            all_valid &= all_extra_tags_valid(tag[2:-1].split(','))
         else:
             assert is_valid_extra_tag(tag[1:] if tag.startswith('-') else tag)
+        assert all_valid
         return tag.lower().replace(' ', '_')
     except Exception:
         if log:
@@ -114,6 +117,15 @@ def valid_categories(categories_str: str) -> str:
 
 def is_wtag(tag: str) -> bool:
     return not not re_wtag.fullmatch(tag)
+
+
+def all_extra_tags_valid(tags: List[str]) -> bool:
+    all_valid = True
+    for t in tags:
+        if not is_valid_extra_tag(t):
+            all_valid = False
+            Log.error(f'Error: invalid extra tag: \'{t}\'!')
+    return all_valid
 
 
 def is_valid_extra_tag(extag: str) -> bool:
