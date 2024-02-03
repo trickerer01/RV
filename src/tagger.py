@@ -269,7 +269,7 @@ def filtered_tags(tags_list: Collection[str]) -> str:
             tag = trim_undersores(aser_match.group(1))
             if len(tag) >= 17:
                 continue
-        elif re_tags_to_not_exclude.match(tag) is None:
+        elif alias is None and re_tags_to_not_exclude.match(tag) is None:
             continue
 
         tag = trim_undersores(tag)
