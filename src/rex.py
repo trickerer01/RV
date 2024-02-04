@@ -53,7 +53,7 @@ re_tags_to_not_exclude = re_compile(
     r'^(?:'
     r'a(?:i_content|lien(?:_.+?|s)?|m(?:azonium|b(?:er|rosine)|putee)|n(?:al(?:_beads)?|driod|gel|imopron|thro)|'  # a
     r'r(?:achnid|iel)|utofacial|yasz)|'  # a
-    r'b(?:a(?:d_end|ndoned|ronstrap|t(?:_girl|esz))|dsm|e(?:a(?:st|r(?:_girl)?)|lly_?b.+?|n_10|stiality|wyx)|'  # b
+    r'b(?:a(?:d_end|ndoned|ronstrap|t(?:_girl|esz))|b[mw]|dsm|e(?:a(?:st|r(?:_girl)?)|lly_?b.+?|n_10|stiality|wyx)|'  # b
     r'i(?:g(?:green|johnson)|mbo|oshock|r(?:dway|th))|l(?:ack(?:ed|j.+?)?|blind(?:fold)?|o(?:od|wjob))|'  # b
     r'o(?:dysuit|ndage|vine)|u(?:nny_?girl|tt_?plug))|'  # b
     r'c(?:a(?:ge|n(?:astus|i(?:d|ne|s))|ptured|t(?:_girl|woman)|ught)|entaur|hain(?:ed|s)|lass_sweeb|'  # c
