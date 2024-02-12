@@ -156,7 +156,7 @@ async def process_video(vi: VideoInfo) -> DownloadResult:
             pass
     if vi.my_quality not in qualities:
         q_idx = 0
-        Log.warn(f'Warning: cannot find quality \'{vi.my_quality}\' for {sname}, using \'{qualities[q_idx]}\'')
+        Log.warn(f'Warning: cannot find quality \'{vi.my_quality}\' for {sname}, selecting \'{qualities[q_idx]}\'')
         vi.my_quality = qualities[q_idx]
         link_idx = q_idx
     else:
