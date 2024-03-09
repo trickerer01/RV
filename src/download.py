@@ -18,7 +18,7 @@ from config import Config
 from defs import (
     Mem, NamingFlags, DownloadResult, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
     DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, DOWNLOAD_STATUS_CHECK_TIMER, SITE, SCREENSHOTS_COUNT,
-    FULLPATH_MAX_BASE_LEN,
+    FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY,
 )
 from downloader import VideoDownloadWorker
 from fetch_html import fetch_html, wrap_request, make_session
@@ -35,7 +35,9 @@ __all__ = ('download', 'at_interrupt')
 
 async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
     minid, maxid = get_min_max_ids(sequence)
-    Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n')
+    eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.3 + 0.05) * len(sequence))
+    Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n'
+             f'\nThis will take at least {eta_min:d} seconds!\n')
     async with session or make_session() as session:
         await VideoDownloadWorker(sequence, (download_video, process_video)[by_id], filtered_count, session).run()
     export_video_info(sequence)
