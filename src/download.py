@@ -35,7 +35,7 @@ __all__ = ('download', 'at_interrupt')
 
 async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
     minid, maxid = get_min_max_ids(sequence)
-    eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.3 + 0.05) * len(sequence))
+    eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(sequence))
     Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n'
              f'\nThis will take at least {eta_min:d} seconds!\n')
     async with session or make_session() as session:
