@@ -27,7 +27,7 @@ from path_util import file_already_exists
 from rex import re_media_filename
 from scenario import DownloadScenario
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
-from util import has_naming_flag, get_elapsed_time_i, extract_ext
+from util import has_naming_flag, format_time, get_elapsed_time_i, extract_ext
 from vinfo import VideoInfo, export_video_info, get_min_max_ids
 
 __all__ = ('download', 'at_interrupt')
@@ -37,7 +37,7 @@ async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, 
     minid, maxid = get_min_max_ids(sequence)
     eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(sequence))
     Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n'
-             f'\nThis will take at least {eta_min:d} seconds!\n')
+             f'\nThis will take at least {eta_min:d} seconds ({f"{format_time(eta_min)}" if eta_min >= 60 else ""})!\n')
     async with session or make_session() as session:
         await VideoDownloadWorker(sequence, (download_video, process_video)[by_id], filtered_count, session).run()
     export_video_info(sequence)

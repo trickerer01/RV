@@ -55,7 +55,7 @@ def scan_dest_folder() -> None:
         total_files_count = sum(len(li) for li in found_filenames_dict.values())
         Log.info(f'Found {base_files_count:d} file(s) in base and '
                  f'{total_files_count - base_files_count:d} file(s) in {len(found_filenames_dict.keys()) - 1:d} subfolder(s) '
-                 f'(total file(s): {total_files_count:d}, scan depth: {MAX_DEST_SCAN_SUB_DEPTH:d})')
+                 f'(total files: {total_files_count:d}, scan depth: {MAX_DEST_SCAN_SUB_DEPTH:d})')
 
 
 def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> str:
