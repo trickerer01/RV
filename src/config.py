@@ -49,6 +49,7 @@ class BaseConfig:
         self.playlist_id = None  # type: Optional[int]
         self.playlist_name = None  # type: Optional[str]
         self.uploader = None  # type: Optional[int]
+        self.model = None  # type: Optional[str]
         self.get_maxid = None  # type: Optional[bool]
         # extras (can't be set through cmdline arguments)
         self.nodelay = False
@@ -94,6 +95,7 @@ class BaseConfig:
             getattr(params, 'playlist_id') if getattr(params, 'playlist_id', (0,))[0] else getattr(params, 'playlist_name')
         ) if hasattr(params, 'playlist_id') or hasattr(params, 'playlist_name') else (self.playlist_id, self.playlist_name)
         self.uploader = getattr(params, 'uploader', self.uploader)
+        self.model = getattr(params, 'model', self.model)
         self.get_maxid = getattr(params, 'get_maxid', self.get_maxid)
 
     @property

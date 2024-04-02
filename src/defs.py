@@ -53,6 +53,11 @@ SITE_AJAX_REQUEST_UPLOADER_PAGE = b64decode(
     'FkZWRfdmlkZW9zJnNvcnRfYnk9JmZyb21fdmlkZW9zPSVk').decode()
 """Params required: **user_id**, **page** - **int**, **int**\n
 Ex. SITE_AJAX_REQUEST_UPLOADER_PAGE % (158018, 1)"""
+SITE_AJAX_REQUEST_MODEL_PAGE = b64decode(
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9tb2RlbHMvJXMvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc19jb21tb2'
+    '5fdmlkZW9zJnNvcnRfYnk9JmZyb209JWQ=').decode()
+"""Params required: **artist_name**, **page** - **str**, **int**\n
+Ex. SITE_AJAX_REQUEST_MODEL_PAGE % ('gray', 1)"""
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.6 Firefox/102.0 PaleMoon/33.0.1'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
@@ -231,6 +236,7 @@ HELP_ARG_UNFINISH = 'Do not clean up unfinished files on interrupt'
 HELP_ARG_TIMEOUT = 'Connection timeout (in seconds)'
 HELP_ARG_THROTTLE = 'Download speed threshold (in KB/s) to assume throttling, drop connection and retry'
 HELP_ARG_UPLOADER = 'Uploader user id (integer, filters still apply)'
+HELP_ARG_MODEL = 'Artist name (download directly from artist\'s page)'
 
 
 class DownloadResult(IntEnum):

@@ -95,6 +95,22 @@ class CmdTests(TestCase):
         self.assertTrue(c3.save_descriptions)
         self.assertTrue(c3.save_comments)
         self.assertTrue(c3.save_screenshots)
+        parsed4 = prepare_arglist(['-model', 'gret', '-start', '3', '-pages', '2', '-quality', '480p',
+                                   '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
+        c4 = BaseConfig()
+        c4.read(parsed4, True)
+        self.assertEqual('gret', c4.model)
+        self.assertEqual(3, c4.start)
+        self.assertEqual(4, c4.end)
+        self.assertEqual(QUALITIES[3], c4.quality)
+        self.assertEqual('480p', c4.quality)
+        self.assertEqual(12, c4.min_score)
+        self.assertTrue(c4.continue_mode)
+        self.assertTrue(c4.keep_unfinished)
+        self.assertTrue(c4.save_tags)
+        self.assertTrue(c4.save_descriptions)
+        self.assertTrue(c4.save_comments)
+        self.assertTrue(c4.save_screenshots)
         print(f'{self._testMethodName} passed')
 
     def test_cmd_ids(self):
