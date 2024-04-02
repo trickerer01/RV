@@ -107,6 +107,8 @@ RV is a video downloader with a lot of features, most of which are filters for f
     - `python pages.py -log trace -start 3 -pages 1 -path PATH -proxy https://127.0.0.1:222 -tdump -quality 2160p -minscore 100 -minrating 90 -search_cat CATEGORY1,CAT_EGORY2 -search_art ART_IST1,ARTIST2 -search_tag TAG1,TAG2,TAG3 -search_rule_cat any -search_rule_art any -search_rule_tag any -naming 0 -*vore -fart*`
   - All videos uploaded by a user, if tagged with either of 2 desired tags, in best quality, sorted into subfolders by several desired (known) authors, putting remaining videos into a separate folder, setup for interrupt & continue:
     - `python pages.py -pages 9999 -path PATH --store-continue-cmdfile -quality 2160p -uploader USER_ID (TAG1~TAG2) -script "name1: AUTHOR1; name2: AUTHOR2; name3: AUTHOR3; rest: * -utp always"`
+  - All videos from artist's page, if tagged with a desired tag, in best quality:
+    - `python pages.py -pages 999 -path PATH -quality 2160p -model ARTIST_NAME TAG1`
 
 2. Ids
   - All existing videos in range:
