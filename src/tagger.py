@@ -170,8 +170,8 @@ def normalize_wtag(wtag: str) -> str:
     return wtag.replace('*', '.*').replace('?', '.')
 
 
-def get_matching_tag(wtag: str, mtags: Iterable[str]) -> Optional[str]:
-    if not is_wtag(wtag):
+def get_matching_tag(wtag: str, mtags: Iterable[str], *, force_regex=False) -> Optional[str]:
+    if not is_wtag(wtag) and not force_regex:
         return wtag if wtag in mtags else None
     pat = prepare_regex_fullmatch(normalize_wtag(wtag))
     for htag in mtags:
@@ -188,8 +188,14 @@ def get_or_group_matching_tag(orgr: str, mtags: Iterable[str]) -> Optional[str]:
     return None
 
 
-def is_neg_and_group_matches(andgr: str, mtags: Iterable[str]) -> bool:
-    return all(get_matching_tag(wtag, mtags) is not None for wtag in andgr[2:-1].split(','))
+def get_neg_and_group_matches(andgr: str, mtags: Iterable[str]) -> List[str]:
+    matched_tags = list()
+    for wtag in andgr[2:-1].split(','):
+        mtag = get_matching_tag(wtag, mtags, force_regex=True)
+        if not mtag:
+            return []
+        matched_tags.append(mtag)
+    return matched_tags
 
 
 def is_valid_id_or_group(orgr: str) -> bool:
@@ -225,9 +231,10 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
                 Log.trace(f'{sfol}Video {sname} misses required tag matching \'{extag}\'. Skipped!',
                           LoggingFlags.EX_MISSING_TAGS)
         elif extag.startswith('-('):
-            if is_neg_and_group_matches(extag, tags_raw):
+            neg_matches = get_neg_and_group_matches(extag, tags_raw)
+            if neg_matches:
                 suc = False
-                Log.info(f'{sfol}Video {sname} contains excluded tags combination \'{extag[1:]}\'. Skipped!',
+                Log.info(f'{sfol}Video {sname} contains excluded tags combination \'{extag}\': {",".join(neg_matches)}. Skipped!',
                          LoggingFlags.EX_EXCLUDED_TAGS)
         else:
             negative = extag.startswith('-')
