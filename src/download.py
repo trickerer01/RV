@@ -186,6 +186,7 @@ async def process_video(vi: VideoInfo) -> DownloadResult:
         fname_part1 += f'_({my_tags})' if len(my_tags) > 0 else ''
     if len(my_tags) == 0 and len(fname_part1) > max(0, FULLPATH_MAX_BASE_LEN - (len(vi.my_folder) + len(fname_part2) + extra_len)):
         fname_part1 = fname_part1[:max(0, FULLPATH_MAX_BASE_LEN - (len(vi.my_folder) + len(fname_part2) + extra_len))]
+    fname_part1 = fname_part1.strip()
 
     fname_mid = f'_{vi.my_quality}' if has_naming_flag(NamingFlags.QUALITY) else ''
     vi.my_filename = f'{fname_part1}{fname_mid}{fname_part2}'
