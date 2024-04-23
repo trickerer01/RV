@@ -306,13 +306,18 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
 
     while (not skip) and retries < CONNECT_RETRIES_BASE:
         try:
+            file_exists = path.isfile(vi.my_fullpath)
+            file_size = stat(vi.my_fullpath).st_size if file_exists else 0
+
             if Config.dm == DOWNLOAD_MODE_TOUCH:
-                Log.info(f'Saving<touch> {sname} {0.0:.2f} Mb to {sfilename}')
-                with open(vi.my_fullpath, 'wb'):
-                    vi.set_state(VideoInfo.State.DONE)
+                if file_exists:
+                    Log.warn(f'{sname} ({vi.my_quality}) already exists, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
+                else:
+                    Log.info(f'Saving<touch> {sname} {0.0:.2f} Mb to {sfilename}')
+                    with open(vi.my_fullpath, 'wb'):
+                        vi.set_state(VideoInfo.State.DONE)
                 break
 
-            file_size = stat(vi.my_fullpath).st_size if path.isfile(vi.my_fullpath) else 0
             hkwargs = {'headers': {'Range': f'bytes={file_size:d}-'}} if file_size > 0 else {}  # type: Dict[str, Dict[str, str]]
             r = None
             async with await wrap_request(dwn.session, 'GET', vi.my_link, **hkwargs) as r:
