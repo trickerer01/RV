@@ -64,11 +64,11 @@ class VideoDownloadWorker:
 
     async def _at_task_start(self, vi: VideoInfo) -> None:
         self._downloads_active.append(vi)
-        Log.trace(f'[queue] {vi.sname} added to queue')
+        Log.trace(f'[queue] {vi.sname} added to active')
 
     async def _at_task_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
         self._downloads_active.remove(vi)
-        Log.trace(f'[queue] {vi.sname} removed from queue')
+        Log.trace(f'[queue] {vi.sname} removed from active')
         if result == DownloadResult.FAIL_ALREADY_EXISTS:
             self._filtered_count_after += 1
         elif result == DownloadResult.FAIL_SKIPPED:
