@@ -311,7 +311,9 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
 
             if Config.dm == DOWNLOAD_MODE_TOUCH:
                 if file_exists:
-                    Log.warn(f'{sname} ({vi.my_quality}) already exists, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
+                    Log.info(f'{sname} ({vi.my_quality}) already exists, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
+                    vi.set_state(VideoInfo.State.DONE)
+                    return DownloadResult.FAIL_ALREADY_EXISTS
                 else:
                     Log.info(f'Saving<touch> {sname} {0.0:.2f} Mb to {sfilename}')
                     with open(vi.my_fullpath, 'wb'):
