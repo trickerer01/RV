@@ -28,70 +28,77 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         FAILED = 6
 
     def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='') -> None:
-        self.my_id = m_id or 0
-        self.my_title = m_title or ''
-        self.my_link = m_link or ''
-        self.my_subfolder = m_subfolder or ''
-        self.my_filename = m_filename or ''
-        self.my_rating = m_rating or ''
+        self._id = m_id or 0
 
-        self.my_quality = Config.quality or DEFAULT_QUALITY
-        self.my_tags = ''
-        self.my_description = ''
-        self.my_comments = ''
-        self.my_expected_size = 0
-        self.my_start_size = 0
-        self.my_start_time = 0
-        self.my_last_check_size = 0
-        self.my_last_check_time = 0
+        self.title = m_title or ''
+        self.link = m_link or ''
+        self.subfolder = m_subfolder or ''
+        self.filename = m_filename or ''
+        self.rating = m_rating or ''
+        self.quality = Config.quality or DEFAULT_QUALITY  # type: str
+        self.tags = ''
+        self.description = ''
+        self.comments = ''
+        self.expected_size = 0
+        self.start_size = 0
+        self.start_time = 0
+        self.last_check_size = 0
+        self.last_check_time = 0
+
         self._state = VideoInfo.State.NEW
 
     def set_state(self, state: VideoInfo.State) -> None:
         self._state = state
 
     def __eq__(self, other: Union[VideoInfo, int]) -> bool:
-        return self.my_id == other.my_id if isinstance(other, type(self)) else self.my_id == other if isinstance(other, int) else False
+        return self.id == other.id if isinstance(other, type(self)) else self.id == other if isinstance(other, int) else False
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return (
-            f'[{self.state_str}] \'{PREFIX}{self.my_id:d}_{self.my_title}.{DEFAULT_EXT}\' ({self.my_quality})'
-            f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.my_link}\''
+            f'[{self.state_str}] \'{PREFIX}{self.id:d}_{self.title}.{DEFAULT_EXT}\' ({self.quality})'
+            f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.link}\''
         )
 
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
     def sname(self) -> str:
-        return f'{PREFIX}{self.my_id:d}.{DEFAULT_EXT}'
+        return f'{PREFIX}{self.id:d}.{DEFAULT_EXT}'
 
     @property
     def my_sfolder(self) -> str:
-        return normalize_path(self.my_subfolder)
+        return normalize_path(self.subfolder)
 
     @property
     def my_folder(self) -> str:
-        return normalize_path(f'{Config.dest_base}{self.my_subfolder}')
+        return normalize_path(f'{Config.dest_base}{self.subfolder}')
 
     @property
     def my_fullpath(self) -> str:
-        return normalize_filename(self.my_filename, self.my_folder)
+        return normalize_filename(self.filename, self.my_folder)
 
     @property
     def state_str(self) -> str:
         return self._state.name
 
+    __repr__ = __str__
+
 
 def get_min_max_ids(seq: Iterable[VideoInfo]) -> Tuple[int, int]:
-    return min(seq, key=lambda x: x.my_id).my_id, max(seq, key=lambda x: x.my_id).my_id
+    return min(seq, key=lambda x: x.id).id, max(seq, key=lambda x: x.id).id
 
 
 def export_video_info(info_list: Iterable[VideoInfo]) -> None:
     """Saves tags, descriptions and comments for each subfolder in scenario and base dest folder based on video info"""
     tags_dict, desc_dict, comm_dict = dict(), dict(), dict()  # type: Dict[str, Dict[int, str]]
     for vi in info_list:
-        if vi.my_link:
-            for d, s in zip((tags_dict, desc_dict, comm_dict), (vi.my_tags, vi.my_description, vi.my_comments)):
-                if vi.my_subfolder not in d:
-                    d[vi.my_subfolder] = dict()
-                d[vi.my_subfolder][vi.my_id] = s
+        if vi.link:
+            for d, s in zip((tags_dict, desc_dict, comm_dict), (vi.tags, vi.description, vi.comments)):
+                if vi.subfolder not in d:
+                    d[vi.subfolder] = dict()
+                d[vi.subfolder][vi.id] = s
     for conf, dct, name, proc_cb in zip(
         (Config.save_tags, Config.save_descriptions, Config.save_comments),
         (tags_dict, desc_dict, comm_dict),

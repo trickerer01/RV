@@ -99,7 +99,7 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
         return
 
     for i in reversed(range(len(vi_list))):  # type: int
-        fullpath = file_already_exists(vi_list[i].my_id, '')
+        fullpath = file_already_exists(vi_list[i].id, '')
         if len(fullpath) > 0:
             Log.info(f'Info: {vi_list[i].sname} found in \'{path.split(fullpath)[0]}/\'. Skipped.')
             del vi_list[i]

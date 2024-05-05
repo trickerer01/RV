@@ -220,7 +220,7 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
     suc = True
     sname = vi.sname
     sfol = f'[{subfolder}] ' if subfolder else ''
-    if id_seq and vi.my_id not in id_seq:
+    if id_seq and vi.id not in id_seq:
         suc = False
         Log.trace(f'{sfol}Video {sname} isn\'t contained in id list \'{str(id_seq)}\'. Skipped!',
                   LoggingFlags.EX_MISSING_TAGS)
