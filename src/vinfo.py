@@ -21,11 +21,13 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
     class State(IntEnum):
         NEW = 0
         QUEUED = 1
-        ACTIVE = 2
-        DOWNLOADING = 3
-        WRITING = 4
-        DONE = 5
-        FAILED = 6
+        SCANNING = 2
+        SCANNED = 3
+        ACTIVE = 4
+        DOWNLOADING = 5
+        WRITING = 6
+        DONE = 7
+        FAILED = 8
 
     def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='') -> None:
         self._id = m_id or 0

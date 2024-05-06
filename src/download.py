@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import Task, CancelledError, sleep, get_running_loop
+from asyncio import Task, CancelledError, sleep, get_running_loop, as_completed
 from os import path, stat, remove, makedirs, rename
 from random import uniform as frand
 from typing import Optional, List, Dict
@@ -21,6 +21,7 @@ from defs import (
     FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY,
 )
 from downloader import VideoDownloadWorker
+from dscanner import VideoScanWorker
 from fetch_html import fetch_html, wrap_request, make_session
 from logger import Log
 from path_util import file_already_exists
@@ -39,11 +40,18 @@ async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, 
     Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n'
              f'\nThis will take at least {eta_min:d} seconds{f" ({format_time(eta_min)})" if eta_min >= 60 else ""}!\n')
     async with session or make_session() as session:
-        await VideoDownloadWorker(sequence, (download_video, process_video)[by_id], filtered_count, session).run()
+        if by_id:
+            for cv in as_completed([
+                VideoScanWorker(sequence, scan_video).run(),
+                VideoDownloadWorker(sequence, process_video, filtered_count, session).run()
+            ]):
+                await cv
+        else:
+            await VideoDownloadWorker(sequence, download_video, filtered_count, session).run()
     export_video_info(sequence)
 
 
-async def process_video(vi: VideoInfo) -> DownloadResult:
+async def scan_video(vi: VideoInfo) -> DownloadResult:
     dwn = VideoDownloadWorker.get()
     scenario = Config.scenario  # type: Optional[DownloadScenario]
     sname = vi.sname
@@ -51,7 +59,7 @@ async def process_video(vi: VideoInfo) -> DownloadResult:
     rating = vi.rating
     score = ''
 
-    vi.set_state(VideoInfo.State.ACTIVE)
+    vi.set_state(VideoInfo.State.SCANNING)
     a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + vi.id % 10:d}', session=dwn.session)
     if a_html is None:
         Log.error(f'Error: unable to retreive html for {sname}! Aborted!')
@@ -191,10 +199,15 @@ async def process_video(vi: VideoInfo) -> DownloadResult:
     fname_mid = f'_{vi.quality}' if has_naming_flag(NamingFlags.QUALITY) else ''
     vi.filename = f'{fname_part1}{fname_mid}{fname_part2}'
 
+    vi.set_state(VideoInfo.State.SCANNED)
+    return DownloadResult.SUCCESS
+
+
+async def process_video(vi: VideoInfo) -> DownloadResult:
+    vi.set_state(VideoInfo.State.ACTIVE)
     res = await download_video(vi)
     if res not in (DownloadResult.SUCCESS, DownloadResult.FAIL_SKIPPED, DownloadResult.FAIL_ALREADY_EXISTS):
         vi.set_state(VideoInfo.State.FAILED)
-
     return res
 
 

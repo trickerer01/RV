@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
 from config import Config
-from defs import Mem, UTF8, CONNECT_RETRIES_BASE, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE
+from defs import Mem, UTF8, CONNECT_RETRIES_BASE, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, MAX_SCAN_QUEUE_SIZE
 from logger import Log
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
@@ -52,9 +52,9 @@ def make_session() -> ClientSession:
     if Config.proxy:
         pp = urlparse(Config.proxy)
         ptype = ProxyType.SOCKS5 if pp.scheme in ('socks5', 'socks5h') else ProxyType.HTTP
-        connector = ProxyConnector(limit=MAX_VIDEOS_QUEUE_SIZE, proxy_type=ptype, host=pp.hostname, port=pp.port)
+        connector = ProxyConnector(limit=MAX_VIDEOS_QUEUE_SIZE + MAX_SCAN_QUEUE_SIZE, proxy_type=ptype, host=pp.hostname, port=pp.port)
     else:
-        connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE)
+        connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE + MAX_SCAN_QUEUE_SIZE)
     s = ClientSession(connector=connector, read_bufsize=Mem.MB)
     s.cookie_jar.update_cookies({'kt_rt_popAccess': '1', 'kt_tcookie': '1', 'kt_is_visited': '1'})
     if Config.session_id:

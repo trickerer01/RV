@@ -20,6 +20,7 @@ from defs import (
     APP_NAME, APP_VERSION, DOWNLOAD_MODE_TOUCH, SEARCH_RULE_DEFAULT, QUALITIES,
 )
 from downloader import VideoDownloadWorker
+from dscanner import VideoScanWorker
 # noinspection PyProtectedMember
 from ids import main as ids_main, main_sync as ids_main_sync
 from logger import Log
@@ -34,6 +35,7 @@ RUN_CONN_TESTS = 1
 
 def set_up_test(log=False) -> None:
     VideoDownloadWorker._instance = None
+    VideoScanWorker._instance = None
     found_filenames_dict.clear()
     Log._disabled = not log
 
