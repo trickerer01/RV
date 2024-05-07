@@ -342,6 +342,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 if (content_len == 0 or r.status == 416) and file_size >= content_range:
                     Log.warn(f'{sname} ({vi.quality}) is already completed, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
                     vi.set_state(VideoInfo.State.DONE)
+                    ret = DownloadResult.FAIL_ALREADY_EXISTS
                     break
                 if r.status == 404:
                     Log.error(f'Got 404 for {sname}...!')
@@ -394,7 +395,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 Log.error(f'Failed to download {sfilename}. Removing unfinished file...')
                 remove(vi.my_fullpath)
 
-    ret = (ret if ret in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_SKIPPED) else
+    ret = (ret if ret in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_SKIPPED, DownloadResult.FAIL_ALREADY_EXISTS) else
            DownloadResult.SUCCESS if retries < CONNECT_RETRIES_BASE else
            DownloadResult.FAIL_RETRIES)
 
