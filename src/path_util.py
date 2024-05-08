@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from os import path, listdir
+from os import path, listdir, rename
 from typing import List, Optional, Dict, MutableSequence
 
 from config import Config
@@ -17,7 +17,7 @@ from scenario import DownloadScenario
 from util import normalize_path
 from vinfo import VideoInfo
 
-__all__ = ('file_already_exists', 'prefilter_existing_items')
+__all__ = ('file_already_exists', 'try_rename', 'prefilter_existing_items')
 
 found_filenames_dict = dict()  # type: Dict[str, List[str]]
 
@@ -103,6 +103,14 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
         if len(fullpath) > 0:
             Log.info(f'Info: {vi_list[i].sname} found in \'{path.split(fullpath)[0]}/\'. Skipped.')
             del vi_list[i]
+
+
+def try_rename(oldpath: str, newpath: str) -> bool:
+    try:
+        rename(oldpath, newpath)
+        return True
+    except Exception:
+        return False
 
 #
 #

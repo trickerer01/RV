@@ -7,7 +7,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from asyncio import Task, CancelledError, sleep, get_running_loop, as_completed
-from os import path, stat, remove, makedirs, rename
+from os import path, stat, remove, makedirs
 from random import uniform as frand
 from typing import Optional, List, Dict
 
@@ -24,7 +24,7 @@ from downloader import VideoDownloadWorker
 from dscanner import VideoScanWorker
 from fetch_html import fetch_html, wrap_request, make_session
 from logger import Log
-from path_util import file_already_exists
+from path_util import file_already_exists, try_rename
 from rex import re_media_filename
 from scenario import DownloadScenario
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
@@ -311,7 +311,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 if Config.continue_mode:
                     if rv_curfile != vi.my_fullpath:
                         Log.info(f'{sname} {vi.quality} (or similar) found. Enforcing new name (was \'{path.split(rv_curfile)[1]}\').')
-                        rename(rv_curfile, vi.my_fullpath)
+                        if not try_rename(rv_curfile, vi.my_fullpath):
+                            Log.warn(f'Warning: file {vi.my_fullpath} already exists! Old file will be preserved.')
                 else:
                     Log.info(f'{vi.filename} (or similar) already exists. Skipped.')
                     vi.set_state(VideoInfo.State.DONE)
