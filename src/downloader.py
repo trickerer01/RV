@@ -198,7 +198,7 @@ class VideoDownloadWorker:
             elapsed_seconds = get_elapsed_time_i()
             if elapsed_seconds >= write_delay and elapsed_seconds - last_check_seconds >= write_delay:
                 last_check_seconds = elapsed_seconds
-                v_ids = sorted(vi.id for vi in self._seq + [qvi[0] for qvi in getattr(self._queue, '_queue')] + self._downloads_active +
+                v_ids = sorted(vi.id for vi in self._seq + [qvi for qvi in getattr(self._queue, '_queue')] + self._downloads_active +
                                self.get_scanner_workload())
                 arglist = ['-seq', f'({"~".join(f"id={idi:d}" for idi in v_ids)})'] if len(v_ids) > 1 else ['-start', str(v_ids[0])]
                 arglist.extend(arglist_base)
