@@ -1,4 +1,4 @@
-# coding=UTF-8
+    # coding=UTF-8
 """
 Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 """
@@ -68,6 +68,14 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
     @property
     def sname(self) -> str:
         return f'{PREFIX}{self.id:d}.{DEFAULT_EXT}'
+
+    @property
+    def sfsname(self) -> str:
+        return normalize_filename(self.sname, self.subfolder)
+
+    @property
+    def sffilename(self) -> str:
+        return normalize_filename(self.filename, self.subfolder)
 
     @property
     def my_sfolder(self) -> str:
