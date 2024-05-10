@@ -32,6 +32,7 @@ class BaseConfig:
         self.save_tags = None  # type: Optional[bool]
         self.save_descriptions = None  # type: Optional[bool]
         self.save_comments = None  # type: Optional[bool]
+        self.skip_empty_lists = None  # type: Optional[bool]
         self.save_screenshots = None  # type: Optional[bool]
         self.extra_tags = None  # type: Optional[List[str]]
         self.id_sequence = None  # type: Optional[List[int]]
@@ -69,6 +70,7 @@ class BaseConfig:
         self.save_tags = params.dump_tags
         self.save_descriptions = params.dump_descriptions
         self.save_comments = params.dump_comments
+        self.skip_empty_lists = params.skip_empty_lists
         self.save_screenshots = params.dump_screenshots
         self.extra_tags = params.extra_tags
         self.id_sequence = []
