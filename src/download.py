@@ -6,22 +6,23 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import Task, CancelledError, sleep, get_running_loop, as_completed
+from asyncio import Task, sleep, get_running_loop, as_completed
 from os import path, stat, remove, makedirs
 from random import uniform as frand
 from typing import Optional, List, Dict
 
 from aiofile import async_open
-from aiohttp import ClientSession, ClientResponse, ClientPayloadError
+from aiohttp import ClientSession, ClientPayloadError
 
 from config import Config
 from defs import (
     Mem, NamingFlags, DownloadResult, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
-    DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, DOWNLOAD_STATUS_CHECK_TIMER, SITE, SCREENSHOTS_COUNT,
+    DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, SITE, SCREENSHOTS_COUNT,
     FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY,
 )
 from downloader import VideoDownloadWorker
 from dscanner import VideoScanWorker
+from dthrottler import ThrottleChecker
 from fetch_html import fetch_html, wrap_request, make_session
 from logger import Log
 from path_util import file_already_exists, try_rename
@@ -211,30 +212,6 @@ async def process_video(vi: VideoInfo) -> DownloadResult:
     return res
 
 
-async def check_video_download_status(vi: VideoInfo, init_size: int, resp: ClientResponse) -> None:
-    dwn = VideoDownloadWorker.get()
-    sname = vi.sname
-    dest = vi.my_fullpath
-    check_timer = float(DOWNLOAD_STATUS_CHECK_TIMER)
-    slow_con_dwn_threshold = max(1, DOWNLOAD_STATUS_CHECK_TIMER * Config.throttle * Mem.KB)
-    last_size = init_size
-    try:
-        while True:
-            await sleep(check_timer)
-            if not dwn.is_writing(dest):  # finished already
-                Log.error(f'{sname} status checker is still running for finished download!')
-                break
-            file_size = stat(dest).st_size if path.isfile(dest) else 0
-            if file_size < last_size + slow_con_dwn_threshold:
-                last_speed = (file_size - last_size) / Mem.KB / DOWNLOAD_STATUS_CHECK_TIMER
-                Log.warn(f'{sname} status check failed at {file_size:d} ({last_speed:.2f} KB/s)! Interrupting current try...')
-                resp.connection.transport.abort()  # abort download task (forcefully - close connection)
-                break
-            last_size = file_size
-    except CancelledError:
-        pass
-
-
 async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
     dwn = VideoDownloadWorker.get()
     sname = f'{PREFIX}{vi.id:d}_{scr_num:02d}.webp'
@@ -289,7 +266,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
     retries = 0
     ret = DownloadResult.SUCCESS
     skip = Config.dm == DOWNLOAD_MODE_SKIP
-    status_checker = None  # type: Optional[Task]
+    status_checker = ThrottleChecker(vi)
 
     if skip is True:
         vi.set_state(VideoInfo.State.DONE)
@@ -352,6 +329,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     Log.error(f'File not found at {vi.link}!')
                     raise FileNotFoundError(vi.link)
 
+                status_checker.prepare(r, file_size)
                 vi.expected_size = file_size + content_len
                 vi.last_check_size = vi.start_size = file_size
                 vi.last_check_time = vi.start_time = get_elapsed_time_i()
@@ -361,11 +339,11 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
 
                 dwn.add_to_writes(vi)
                 vi.set_state(VideoInfo.State.WRITING)
-                status_checker = get_running_loop().create_task(check_video_download_status(vi, file_size, r))
+                status_checker.run()
                 async with async_open(vi.my_fullpath, 'ab') as outf:
                     async for chunk in r.content.iter_chunked(1 * Mem.MB):
                         await outf.write(chunk)
-                status_checker.cancel()
+                status_checker.reset()
                 dwn.remove_from_writes(vi)
 
                 file_size = stat(vi.my_fullpath).st_size
@@ -386,8 +364,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             # Network error may be thrown before item is added to active downloads
             if dwn.is_writing(vi):
                 dwn.remove_from_writes(vi)
-            if status_checker is not None:
-                status_checker.cancel()
+            status_checker.reset()
             if retries < CONNECT_RETRIES_BASE:
                 vi.set_state(VideoInfo.State.DOWNLOADING)
                 await sleep(frand(1.0, 7.0))
