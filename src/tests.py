@@ -69,7 +69,7 @@ class CmdTests(TestCase):
         c1 = BaseConfig()
         c1.read(parsed1, True)
         self.assertTrue(c1.get_maxid)
-        parsed2 = prepare_arglist(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~vr)', '-script',
+        parsed2 = prepare_arglist(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~vr)', '--skip-empty-lists', '-script',
                                    'a: 2d; b: 3d; c: a2 -2d; d: * -utp always', '-naming', 'prefix|quality', '-log', 'warn'], True)
         c2 = BaseConfig()
         c2.read(parsed2, True)
@@ -81,7 +81,8 @@ class CmdTests(TestCase):
         self.assertEqual('', c2.search)
         self.assertEqual(SEARCH_RULE_DEFAULT, c2.search_rule_art)
         self.assertIsNone(c2.use_id_sequence)
-        parsed3 = prepare_arglist(['-playlist_name', 'commodified', '-start', '3', '-pages', '2', '-quality', '480p',
+        self.assertTrue(c2.skip_empty_lists)
+        parsed3 = prepare_arglist(['-playlist_name', 'commodified', '-start', '3', '-pages', '2', '-quality', '480p', '-noempty',
                                    '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
         c3 = BaseConfig()
         c3.read(parsed3, True)
@@ -97,6 +98,7 @@ class CmdTests(TestCase):
         self.assertTrue(c3.save_descriptions)
         self.assertTrue(c3.save_comments)
         self.assertTrue(c3.save_screenshots)
+        self.assertTrue(c3.skip_empty_lists)
         parsed4 = prepare_arglist(['-model', 'gret', '-start', '3', '-pages', '2', '-quality', '480p',
                                    '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
         c4 = BaseConfig()
