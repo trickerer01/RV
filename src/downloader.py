@@ -235,18 +235,16 @@ class VideoDownloadWorker:
         await self._after_download()
 
     def at_interrupt(self) -> None:
-        if len(self._writes_active) > 0:
+        if len(self._downloads_active) > 0:
+            paths_active = sorted(vi.my_fullpath for vi in self._downloads_active if path.isfile(vi.my_fullpath))
             if Config.keep_unfinished:
-                unfinished_str = '\n '.join(f'{i + 1:d}) {s}' for i, s in enumerate(sorted(self._writes_active)))
-                Log.debug(f'at_interrupt: keeping {len(self._writes_active):d} unfinished file(s):\n {unfinished_str}')
+                unfinished_str = '\n '.join(f'{i + 1:d}) {s}' for i, s in enumerate(paths_active))
+                Log.debug(f'at_interrupt: keeping {len(paths_active):d} unfinished file(s):\n {unfinished_str}')
                 return
-            Log.debug(f'at_interrupt: cleaning {len(self._writes_active):d} unfinished file(s)...')
-            for unfinished in sorted(self._writes_active):
+            Log.debug(f'at_interrupt: cleaning {len(paths_active):d} unfinished file(s)...')
+            for unfinished in paths_active:
                 Log.debug(f'at_interrupt: trying to remove \'{unfinished}\'...')
-                if path.isfile(unfinished):
-                    remove(unfinished)
-                else:
-                    Log.debug(f'at_interrupt: file \'{unfinished}\' not found!')
+                remove(unfinished)
 
     @property
     def session(self) -> ClientSession:
