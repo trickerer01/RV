@@ -237,6 +237,7 @@ HELP_ARG_CONTINUE = 'Try to continue unfinished files, may be slower if most fil
 HELP_ARG_UNFINISH = 'Do not clean up unfinished files on interrupt'
 HELP_ARG_TIMEOUT = 'Connection timeout (in seconds)'
 HELP_ARG_THROTTLE = 'Download speed threshold (in KB/s) to assume throttling, drop connection and retry'
+HELP_ARG_THROTTLE_AUTO = 'Enable automatic throttle threshold adjustment when crossed too many times in a row'
 HELP_ARG_UPLOADER = 'Uploader user id (integer, filters still apply)'
 HELP_ARG_MODEL = 'Artist name (download directly from artist\'s page)'
 

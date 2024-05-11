@@ -41,6 +41,7 @@ class BaseConfig:
         self.start = self.end = self.start_id = self.end_id = 0
         self.timeout = None  # type: Optional[ClientTimeout]
         self.throttle = None  # type: Optional[int]
+        self.throttle_auto = None  # type: Optional[bool]
         self.store_continue_cmdfile = None  # type: Optional[bool]
         # module-specific params (pages only or ids only)
         self.use_id_sequence = None  # type: Optional[bool]
@@ -83,6 +84,7 @@ class BaseConfig:
         self.end_id = params.begin_id if pages else self.end
         self.timeout = ClientTimeout(total=None, connect=params.timeout or CONNECT_TIMEOUT_BASE)
         self.throttle = params.throttle
+        self.throttle_auto = params.throttle_auto
         self.store_continue_cmdfile = params.store_continue_cmdfile
         # module-specific params (pages only or ids only)
         self.use_id_sequence = getattr(params, 'use_id_sequence', self.use_id_sequence)
