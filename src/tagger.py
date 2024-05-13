@@ -216,11 +216,12 @@ def trim_undersores(base_str: str) -> str:
     return re_uscore_mult.sub('_', base_str).strip('_')
 
 
-def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags: List[str], id_seq: List[int], subfolder: str) -> bool:
+def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags: List[str],
+                                  id_seq: List[int], subfolder: str, id_seq_ex: List[int] = None) -> bool:
     suc = True
     sname = vi.sname
     sfol = f'[{subfolder}] ' if subfolder else ''
-    if id_seq and vi.id not in id_seq:
+    if id_seq and vi.id not in id_seq and not (id_seq_ex and vi.id in id_seq_ex):
         suc = False
         Log.trace(f'{sfol}Video {sname} isn\'t contained in id list \'{str(id_seq)}\'. Skipped!',
                   LoggingFlags.EX_MISSING_TAGS)

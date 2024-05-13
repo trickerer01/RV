@@ -17,7 +17,7 @@ from defs import (
     HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, HELP_ARG_CONTINUE, HELP_ARG_UNFINISH,
     HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER, HELP_ARG_VERSION, HELP_ARG_SESSION_ID, SEARCH_RULES, SEARCH_RULE_DEFAULT,
     QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, HELP_ARG_MODEL,
-    HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS,
+    HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS, HELP_ARG_LOOKAHEAD,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -157,6 +157,7 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     arggr_start_or_seq.add_argument('-start', metavar='#number', help='Start video id. Required', type=positive_nonzero_int)
     arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=positive_nonzero_int)
     arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End video id', type=positive_nonzero_int)
+    par_cmd.add_argument('-lookahead', metavar='#number', default=0, help=HELP_ARG_LOOKAHEAD, type=positive_nonzero_int)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
 
     add_common_args(par_cmd)

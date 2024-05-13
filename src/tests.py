@@ -124,6 +124,7 @@ class CmdTests(TestCase):
         c1.read(parsed1, False)
         self.assertTrue(c1.use_id_sequence)
         parsed2 = prepare_arglist(['-start', '1000', '-end', '999', '(a2~4k)', '(2d~vr)', '-dmode', 'touch', '--store-continue-cmdfile',
+                                   '-lookahead', '100',
                                    '-script', 'a: 2d; b: 3d; c: a2 -2d; d: * -utp always', '-naming', '0x8', '-log', 'trace'], False)
         c2 = BaseConfig()
         c2.read(parsed2, False)
@@ -131,6 +132,7 @@ class CmdTests(TestCase):
         self.assertEqual(1, c2.logging_flags)
         self.assertEqual(2, len(c2.extra_tags))
         self.assertEqual(4, len(c2.scenario))
+        self.assertEqual(100, c2.lookahead)
         self.assertEqual(DOWNLOAD_MODE_TOUCH, c2.download_mode)
         self.assertTrue(c2.store_continue_cmdfile)
         print(f'{self._testMethodName} passed')

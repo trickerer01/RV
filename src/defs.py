@@ -163,6 +163,10 @@ ACTION_STORE_TRUE = 'store_true'
 HELP_ARG_VERSION = 'Show program\'s version number and exit'
 HELP_ARG_GET_MAXID = 'Print maximum id and exit'
 HELP_ARG_BEGIN_STOP_ID = 'Video id lower / upper bounds filter to only download videos where \'begin_id >= video_id >= stop_id\''
+HELP_ARG_LOOKAHEAD = (
+    'Continue scanning indefinitely after reaching end id until number of non-existing videos encountered in a row'
+    ' reaches this number'
+)
 HELP_ARG_IDSEQUENCE = (
     'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence among'
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'

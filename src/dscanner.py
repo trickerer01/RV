@@ -11,10 +11,18 @@ from asyncio.tasks import sleep
 from collections import deque
 from typing import List, Deque, Coroutine, Any, Callable, Optional, Iterable
 
+from config import Config
 from defs import DownloadResult
-from vinfo import VideoInfo
+from logger import Log
+from vinfo import VideoInfo, get_min_max_ids
 
 __all__ = ('VideoScanWorker',)
+
+
+class ExtensionState:
+    NOT_EXTENDING = 2
+    WAITING_FOR_DOWNLOAD = 1
+    EXTEND_NOW = 0
 
 
 class VideoScanWorker:
@@ -36,16 +44,48 @@ class VideoScanWorker:
         self._func = func
         self._seq = deque(sequence)
 
+        self._orig_count = len(self._seq)
+        self._notfound_counter = 0
+        self._extension_switch = ExtensionState.NOT_EXTENDING
+        self._extra_ids = list()  # type: List[int]
         self._scanned_items = deque()  # type: Deque[VideoInfo]
         self._task_finish_callback = None  # type: Optional[Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]]]
 
+    def _prepare_to_extend(self) -> None:
+        if self._extension_switch == ExtensionState.NOT_EXTENDING:
+            self._extension_switch = ExtensionState.WAITING_FOR_DOWNLOAD
+
+    async def _extend_with_extra(self) -> None:
+        while self._extension_switch != ExtensionState.EXTEND_NOW:
+            await sleep(0.15)
+        extra_cur = Config.lookahead - self._notfound_counter
+        if extra_cur > 0:
+            last_id = Config.end_id + len(self._extra_ids)
+            extra_idseq = [(last_id + i + 1) for i in range(extra_cur)]
+            extra_vis = [VideoInfo(idi) for idi in extra_idseq]
+            minid, maxid = get_min_max_ids(extra_vis)
+            Log.warn(f'[lookahead] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}')
+            self._seq.extend(extra_vis)
+            self._extra_ids.extend(extra_idseq)
+        self._extension_switch = ExtensionState.NOT_EXTENDING
+
     async def _at_scan_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
         # Log.trace(f'[queue] {vi.sname} scan finished (result: {result})')
+        can_extend = not not Config.lookahead and self.get_workload_size() <= 1
+        if can_extend:
+            self._prepare_to_extend()
         if result == DownloadResult.SUCCESS:
             self._scanned_items.append(vi)
         else:
             assert self._task_finish_callback
             await self._task_finish_callback(vi, result)
+        if can_extend:
+            await self._extend_with_extra()
+
+    def at_download_result(self, result: DownloadResult, remainder: int) -> None:
+        self._notfound_counter = self._notfound_counter + 1 if result == DownloadResult.FAIL_NOT_FOUND else 0
+        if remainder <= 1 and self._extension_switch == ExtensionState.WAITING_FOR_DOWNLOAD:
+            self._extension_switch = ExtensionState.EXTEND_NOW
 
     async def run(self) -> None:
         while self._seq:
@@ -65,6 +105,12 @@ class VideoScanWorker:
 
     def get_prescanned_count(self) -> int:
         return len(self._scanned_items)
+
+    def get_extra_count(self) -> int:
+        return len(self._extra_ids)
+
+    def get_extra_ids(self) -> List[int]:
+        return self._extra_ids
 
     def register_task_finish_callback(self, callack: Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]]) -> None:
         self._task_finish_callback = callack

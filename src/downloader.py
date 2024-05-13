@@ -56,6 +56,7 @@ class VideoDownloadWorker:
         self._filtered_count_pre = filtered_count
         self._filtered_count_after = 0
         self._skipped_count = 0
+        self._404_count = 0
         self._minmax_id = get_min_max_ids(self._seq)
 
         self._downloads_active = list()  # type: List[VideoInfo]
@@ -83,10 +84,14 @@ class VideoDownloadWorker:
             self._filtered_count_after += 1
         elif result == DownloadResult.FAIL_SKIPPED:
             self._skipped_count += 1
+        elif result == DownloadResult.FAIL_NOT_FOUND:
+            self._404_count += 1
         elif result == DownloadResult.FAIL_RETRIES:
             self._failed_items.append(vi.id)
         elif result == DownloadResult.SUCCESS:
             self._downloaded_count += 1
+        if self._scn:
+            self._scn.at_download_result(result, self.get_workload_size())
 
     async def _prod(self) -> None:
         while self.can_fetch_next():
@@ -119,7 +124,7 @@ class VideoDownloadWorker:
         base_sleep_time = calc_sleep_time(3.0)
         force_check_seconds = DOWNLOAD_QUEUE_STALL_CHECK_TIMER
         last_check_seconds = 0
-        while len(self._seq) + self._queue.qsize() + len(self._downloads_active) > 0 or self.waiting_for_scanner():
+        while self.get_workload_size() > 0 or self.waiting_for_scanner():
             await sleep(base_sleep_time if len(self._seq) + self._queue.qsize() > 0 else 1.0)
             queue_size = len(self._seq) + self._queue.qsize() + self.get_scanner_workload_size()
             download_count = len(self._downloads_active)
@@ -194,7 +199,7 @@ class VideoDownloadWorker:
         base_sleep_time = calc_sleep_time(3.0)
         write_delay = DOWNLOAD_CONTINUE_FILE_CHECK_TIMER
         last_check_seconds = 0
-        while len(self._seq) + self._queue.qsize() + len(self._downloads_active) + self.get_scanner_workload_size() > 0:
+        while self.get_workload_size() + self.get_scanner_workload_size() > 0:
             elapsed_seconds = get_elapsed_time_i()
             if elapsed_seconds >= write_delay and elapsed_seconds - last_check_seconds >= write_delay:
                 last_check_seconds = elapsed_seconds
@@ -217,9 +222,10 @@ class VideoDownloadWorker:
 
     async def _after_download(self) -> None:
         newline = '\n'
-        Log.info(f'\nDone. {self._downloaded_count:d} / {self._orig_count:d}+{self._filtered_count_pre:d} file(s) downloaded, '
+        Log.info(f'\nDone. {self._downloaded_count:d} / {self._orig_count:d}+{self._filtered_count_pre:d}'
+                 f'{f"+{self._scn.get_extra_count():d}" if Config.lookahead else ""} file(s) downloaded, '
                  f'{self._filtered_count_after:d}+{self._filtered_count_pre:d} already existed, '
-                 f'{self._skipped_count:d} skipped')
+                 f'{self._skipped_count:d} skipped, {self._404_count:d} not found')
         workload_size = len(self._seq) + self.get_scanner_workload_size()
         if workload_size > 0:
             Log.fatal(f'total queue is still at {workload_size:d} != 0!')
@@ -270,6 +276,9 @@ class VideoDownloadWorker:
 
     def can_fetch_next(self) -> bool:
         return self.waiting_for_scanner() or not not self._seq
+
+    def get_workload_size(self) -> int:
+        return len(self._seq) + self._queue.qsize() + len(self._downloads_active)
 
     async def try_fetch_next(self) -> Optional[VideoInfo]:
         if self._seq:

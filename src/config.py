@@ -45,6 +45,7 @@ class BaseConfig:
         self.store_continue_cmdfile = None  # type: Optional[bool]
         # module-specific params (pages only or ids only)
         self.use_id_sequence = None  # type: Optional[bool]
+        self.lookahead = None  # type: Optional[int]
         self.search = None  # type: Optional[str]
         self.search_tags, self.search_arts, self.search_cats = None, None, None  # type: Optional[str]
         self.search_rule_tag, self.search_rule_art, self.search_rule_cat = None, None, None  # type: Optional[str]
@@ -88,6 +89,7 @@ class BaseConfig:
         self.store_continue_cmdfile = params.store_continue_cmdfile
         # module-specific params (pages only or ids only)
         self.use_id_sequence = getattr(params, 'use_id_sequence', self.use_id_sequence)
+        self.lookahead = getattr(params, 'lookahead', self.lookahead)
         self.search = getattr(params, 'search', self.search)
         self.search_tags = getattr(params, 'search_tag', '')
         self.search_arts = getattr(params, 'search_art', '')
