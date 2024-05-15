@@ -90,8 +90,6 @@ class VideoDownloadWorker:
             self._failed_items.append(vi.id)
         elif result == DownloadResult.SUCCESS:
             self._downloaded_count += 1
-        if self._scn:
-            self._scn.at_download_result(result, self.get_workload_size())
 
     async def _prod(self) -> None:
         while self.can_fetch_next():
