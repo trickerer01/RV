@@ -29,6 +29,12 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         DONE = 7
         FAILED = 8
 
+    class Flags(IntEnum):
+        NONE = 0x0
+        ALREADY_EXISTED_EXACT = 0x1
+        ALREADY_EXISTED_SIMILAR = 0x2
+        FILE_WAS_CREATED = 0x4
+
     def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='') -> None:
         self._id = m_id or 0
 
@@ -48,9 +54,16 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         self.last_check_time = 0
 
         self._state = VideoInfo.State.NEW
+        self._flags = VideoInfo.Flags.NONE
 
     def set_state(self, state: VideoInfo.State) -> None:
         self._state = state
+
+    def set_flag(self, flag: VideoInfo.Flags) -> None:
+        self._flags |= flag
+
+    def has_flag(self, flag: Union[int, VideoInfo.Flags]) -> bool:
+        return bool(self._flags & flag)
 
     def __eq__(self, other: Union[VideoInfo, int]) -> bool:
         return self.id == other.id if isinstance(other, type(self)) else self.id == other if isinstance(other, int) else False
@@ -88,6 +101,10 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
     @property
     def my_fullpath(self) -> str:
         return normalize_filename(self.filename, self.my_folder)
+
+    @property
+    def state(self) -> VideoInfo.State:
+        return self._state
 
     @property
     def state_str(self) -> str:

@@ -285,8 +285,10 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             rv_quality = rv_match.group(2)
             rv_curfile = file_already_exists(vi.id, rv_quality)
             if rv_curfile:
+                exact_name = rv_curfile == vi.my_fullpath
+                vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
                 if Config.continue_mode:
-                    if rv_curfile != vi.my_fullpath:
+                    if not exact_name:
                         old_filename = path.split(rv_curfile)[1]
                         Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing new name (was \'{old_filename}\').')
                         if not try_rename(rv_curfile, vi.my_fullpath):
@@ -299,6 +301,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
     while (not skip) and retries < CONNECT_RETRIES_BASE:
         try:
             file_exists = path.isfile(vi.my_fullpath)
+            if file_exists and retries == 0:
+                vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT)
             file_size = stat(vi.my_fullpath).st_size if file_exists else 0
 
             if Config.dm == DOWNLOAD_MODE_TOUCH:
@@ -309,6 +313,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 else:
                     Log.info(f'Saving<touch> {vi.sname} {0.0:.2f} Mb to {vi.sffilename}')
                     with open(vi.my_fullpath, 'wb'):
+                        vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
                         vi.set_state(VideoInfo.State.DONE)
                 break
 
@@ -343,6 +348,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 vi.set_state(VideoInfo.State.WRITING)
                 status_checker.run()
                 async with async_open(vi.my_fullpath, 'ab') as outf:
+                    vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
                     async for chunk in r.content.iter_chunked(1 * Mem.MB):
                         await outf.write(chunk)
                 status_checker.reset()
@@ -370,7 +376,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             if retries < CONNECT_RETRIES_BASE:
                 vi.set_state(VideoInfo.State.DOWNLOADING)
                 await sleep(frand(1.0, 7.0))
-            elif Config.keep_unfinished is False and path.isfile(vi.my_fullpath):
+            elif Config.keep_unfinished is False and path.isfile(vi.my_fullpath) and vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED):
                 Log.error(f'Failed to download {vi.sffilename}. Removing unfinished file...')
                 remove(vi.my_fullpath)
 
