@@ -9,10 +9,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from re import compile as re_compile
 from typing import Pattern
 
-from defs import QUALITIES, EXTENSIONS_V
+from defs import QUALITIES, EXTENSIONS_V, PREFIX
 
 # common
-re_media_filename = re_compile(fr'^(?:rv_)?(\d+).*?(?:_({"|".join(QUALITIES)}))?(?:_py(?:dw|pv))?\.(?:{"|".join(EXTENSIONS_V)})$')
+re_media_filename = re_compile(fr'^(?:{PREFIX})?(\d+).*?(?:_({"|".join(QUALITIES)}))?\.(?:{"|".join(EXTENSIONS_V)})$')
+re_infolist_filename = re_compile(fr'{PREFIX}!(?:tag|description|comment)s_\d+-\d+\.txt')
 re_replace_symbols = re_compile(r'[^0-9a-zA-Z.,_+%!\-()\[\] ]+')
 re_ext = re_compile(r'(\.[^&]{3,5})&')
 # re_private_video = re_compile(r'^This is a private video\..*?$')

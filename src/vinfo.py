@@ -8,10 +8,13 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from __future__ import annotations
 from enum import IntEnum
-from typing import Dict, Iterable, Union, Tuple
+from os import path, listdir, remove
+from typing import Dict, Iterable, Union, Tuple, List, Match
 
 from config import Config
 from defs import PREFIX, UTF8, DEFAULT_QUALITY, DEFAULT_EXT
+from logger import Log
+from rex import re_infolist_filename
 from util import normalize_path, normalize_filename
 
 __all__ = ('VideoInfo', 'get_min_max_ids', 'export_video_info')
@@ -117,6 +120,58 @@ def get_min_max_ids(seq: Iterable[VideoInfo]) -> Tuple[int, int]:
     return min(seq, key=lambda x: x.id).id, max(seq, key=lambda x: x.id).id
 
 
+def try_merge_info_files(info_dict: Dict[int, str], subfolder: str, list_type: str) -> List[str]:
+    parsed_files = list()  # type: List[str]
+    if not Config.merge_lists:
+        return parsed_files
+    dir_fullpath = normalize_path(f'{Config.dest_base}{subfolder}')
+    if not path.isdir(dir_fullpath):
+        return parsed_files
+    # Log.debug(f'\nMerging {Config.dest_base}{subfolder} \'{list_type}\' info lists...')
+    info_lists = sorted(filter(
+        lambda x: not not x, [re_infolist_filename.fullmatch(f) for f in listdir(dir_fullpath)
+                              if path.isfile(f'{dir_fullpath}{f}') and f.startswith(f'{PREFIX}!{list_type}_')]
+    ), key=lambda m: m.string)  # type: List[Match[str]]
+    if not info_lists:
+        return parsed_files
+    parsed_dict = dict()  # type: Dict[int, str]
+    for fmatch in info_lists:
+        fmname = fmatch.string
+        # Log.debug(f'Parsing {fmname}...')
+        list_fullpath = f'{dir_fullpath}{fmname}'
+        try:
+            with open(list_fullpath, 'rt') as listfile:
+                last_id = 0
+                for line in listfile.readlines():
+                    line = line.strip('\ufeff')
+                    if line in ('', '\n'):
+                        continue
+                    if line.startswith(PREFIX):
+                        delim_idx = line.find(':')
+                        idi = line[len(PREFIX):delim_idx]
+                        last_id = int(idi)
+                        # Log.debug(f'new id: {last_id:d}{f" (override!)" if last_id in parsed_dict else ""}...')
+                        parsed_dict[last_id] = ''
+                        if len(line) > delim_idx + 2:
+                            parsed_dict[last_id] += line[delim_idx + 2:].strip()
+                            # Log.debug(f'at {last_id:d}: (in place) now \'{parsed_dict[last_id]}\'')
+                            last_id = 0
+                    else:
+                        assert last_id
+                        if not parsed_dict[last_id]:
+                            line = f'\n{line}'
+                        parsed_dict[last_id] += line
+                        # Log.debug(f'at {last_id:d}: adding \'{line}\'')
+                parsed_files.append(list_fullpath)
+        except Exception:
+            Log.error(f'Error reading from {fmname}. Skipped')
+            continue
+    for k in parsed_dict:
+        if k not in info_dict:
+            info_dict[k] = parsed_dict[k]
+    return parsed_files
+
+
 def export_video_info(info_list: Iterable[VideoInfo]) -> None:
     """Saves tags, descriptions and comments for each subfolder in scenario and base dest folder based on video info"""
     tags_dict, desc_dict, comm_dict = dict(), dict(), dict()  # type: Dict[str, Dict[int, str]]
@@ -130,11 +185,12 @@ def export_video_info(info_list: Iterable[VideoInfo]) -> None:
         (Config.save_tags, Config.save_descriptions, Config.save_comments),
         (tags_dict, desc_dict, comm_dict),
         ('tags', 'descriptions', 'comments'),
-        (lambda tags: f' {tags.strip()}\n', lambda description: f'{description}\n', lambda comment: f'{comment}\n')
+        (lambda tags: f' {tags.strip()}\n', lambda description: f'{description}\n', lambda comments: f'{comments}\n')
     ):
         if not conf:
             continue
         for subfolder, sdct in dct.items():
+            merged_files = try_merge_info_files(sdct, subfolder, name)
             if not sdct:
                 continue
             if Config.skip_empty_lists and not any(sdct[idi] for idi in sdct.keys()):
@@ -144,6 +200,7 @@ def export_video_info(info_list: Iterable[VideoInfo]) -> None:
             fullpath = f'{normalize_path(f"{Config.dest_base}{subfolder}")}{PREFIX}!{name}_{min_id:d}-{max_id:d}.txt'
             with open(fullpath, 'wt', encoding=UTF8) as sfile:
                 sfile.writelines(f'{PREFIX}{idi:d}:{proc_cb(sdct[idi])}' for idi in keys)
+            [remove(merged_file) for merged_file in merged_files if merged_file != fullpath]
 
 #
 #

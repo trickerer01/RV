@@ -237,6 +237,7 @@ HELP_ARG_LOGGING = (
 )
 HELP_ARG_DUMP_INFO = 'Save tags / descriptions / comments to text file (separately)'
 HELP_ARG_SKIP_EMPTY_LISTS = 'Do not store tags / descriptions / comments list if it contains no useful data'
+HELP_ARG_MERGE_LISTS = 'Merge exising tags / descriptions / comments list(s) with saved info (only if saving is enabled)'
 HELP_ARG_CONTINUE = 'Try to continue unfinished files, may be slower if most files already exist'
 HELP_ARG_UNFINISH = 'Do not clean up unfinished files on interrupt'
 HELP_ARG_TIMEOUT = 'Connection timeout (in seconds)'

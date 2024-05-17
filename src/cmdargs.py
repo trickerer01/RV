@@ -18,6 +18,7 @@ from defs import (
     HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER, HELP_ARG_VERSION, HELP_ARG_SESSION_ID, SEARCH_RULES, SEARCH_RULE_DEFAULT,
     QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, HELP_ARG_MODEL,
     HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS, HELP_ARG_LOOKAHEAD,
+    HELP_ARG_MERGE_LISTS,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -139,6 +140,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-tdump', '--dump-tags', action=ACTION_STORE_TRUE, help='')
     parser_or_group.add_argument('-ddump', '--dump-descriptions', action=ACTION_STORE_TRUE, help='')
     parser_or_group.add_argument('-cdump', '--dump-comments', action=ACTION_STORE_TRUE, help=HELP_ARG_DUMP_INFO)
+    parser_or_group.add_argument('-dmerge', '--merge-lists', action=ACTION_STORE_TRUE, help=HELP_ARG_MERGE_LISTS)
     parser_or_group.add_argument('-noempty', '--skip-empty-lists', action=ACTION_STORE_TRUE, help=HELP_ARG_SKIP_EMPTY_LISTS)
     parser_or_group.add_argument('-sdump', '--dump-screenshots', action=ACTION_STORE_TRUE, help='Save screenshots (webp, very slow)')
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
