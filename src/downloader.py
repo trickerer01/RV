@@ -149,13 +149,13 @@ class VideoDownloadWorker:
                         totalsize_str = f'{vi.expected_size / Mem.MB:.2f}' if vi.expected_size else '???'
                         size_pct = f'{cursize * 100 / vi.expected_size:.1f}' if cursize and vi.expected_size else '??.?'
                         dfull_seconds = max(0, elapsed_seconds - vi.start_time)
-                        dfull_size_b = cursize - vi.start_size
+                        dfull_size_b = cursize - vi.start_size if vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED) else 0
                         dfull_speed_kb = ((dfull_size_b / Mem.KB) / dfull_seconds) if dfull_seconds and dfull_size_b >= Mem.KB else 0.0
                         dfull_speed_str = f'{dfull_speed_kb:.1f}' if dfull_speed_kb >= 0.1 else '???.?'
                         dfull_time_str = format_time(dfull_seconds) if dfull_speed_kb >= 0.1 else '??:??:??'
                         dfull_str = f'{dfull_size_b / Mem.MB:.2f} Mb in {dfull_time_str}, avg {dfull_speed_str} Kb/s'
                         d_seconds = max(0, elapsed_seconds - vi.last_check_time)
-                        d_size_b = cursize - vi.last_check_size
+                        d_size_b = cursize - vi.last_check_size if vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED) else 0
                         d_speed_kb = ((d_size_b / Mem.KB) / d_seconds) if d_seconds and d_size_b >= Mem.KB else 0.0
                         speed_str = f'{d_speed_kb:.1f}' if d_speed_kb >= 0.1 else '???.?'
                         eta_str = (format_time(0) if vi.expected_size == cursize else
