@@ -12,16 +12,33 @@ RV is a video downloader with a lot of features, most of which are filters for f
 - Invoke `python pages.py --help` or `python ids.py --help` to list possible arguments for each module (the differences are minimal)
 - For bug reports, questions and feature requests use our [issue tracker](https://github.com/trickerer01/RV/issues)
 
-#### Search & filters
-- RV provides advanced searching and filtering functionality
-- Search (`pages.py` module only) is performed using extended website native API (see help for possible search args)
-- Initial search results / ids list can be then filtered further using `extra tags` (see help for additional info)
+#### Search
+- RV provides advanced searching functionality (`pages.py` module). Search is performed using extended website native API
+- There are 4 search arguments available each corresponding to different parts of search API. It's possible to utilize all four at once but usually a single one is enough
+  - `-search <STRING>` - search using raw string, matching any word. Spaces must be replaced with `-`:
+    - `-search after-hours`
+  - `-search_tag <TAGS>`, `-search_cat <CATEGORIES>`, `-search_art <ARTISTS>` - search using one or more tag/category/artist names (see below). Spaces must be replaced with `_`, concatenate using `,`:
+    - `-search_tag 1girl,side_view`
+    - `-search_cat cyberpunk_2077`
+    - `-search_art hydrafxx`
+    
+##### Search rules
+- In addition to ability to use more than one tag (or category/artist) name at once there is also a combining logic - match all or any of them, for example `-search_tag 1female,1girl` by default will try to match posts having both tags, to make it match any of those tags you must specify tags search rule argument
+  - `-search_rule_tag any`
+- Same with categories and artists
+  - `-search_cat cyberpunk_2077,overwatch -search_rule_cat any`
+  - `-search_art hydrafxx,medeister -search_rule_art any`
+- Note that overall search always obeys `AND` rule:
+  - _search string_ `AND` _ANY_OF/ALL the tags_ `AND` _ANY_OF/ALL the artists_ `AND` _ANY_OF/ALL the categories_
 
-#### Tags
-- `rv_tags.list` file contains all existing tags for current version, same with `rv_cats.list` (categories) and `rv_arts.list` (artists) files. Any tag / category / artist you use is required to be valid and every `extra tag` needs to be a valid tag, category or artist. That is, unless you also utilize...
+#### Filters
+- Initial search results / ids list can be then filtered further using `extra tags` (see below)
+
+#### Tags. Categories. Artists. Extra tags
+- `rv_tags.list` file contains all existing tags for current version, same with `rv_cats.list` (categories) and `rv_arts.list` (artists) files. Any tag/category/artist you use is required to be valid and every `extra tag` needs to be a valid tag, category or artist. That is, unless you also utilize...
 - Wildcards. In any `extra tag` you can use symbols `?` and `*` for `any symbol` and `any number of any symbols` repectively
 - `extra tags` containing wildcards aren't validated, they can be anything
-- What makes `extra tags` different from tags / categories / artists is `tags` or `-tags` are being used as filters instead of search params, normal tags / categories / artists are passed using their own search argument (see full help) and all unknown arguments are automatically considered `extra tags`
+- What makes `extra tags` different from tags/categories/artists is these `tags` or `-tags` are being used as filters instead of search params, normal tags/categories/artists are passed using their own search argument (see full help) and all unknown arguments are automatically considered `extra tags`
 - All spaces **must_be_replaced_with_underscores** ‒ all tag / category / artist names are unified this way for convenience
 
 #### Additional info
@@ -95,7 +112,13 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - Continue file contains cmdline arguments required to resume download, all provided parameters / options / download scenario / extra tags are preserved
   - It is strongly recommended to also include `--continue-mode` and `--keep-unfinished` options when using continue file
   - If download actually finishes without interruption stored continue file is automatically deleted
-  - Continue file has to be used with `ids.py` module, `file` mode (see `using 'file' mode` above)
+  - Continue file has to be used with `ids` module, `file` mode (see `using 'file' mode` above)
+  
+8. Wildcards in search
+  - Once familiar enough with existing tags/categories/artists lists one may want to go advanced and use wildcards in typed search (not search string)
+  - Syntax is the same, search rules apply as normal, but tag/category/artist name containing wildcard symbol has to match at least one existing tag/category/artist name in list
+  - Example: `-search_tag ?girl*,?boy*` will be automatically expanded to:
+    - `-search_tag 1girl,2girls,3girls,...,1boy1girl,2boys,3boys,3boys1girl,...,6girls`
 
 #### Examples
 1. Pages

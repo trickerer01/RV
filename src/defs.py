@@ -182,7 +182,7 @@ HELP_ARG_SEARCH_RULE = (
     f' \'{SEARCH_RULE_ANY}\' will search for any of those tags, \'{SEARCH_RULE_ALL}\' will only return results matching both'
 )
 HELP_ARG_SEARCH_ACT = (
-    'Native search by tag(s) / artist(s) / category(ies). Spaces must be replced with \'_\', concatenate with \',\'.'
+    'Native search by tag(s) / artist(s) / category(ies). Spaces must be replced with \'_\', concatenate using \',\'.'
     ' Example: \'-search_tag 1girl,side_view -search_art artist_name -search_cat category_name\'.'
     ' Note that search obeys \'AND\' rule: search string AND ANY_OF/ALL the tags AND ANY_OF/ALL the artists AND ANY_OF/ALL the categories'
 )
