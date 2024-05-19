@@ -115,6 +115,22 @@ class CmdTests(TestCase):
         self.assertTrue(c4.save_descriptions)
         self.assertTrue(c4.save_comments)
         self.assertTrue(c4.save_screenshots)
+        parsed5 = prepare_arglist(['-search_tag', '6*,5????', '-search_rule_tag', 'any',
+                                   '-search_art', '*nan', '-search_rule_art', 'any',
+                                   '-search_cat', 'ali??_*', '-search_rule_cat', 'any',
+                                   '-start', '3', '-pages', '2', '-quality', '720p'], True)
+        c5 = BaseConfig()
+        c5.read(parsed5, True)
+        self.assertEqual('164,3966,5157,5261,5570,5934', c5.search_tags)
+        self.assertEqual('22565,8822', c5.search_arts)
+        self.assertEqual('1433,1970,345,57,73', c5.search_cats)
+        self.assertEqual('any', c5.search_rule_tag)
+        self.assertEqual('any', c5.search_rule_art)
+        self.assertEqual('any', c5.search_rule_cat)
+        self.assertEqual(3, c5.start)
+        self.assertEqual(4, c5.end)
+        self.assertEqual(QUALITIES[2], c5.quality)
+        self.assertEqual('720p', c5.quality)
         print(f'{self._testMethodName} passed')
 
     def test_cmd_ids(self):

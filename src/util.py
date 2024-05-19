@@ -8,11 +8,17 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from datetime import datetime
+from typing import Iterable
 
 from config import Config
 from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL, DEFAULT_EXT
 from logger import Log
 from rex import re_replace_symbols, re_ext
+
+
+def assert_nonempty(container: Iterable, message='') -> Iterable:
+    assert not not container, message
+    return container
 
 
 def format_time(seconds: int) -> str:

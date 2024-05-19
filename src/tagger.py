@@ -16,6 +16,7 @@ from rex import (
     re_neg_and_group, re_tags_to_process, re_bracketed_tag, re_tags_exclude_major1, re_tags_exclude_major2, re_tags_to_not_exclude,
     prepare_regex_fullmatch,
 )
+from util import assert_nonempty
 from vinfo import VideoInfo
 
 __all__ = (
@@ -70,7 +71,7 @@ def valid_tags(tags_str: str) -> str:
     if len(tags_str) > 0:
         for tag in tags_str.split(','):
             try:
-                tag_ids.add(get_tag_num(tag, True))
+                tag_ids.update(get_tag_num(tag_ex, True) for tag_ex in assert_nonempty(expand_tags(tag)))
             except Exception:
                 Log.error(f'Error: invalid tag: \'{tag}\'!')
                 all_valid = False
@@ -87,7 +88,7 @@ def valid_artists(artists_str: str) -> str:
     if len(artists_str) > 0:
         for artist in artists_str.split(','):
             try:
-                artist_ids.add(get_artist_num(artist, True))
+                artist_ids.update(get_artist_num(artist_ex, True) for artist_ex in assert_nonempty(expand_artists(artist)))
             except Exception:
                 Log.error(f'Error: invalid artist: \'{artist}\'!')
                 all_valid = False
@@ -104,7 +105,7 @@ def valid_categories(categories_str: str) -> str:
     if len(categories_str) > 0:
         for category in categories_str.split(','):
             try:
-                category_ids.add(get_category_num(category, True))
+                category_ids.update(get_category_num(category_ex, True) for category_ex in assert_nonempty(expand_categories(category)))
             except Exception:
                 Log.error(f'Error: invalid category: \'{category}\'!')
                 all_valid = False
@@ -162,6 +163,48 @@ def is_valid_neg_and_group(andgr: str) -> bool:
 
 def is_valid_or_group(orgr: str) -> bool:
     return not not re_or_group.fullmatch(orgr)
+
+
+def expand_tags(pwtag: str) -> Iterable[str]:
+    expanded_tags = set()
+    if not is_wtag(pwtag):
+        expanded_tags.add(pwtag)
+    else:
+        Log.debug(f'Expanding tags from wtag \'{pwtag}\'...')
+        pat = prepare_regex_fullmatch(normalize_wtag(pwtag))
+        for tag in TAG_NUMS_DECODED:
+            if pat.fullmatch(tag):
+                Log.debug(f' - \'{tag}\'')
+                expanded_tags.add(tag)
+    return expanded_tags
+
+
+def expand_artists(pwtag: str) -> Iterable[str]:
+    expanded_artists = set()
+    if not is_wtag(pwtag):
+        expanded_artists.add(pwtag)
+    else:
+        Log.debug(f'Expanding artists from wtag \'{pwtag}\'...')
+        pat = prepare_regex_fullmatch(normalize_wtag(pwtag))
+        for artist in ART_NUMS_DECODED:
+            if pat.fullmatch(artist):
+                Log.debug(f' - \'{artist}\'')
+                expanded_artists.add(artist)
+    return expanded_artists
+
+
+def expand_categories(pwtag: str) -> Iterable[str]:
+    expanded_categories = set()
+    if not is_wtag(pwtag):
+        expanded_categories.add(pwtag)
+    else:
+        Log.debug(f'Expanding categories from wtag \'{pwtag}\'...')
+        pat = prepare_regex_fullmatch(normalize_wtag(pwtag))
+        for category in CAT_NUMS_DECODED:
+            if pat.fullmatch(category):
+                Log.debug(f' - \'{category}\'')
+                expanded_categories.add(category)
+    return expanded_categories
 
 
 def normalize_wtag(wtag: str) -> str:
