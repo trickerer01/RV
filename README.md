@@ -113,12 +113,19 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - It is strongly recommended to also include `--continue-mode` and `--keep-unfinished` options when using continue file
   - If download actually finishes without interruption stored continue file is automatically deleted
   - Continue file has to be used with `ids` module, `file` mode (see `using 'file' mode` above)
-  
+
 8. Wildcards in search
   - Once familiar enough with existing tags/categories/artists lists one may want to go advanced and use wildcards in typed search (not search string)
   - Syntax is the same, search rules apply as normal, but tag/category/artist name containing wildcard symbol has to match at least one existing tag/category/artist name in list
   - Example: `-search_tag ?girl*,?boy*` will be automatically expanded to:
     - `-search_tag 1girl,2girls,3girls,...,1boy1girl,2boys,3boys,3boys1girl,...,6girls`
+
+9. Scanning for unpublished posts
+  - There is always some posts which hasn't become public yet, many of them don't pass a review and never get published
+  - Unpublished posts cannot be searched for so using direct link is the only option
+  - `ids` module can automatically scan past maximum available post ID until it reaches the actual maximum post ID available.
+  - Syntax: `-lookahead <AMOUNT>`. `<AMOUNT>` here is the number of sequential empty post IDs to assume the end of existing posts. Example:
+    - `python ids.py -start 3500000 -count 500 ... -lookahead 100` - scan until 3,500,500 and continue **indefinetely** until 100 post requests in a row return 'not found' error
 
 #### Examples
 1. Pages
