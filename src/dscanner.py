@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from __future__ import annotations
 from asyncio.tasks import sleep
 from collections import deque
-from typing import List, Deque, Coroutine, Any, Callable, Optional, Iterable
+from typing import List, Deque, Coroutine, Any, Callable, Optional
 
 from config import Config
 from defs import DownloadResult
@@ -31,10 +31,11 @@ class VideoScanWorker:
     def get() -> Optional[VideoScanWorker]:
         return VideoScanWorker._instance
 
-    def __init__(self, sequence: Iterable[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]]) -> None:
+    def __init__(self, sequence: List[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]]) -> None:
         assert VideoScanWorker._instance is None
         VideoScanWorker._instance = self
 
+        self._original_sequence = sequence
         self._func = func
         self._seq = deque(sequence)
 
@@ -53,6 +54,7 @@ class VideoScanWorker:
             minid, maxid = get_min_max_ids(extra_vis)
             Log.warn(f'[lookahead] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}')
             self._seq.extend(extra_vis)
+            self._original_sequence.extend(extra_vis)
             self._extra_ids.extend(extra_idseq)
 
     async def _at_scan_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
