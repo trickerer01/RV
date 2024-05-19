@@ -140,7 +140,7 @@ def try_merge_info_files(info_dict: Dict[int, str], subfolder: str, list_type: s
         # Log.debug(f'Parsing {fmname}...')
         list_fullpath = f'{dir_fullpath}{fmname}'
         try:
-            with open(list_fullpath, 'rt') as listfile:
+            with open(list_fullpath, 'rt', encoding=UTF8) as listfile:
                 last_id = 0
                 for line in listfile.readlines():
                     line = line.strip('\ufeff')
