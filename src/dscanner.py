@@ -56,7 +56,6 @@ class VideoScanWorker:
             self._extra_ids.extend(extra_idseq)
 
     async def _at_scan_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
-        # Log.trace(f'[queue] {vi.sname} scan finished (result: {result})')
         if result == DownloadResult.SUCCESS:
             self._scanned_items.append(vi)
         else:
@@ -68,7 +67,6 @@ class VideoScanWorker:
 
     async def run(self) -> None:
         while self._seq:
-            # Log.trace(f'[queue] {self._seq[0].sname} scan started...')
             result = await self._func(self._seq[0])
             await self._at_scan_finish(self._seq[0], result)
             self._seq.popleft()

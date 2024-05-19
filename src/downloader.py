@@ -95,7 +95,7 @@ class VideoDownloadWorker:
         while self.can_fetch_next():
             if self._queue.full() is False:
                 async with self._lock:
-                    vi = await self.try_fetch_next()
+                    vi = await self._try_fetch_next()
                     if vi:
                         vi.set_state(VideoInfo.State.QUEUED)
                         await self._queue.put(vi)
@@ -278,7 +278,7 @@ class VideoDownloadWorker:
     def get_workload_size(self) -> int:
         return len(self._seq) + self._queue.qsize() + len(self._downloads_active)
 
-    async def try_fetch_next(self) -> Optional[VideoInfo]:
+    async def _try_fetch_next(self) -> Optional[VideoInfo]:
         if self._seq:
             vi = self._seq[0]
             del self._seq[0]
