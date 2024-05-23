@@ -123,7 +123,7 @@ class VideoDownloadWorker:
         force_check_seconds = DOWNLOAD_QUEUE_STALL_CHECK_TIMER
         last_check_seconds = 0
         while self.get_workload_size() > 0 or self.waiting_for_scanner():
-            await sleep(base_sleep_time if len(self._seq) + self._queue.qsize() > 0 else 1.0)
+            await sleep(base_sleep_time if len(self._seq) + self._queue.qsize() > 0 or self.waiting_for_scanner() else 1.0)
             queue_size = len(self._seq) + self._queue.qsize() + self.get_scanner_workload_size()
             download_count = len(self._downloads_active)
             write_count = len(self._writes_active)
