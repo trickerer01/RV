@@ -17,7 +17,7 @@ from aiohttp import ClientSession, ClientPayloadError
 from config import Config
 from defs import (
     Mem, NamingFlags, DownloadResult, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
-    DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, SITE, SCREENSHOTS_COUNT,
+    DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, SITE, SCREENSHOTS_COUNT, QUALITIES,
     FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY,
 )
 from downloader import VideoDownloadWorker
@@ -154,7 +154,9 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             break
         message_span = a_html.find('span', class_='message')
         if message_span:
-            Log.warn(f'Cannot find download section for {sname}, reason: \'{message_span.text}\', skipping...')
+            foundfiles = list(filter(None, [file_already_exists(vi.id, q) for q in QUALITIES]))
+            found_str = f' But was downloaded already to \'{foundfiles[0]}\'!' if foundfiles else ''
+            Log.warn(f'Cannot find download section for {sname}, reason: \'{message_span.text}\', skipping...{found_str}')
             return DownloadResult.FAIL_SKIPPED
         elif tries >= 5:
             Log.error(f'Cannot find download section for {sname} after {tries:d} tries, failed!')
