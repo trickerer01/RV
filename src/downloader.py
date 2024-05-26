@@ -124,7 +124,8 @@ class VideoDownloadWorker:
         last_check_seconds = 0
         while self.get_workload_size() > 0 or self.waiting_for_scanner():
             await sleep(base_sleep_time if len(self._seq) + self._queue.qsize() > 0 or self.waiting_for_scanner() else 1.0)
-            queue_size = len(self._seq) + self._queue.qsize() + self.get_scanner_workload_size()
+            queue_size = len(self._seq) + self.get_scanner_workload_size()
+            ready_size = self._queue.qsize()
             download_count = len(self._downloads_active)
             write_count = len(self._writes_active)
             queue_last = self._total_queue_size_last
@@ -133,8 +134,8 @@ class VideoDownloadWorker:
             elapsed_seconds = get_elapsed_time_i()
             force_check = elapsed_seconds >= force_check_seconds and elapsed_seconds - last_check_seconds >= force_check_seconds
             if queue_last != queue_size or downloading_last != download_count or write_last != write_count or force_check:
-                Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, active: {download_count:d} (writing: {write_count:d})'
-                         f'{f" + {self._scn.get_prescanned_count():d} prescanned" if self._scn else ""}')
+                Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, ready: {ready_size:d}, active: {download_count:d} '
+                         f'(writing: {write_count:d}){f" + {self._scn.get_prescanned_count():d} prescanned" if self._scn else ""}')
                 last_check_seconds = elapsed_seconds
                 self._total_queue_size_last = queue_size
                 self._download_queue_size_last = download_count
