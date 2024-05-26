@@ -214,6 +214,9 @@ HELP_ARG_DWN_SCENARIO = (
 HELP_ARG_STORE_CONTINUE_CMDFILE = (
     'Store and automatically update cmd file which allows to later continue with unfinished download queue (using ids module, file mode)'
 )
+HELP_ARG_CHECK_UPLOADER = (
+    'Apply extra \'tag\' / \'-tag\' filters to uploader name. By default only tags, categories and artists will be checked'
+)
 HELP_ARG_MINRATING = (
     '[DEPRECATED, DO NOT USE] Rating percentage filter, 0-100.'
     ' Videos having rating below this value will be skipped, unless rating extraction fails - in that case video always gets a pass'
