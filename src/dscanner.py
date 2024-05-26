@@ -68,10 +68,12 @@ class VideoScanWorker:
             self._extend_with_extra()
 
     async def run(self) -> None:
+        Log.debug('[queue] scanner thread start')
         while self._seq:
             result = await self._func(self._seq[0])
             await self._at_scan_finish(self._seq[0], result)
             self._seq.popleft()
+        Log.debug('[queue] scanner thread stop: scan complete')
 
     def done(self) -> bool:
         return self.get_workload_size() == 0
