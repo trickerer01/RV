@@ -195,6 +195,7 @@ HELP_ARG_UTPOLICY = (
     f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'
 )
 HELP_ARG_DMMODE = '[Debug] Download (file creation) mode'
+HELP_ARG_ALL_PAGES = 'Do not interrupt pages scan if encountered a page having all posts filtered out'
 HELP_ARG_EXTRA_TAGS = (
     'All remaining \'args\' and \'-args\' count as tags to require or exclude. All spaces must be replaced with \'_\'.'
     ' Videos containing any of \'-tags\', or not containing all \'tags\' will be skipped.'

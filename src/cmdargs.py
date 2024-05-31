@@ -18,7 +18,7 @@ from defs import (
     HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER, HELP_ARG_VERSION, HELP_ARG_SESSION_ID, SEARCH_RULES, SEARCH_RULE_DEFAULT,
     QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, HELP_ARG_MODEL,
     HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS, HELP_ARG_LOOKAHEAD,
-    HELP_ARG_MERGE_LISTS, HELP_ARG_CHECK_UPLOADER,
+    HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_CHECK_UPLOADER,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -178,6 +178,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End page number', type=positive_nonzero_int)
     par_cmd.add_argument('-stop_id', metavar='#number', default=1, help='', type=positive_nonzero_int)
     par_cmd.add_argument('-begin_id', metavar='#number', default=10**9, help=HELP_ARG_BEGIN_STOP_ID, type=positive_nonzero_int)
+    par_cmd.add_argument('-pall', '--scan-all-pages', action=ACTION_STORE_TRUE, help=HELP_ARG_ALL_PAGES)
     arggr_pl_upl = par_cmd.add_mutually_exclusive_group()
     arggr_pl_upl.add_argument('-playlist_id', metavar='#number', default=(0, ''), help='', type=valid_playlist_id)
     arggr_pl_upl.add_argument('-playlist_name', metavar='#name', default=(0, ''), help=HELP_ARG_PLAYLIST, type=valid_playlist_name)

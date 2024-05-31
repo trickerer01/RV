@@ -34,6 +34,7 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
     if Config.get_maxid:
         Config.logging_flags = LoggingFlags.FATAL
         Config.start = Config.end = Config.start_id = Config.end_id = 1
+        return False
 
     if ',' in Config.search_tags and Config.search_rule_tag == SEARCH_RULE_ALL:
         Config.search_tags = f'{SEARCH_RULE_ALL},{Config.search_tags}'
@@ -43,6 +44,11 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
         Config.search_cats = f'{SEARCH_RULE_ALL},{Config.search_cats}'
 
     delay_for_message = False
+
+    if Config.scan_all_pages and Config.start_id <= 1:
+        Log.info('Info: \'--scan-all-pages\' flag was set but post id lower bound was not provided, ignored')
+        delay_for_message = True
+
     if Config.save_comments is True and Config.session_id is None:
         Log.info('Info: Comments cannot be accessed without `-session_id`, saving comments is impossible. Disabled!')
         Config.save_comments = False

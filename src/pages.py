@@ -42,14 +42,14 @@ async def main(args: Sequence[str]) -> None:
     if find_and_resolve_config_conflicts(full_download) is True:
         await sleep(3.0)
 
-    def check_id_bounds(video_id: int) -> bool:
+    def check_id_bounds(video_id: int) -> int:
         if video_id > Config.end_id:
             Log.trace(f'skipping {video_id:d} > {Config.end_id:d}')
-            return False
+            return 1
         if video_id < Config.start_id:
             Log.trace(f'skipping {video_id:d} < {Config.start_id:d}')
-            return False
-        return True
+            return -1
+        return 0
 
     v_entries = list()
     maxpage = Config.end if Config.start == Config.end else 0
@@ -94,11 +94,16 @@ async def main(args: Sequence[str]) -> None:
 
             Log.info(f'page {pi - 1:d}...{" (this is the last page!)" if (0 < maxpage == pi - 1) else ""}')
 
+            lower_count = 0
             if full_download:
                 arefs = a_html.find_all('a', class_=video_ref_class)
+                orig_count = len(arefs)
                 for aref in arefs:
                     cur_id = int(re_page_entry.search(str(aref.get('href'))).group(1))
-                    if check_id_bounds(cur_id) is False:
+                    bound_res = check_id_bounds(cur_id)
+                    if bound_res != 0:
+                        if bound_res < 0:
+                            lower_count += 1
                         continue
                     elif cur_id in v_entries:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
@@ -114,12 +119,16 @@ async def main(args: Sequence[str]) -> None:
 
                 prev_all = content_div.find_all('div', class_='img wrap_image')
                 titl_all = content_div.find_all('div', class_='thumb_title')
+                orig_count = len(prev_all)
                 for i, p in enumerate(prev_all):
                     link = str(p.get('data-preview'))
                     title = str(titl_all[i].text)
                     v_id = re_preview_entry.search(link)
                     cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
-                    if check_id_bounds(cur_id) is False:
+                    bound_res = check_id_bounds(cur_id)
+                    if bound_res != 0:
+                        if bound_res < 0:
+                            lower_count += 1
                         continue
                     elif cur_id in v_entries:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
@@ -128,6 +137,11 @@ async def main(args: Sequence[str]) -> None:
                         cur_id, '', link, '', f'{PREFIX if has_naming_flag(NamingFlags.PREFIX) else ""}{cur_id:d}'
                         f'{f"_{title}" if has_naming_flag(NamingFlags.TITLE) else ""}_preview.{cur_ext}',
                     ))
+
+            if pi - 1 > Config.start and lower_count == orig_count > 0 and not Config.scan_all_pages:
+                if maxpage == 0 or pi - 1 < maxpage:
+                    Log.info(f'Page {pi - 1:d} has all post ids below lower bound. Pages scan stopped!')
+                break
 
         v_entries.reverse()
         orig_count = len(v_entries)
