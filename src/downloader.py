@@ -241,8 +241,8 @@ class VideoDownloadWorker:
 
     def at_interrupt(self) -> None:
         if len(self._downloads_active) > 0:
-            active_items = sorted([vi for vi in self._downloads_active if path.isfile(vi.my_fullpath) and
-                                   vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED)], key=lambda vi: vi.id)
+            active_items = sorted([vi for vi in self._downloads_active if path.isfile(vi.my_fullpath)
+                                   and vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED)], key=lambda vi: vi.id)
             if Config.keep_unfinished:
                 unfinished_str = '\n '.join(f'{i + 1:d}) {vi.my_fullpath}' for i, vi in enumerate(active_items))
                 Log.debug(f'at_interrupt: keeping {len(active_items):d} unfinished file(s):\n {unfinished_str}')
