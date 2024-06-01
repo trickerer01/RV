@@ -245,6 +245,7 @@ HELP_ARG_SKIP_EMPTY_LISTS = 'Do not store tags / descriptions / comments list if
 HELP_ARG_MERGE_LISTS = 'Merge exising tags / descriptions / comments list(s) with saved info (only if saving is enabled)'
 HELP_ARG_CONTINUE = 'Try to continue unfinished files, may be slower if most files already exist'
 HELP_ARG_UNFINISH = 'Do not clean up unfinished files on interrupt'
+HELP_ARG_NOMOVE = 'In continue mode instead of moving already existing file to destination folder download to its original location'
 HELP_ARG_TIMEOUT = 'Connection timeout (in seconds)'
 HELP_ARG_THROTTLE = 'Download speed threshold (in KB/s) to assume throttling, drop connection and retry'
 HELP_ARG_THROTTLE_AUTO = 'Enable automatic throttle threshold adjustment when crossed too many times in a row'

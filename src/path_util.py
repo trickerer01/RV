@@ -35,7 +35,7 @@ def scan_dest_folder() -> None:
     This function may only be called once!
     """
     assert len(found_filenames_dict.keys()) == 0
-    if path.isdir(Config.dest_base):
+    if path.isdir(Config.dest_base) or Config.folder_scan_levelup:
         Log.info('Scanning dest folder...')
         dest_base = Config.dest_base
         scan_depth = MAX_DEST_SCAN_SUB_DEPTH + Config.folder_scan_levelup
@@ -46,15 +46,16 @@ def scan_dest_folder() -> None:
                 break
 
         def scan_folder(base_folder: str, level: int) -> None:
-            for cname in listdir(base_folder):
-                fullpath = f'{base_folder}{cname}'
-                if path.isdir(fullpath):
-                    fullpath = normalize_path(fullpath)
-                    if level < scan_depth:
-                        found_filenames_dict[fullpath] = list()
-                        scan_folder(fullpath, level + 1)
-                elif path.isfile(fullpath):
-                    found_filenames_dict[base_folder].append(cname)
+            if path.isdir(base_folder):
+                for cname in listdir(base_folder):
+                    fullpath = f'{base_folder}{cname}'
+                    if path.isdir(fullpath):
+                        fullpath = normalize_path(fullpath)
+                        if level < scan_depth:
+                            found_filenames_dict[fullpath] = list()
+                            scan_folder(fullpath, level + 1)
+                    elif path.isfile(fullpath):
+                        found_filenames_dict[base_folder].append(cname)
 
         found_filenames_dict[dest_base] = list()
         scan_folder(dest_base, 0)
@@ -145,6 +146,8 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
 
 def try_rename(oldpath: str, newpath: str) -> bool:
     try:
+        if oldpath == newpath:
+            return True
         rename(oldpath, newpath)
         return True
     except Exception:

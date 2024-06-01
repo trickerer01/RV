@@ -30,6 +30,7 @@ class BaseConfig:
         self.download_mode = None  # type: Optional[str]
         self.continue_mode = None  # type: Optional[bool]
         self.keep_unfinished = None  # type: Optional[bool]
+        self.no_rename_move = None  # type: Optional[bool]
         self.save_tags = None  # type: Optional[bool]
         self.save_descriptions = None  # type: Optional[bool]
         self.save_comments = None  # type: Optional[bool]
@@ -74,6 +75,7 @@ class BaseConfig:
         self.download_mode = params.download_mode
         self.continue_mode = params.continue_mode
         self.keep_unfinished = params.keep_unfinished
+        self.no_rename_move = params.no_rename_move
         self.save_tags = params.dump_tags
         self.save_descriptions = params.dump_descriptions
         self.save_comments = params.dump_comments

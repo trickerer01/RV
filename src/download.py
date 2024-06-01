@@ -29,7 +29,7 @@ from path_util import file_already_exists, try_rename
 from rex import re_media_filename
 from scenario import DownloadScenario
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
-from util import has_naming_flag, format_time, get_elapsed_time_i, extract_ext
+from util import has_naming_flag, format_time, get_elapsed_time_i, extract_ext, normalize_path
 from vinfo import VideoInfo, export_video_info, get_min_max_ids
 
 __all__ = ('download', 'at_interrupt')
@@ -296,9 +296,18 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
                 if Config.continue_mode:
                     if not exact_name:
-                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing new name (was \'{curfile}\').')
-                        if not try_rename(curfile, vi.my_fullpath):
-                            Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
+                        curfile_folder, curfile_name = path.split(curfile)
+                        if Config.no_rename_move is False or (path.isdir(vi.my_folder) and path.samefile(curfile_folder, vi.my_folder)):
+                            Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing new name (was \'{curfile}\').')
+                            if not try_rename(curfile, vi.my_fullpath):
+                                Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
+                        else:
+                            new_subfolder = normalize_path(path.relpath(curfile_folder, Config.dest_base))
+                            Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing old path + new name '
+                                     f'\'{curfile_folder}/{vi.filename}\' due to \'--no-rename-move\' flag (was \'{curfile_name}\').')
+                            vi.subfolder = new_subfolder
+                            if not try_rename(curfile, normalize_path(path.abspath(vi.my_fullpath), False)):
+                                Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
                 else:
                     Log.info(f'{vi.sffilename} (or similar) already exists. Skipped.')
                     vi.set_state(VideoInfo.State.DONE)
