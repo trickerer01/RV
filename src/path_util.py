@@ -37,25 +37,35 @@ def scan_dest_folder() -> None:
     assert len(found_filenames_dict.keys()) == 0
     if path.isdir(Config.dest_base):
         Log.info('Scanning dest folder...')
+        dest_base = path.abspath(Config.dest_base)
+        scan_depth = MAX_DEST_SCAN_SUB_DEPTH + Config.folder_scan_levelup
+        for _ in range(Config.folder_scan_levelup):
+            longpath, dirname = path.split(path.abspath(dest_base))
+            dest_base = normalize_path(longpath)
+            if dirname == '':
+                break
 
         def scan_folder(base_folder: str, level: int) -> None:
             for cname in listdir(base_folder):
                 fullpath = f'{base_folder}{cname}'
                 if path.isdir(fullpath):
                     fullpath = normalize_path(fullpath)
-                    if level < MAX_DEST_SCAN_SUB_DEPTH:
+                    if level < scan_depth:
                         found_filenames_dict[fullpath] = list()
                         scan_folder(fullpath, level + 1)
                 elif path.isfile(fullpath):
                     found_filenames_dict[base_folder].append(cname)
 
-        found_filenames_dict[Config.dest_base] = list()
-        scan_folder(Config.dest_base, 0)
-        base_files_count = len(found_filenames_dict.get(Config.dest_base))
+        found_filenames_dict[dest_base] = list()
+        scan_folder(dest_base, 0)
+        if Config.dest_base not in found_filenames_dict:
+            found_filenames_dict[Config.dest_base] = list()
+            scan_folder(Config.dest_base, 0)
+        base_files_count = len(found_filenames_dict[dest_base])
         total_files_count = sum(len(li) for li in found_filenames_dict.values())
         Log.info(f'Found {base_files_count:d} file(s) in base and '
                  f'{total_files_count - base_files_count:d} file(s) in {len(found_filenames_dict.keys()) - 1:d} subfolder(s) '
-                 f'(total files: {total_files_count:d}, scan depth: {MAX_DEST_SCAN_SUB_DEPTH:d})')
+                 f'(total files: {total_files_count:d}, scan depth: {scan_depth:d})')
 
 
 def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> str:

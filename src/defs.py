@@ -172,6 +172,7 @@ HELP_ARG_IDSEQUENCE = (
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
 HELP_ARG_PATH = 'Download destination. Default is current folder'
+HELP_ARG_FSLEVELUP = 'Folder levels to go up before scanning for existing files. Destination folder is always checked'
 HELP_ARG_SESSION_ID = (
     '\'PHPSESSID\' cookie. Comments as well as some tags to search for are hidden behind login wall.'
     ' Using this cookie from logged in account resolves that problem'

@@ -18,7 +18,7 @@ from defs import (
     HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER, HELP_ARG_VERSION, HELP_ARG_SESSION_ID, SEARCH_RULES, SEARCH_RULE_DEFAULT,
     QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, HELP_ARG_MODEL,
     HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS, HELP_ARG_LOOKAHEAD,
-    HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_CHECK_UPLOADER,
+    HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_FSLEVELUP, HELP_ARG_CHECK_UPLOADER,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -129,6 +129,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-minrating', '--minimum-rating', metavar='#rating', default=0, help=HELP_ARG_MINRATING, type=valid_rating)
     parser_or_group.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
     parser_or_group.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, help=HELP_ARG_UTPOLICY, choices=UNTAGGED_POLICIES)
+    parser_or_group.add_argument('-fslevelup', metavar='#number', default=0, help=HELP_ARG_FSLEVELUP, type=positive_nonzero_int)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', default=None, help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-timeout', metavar='#seconds', default=0, help=HELP_ARG_TIMEOUT, type=positive_nonzero_int)
     parser_or_group.add_argument('-throttle', metavar='#rate', default=0, help=HELP_ARG_THROTTLE, type=positive_nonzero_int)

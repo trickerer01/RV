@@ -26,6 +26,7 @@ class BaseConfig:
         self.min_score = None  # type: Optional[int]
         self.quality = None  # type: Optional[str]
         self.untagged_policy = None  # type: Optional[str]
+        self.folder_scan_levelup = 0
         self.download_mode = None  # type: Optional[str]
         self.continue_mode = None  # type: Optional[bool]
         self.keep_unfinished = None  # type: Optional[bool]
@@ -69,6 +70,7 @@ class BaseConfig:
         self.min_score = params.minimum_score
         self.quality = params.quality
         self.untagged_policy = params.untagged_policy
+        self.folder_scan_levelup = params.fslevelup
         self.download_mode = params.download_mode
         self.continue_mode = params.continue_mode
         self.keep_unfinished = params.keep_unfinished
