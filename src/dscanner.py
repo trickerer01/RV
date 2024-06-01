@@ -12,8 +12,9 @@ from collections import deque
 from typing import List, Deque, Coroutine, Any, Callable, Optional
 
 from config import Config
-from defs import DownloadResult
+from defs import DownloadResult, QUALITIES
 from logger import Log
+from path_util import file_already_exists
 from vinfo import VideoInfo, get_min_max_ids
 
 __all__ = ('VideoScanWorker',)
@@ -61,6 +62,10 @@ class VideoScanWorker:
         if result == DownloadResult.SUCCESS:
             self._scanned_items.append(vi)
         else:
+            foundfiles = list(filter(None, [file_already_exists(vi.id, q) for q in QUALITIES]))
+            if foundfiles:
+                newline = '\n'
+                Log.info(f'{vi.sname} scan returned {str(result)} but it was already downloaded:\n - {f"{newline} - ".join(foundfiles)}')
             assert self._task_finish_callback
             await self._task_finish_callback(vi, result)
         self._404_counter = self._404_counter + 1 if result == DownloadResult.FAIL_NOT_FOUND else 0
