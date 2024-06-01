@@ -99,7 +99,10 @@ async def main(args: Sequence[str]) -> None:
                 arefs = a_html.find_all('a', class_=video_ref_class)
                 orig_count = len(arefs)
                 for aref in arefs:
-                    cur_id = int(re_page_entry.search(str(aref.get('href'))).group(1))
+                    try:  # some post previews may be invalid
+                        cur_id = int(re_page_entry.search(str(aref.get('href'))).group(1))
+                    except Exception:
+                        continue
                     bound_res = check_id_bounds(cur_id)
                     if bound_res != 0:
                         if bound_res < 0:
