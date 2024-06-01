@@ -260,7 +260,7 @@ class DownloadResult(IntEnum):
     FAIL_SKIPPED = 4
 
     def __str__(self) -> str:
-        return f'{self.name} (0x{self.value:d})'
+        return f'{self.name} (0x{self.value:02X})'
 
 
 class Mem:

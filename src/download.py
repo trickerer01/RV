@@ -185,14 +185,14 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         link_idx = qualities.index(vi.quality)
     vi.link = links[link_idx].get('href')
 
-    rv_ = PREFIX if has_naming_flag(NamingFlags.PREFIX) else ''
+    prefix = PREFIX if has_naming_flag(NamingFlags.PREFIX) else ''
     fname_part2 = extract_ext(vi.link)
     my_score = (f'{f"+" if score.isnumeric() else ""}{score}' if len(score) > 0
                 else '' if len(rating) > 0 else 'unk')
     my_rating = (f'{", " if  len(my_score) > 0 else ""}{rating}{"%" if rating.isnumeric() else ""}' if len(rating) > 0
                  else '' if len(my_score) > 0 else 'unk')
     fname_part1 = (
-        f'{rv_}{vi.id:d}'
+        f'{prefix}{vi.id:d}'
         f'{f"_({my_score}{my_rating})" if has_naming_flag(NamingFlags.SCORE) else ""}'
         f'{f"_{vi.title}" if vi.title and has_naming_flag(NamingFlags.TITLE) else ""}'
     )
@@ -288,17 +288,16 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             except Exception:
                 raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
         else:
-            rv_match = re_media_filename.match(vi.filename)
-            rv_quality = rv_match.group(2)
-            rv_curfile = file_already_exists(vi.id, rv_quality)
-            if rv_curfile:
-                exact_name = rv_curfile == vi.my_fullpath
+            curfile_match = re_media_filename.match(vi.filename)
+            curfile_quality = curfile_match.group(2)
+            curfile = file_already_exists(vi.id, curfile_quality)
+            if curfile:
+                exact_name = curfile == vi.my_fullpath
                 vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
                 if Config.continue_mode:
                     if not exact_name:
-                        old_filename = path.split(rv_curfile)[1]
-                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing new name (was \'{old_filename}\').')
-                        if not try_rename(rv_curfile, vi.my_fullpath):
+                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing new name (was \'{curfile}\').')
+                        if not try_rename(curfile, vi.my_fullpath):
                             Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
                 else:
                     Log.info(f'{vi.sffilename} (or similar) already exists. Skipped.')
