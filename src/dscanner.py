@@ -14,7 +14,7 @@ from typing import List, Deque, Coroutine, Any, Callable, Optional
 from config import Config
 from defs import DownloadResult, QUALITIES
 from logger import Log
-from path_util import file_already_exists
+from path_util import file_already_exists_arr
 from vinfo import VideoInfo, get_min_max_ids
 
 __all__ = ('VideoScanWorker',)
@@ -62,10 +62,11 @@ class VideoScanWorker:
         if result == DownloadResult.SUCCESS:
             self._scanned_items.append(vi)
         else:
-            foundfiles = list(filter(None, [file_already_exists(vi.id, q) for q in QUALITIES]))
-            if foundfiles:
+            founditems = list(filter(None, [file_already_exists_arr(vi.id, q) for q in QUALITIES]))
+            if any(ffs for ffs in founditems):
                 newline = '\n'
-                Log.info(f'{vi.sname} scan returned {str(result)} but it was already downloaded:\n - {f"{newline} - ".join(foundfiles)}')
+                Log.info(f'{vi.sname} scan returned {str(result)} but it was already downloaded:'
+                         f'\n - {f"{newline} - ".join(f"{newline} - ".join(ffs) for ffs in founditems)}')
             assert self._task_finish_callback
             await self._task_finish_callback(vi, result)
         self._404_counter = self._404_counter + 1 if result == DownloadResult.FAIL_NOT_FOUND else 0

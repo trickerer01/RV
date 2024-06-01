@@ -17,7 +17,7 @@ from scenario import DownloadScenario
 from util import normalize_path
 from vinfo import VideoInfo
 
-__all__ = ('file_already_exists', 'try_rename', 'prefilter_existing_items')
+__all__ = ('file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items')
 
 found_filenames_dict = dict()  # type: Dict[str, List[str]]
 
@@ -37,7 +37,7 @@ def scan_dest_folder() -> None:
     assert len(found_filenames_dict.keys()) == 0
     if path.isdir(Config.dest_base):
         Log.info('Scanning dest folder...')
-        dest_base = path.abspath(Config.dest_base)
+        dest_base = Config.dest_base
         scan_depth = MAX_DEST_SCAN_SUB_DEPTH + Config.folder_scan_levelup
         for _ in range(Config.folder_scan_levelup):
             longpath, dirname = path.split(path.abspath(dest_base))
@@ -96,6 +96,34 @@ def file_already_exists(idi: int, quality: str) -> str:
             if len(fullpath) > 0:
                 return fullpath
     return ''
+
+
+def file_exists_in_folder_arr(base_folder: str, idi: int, quality: str) -> List[str]:
+    orig_file_names = found_filenames_dict.get(normalize_path(base_folder))
+    folder_files = list()
+    if path.isdir(base_folder) and orig_file_names is not None:
+        for fname in orig_file_names:
+            try:
+                f_match = re_media_filename.match(fname)
+                f_id = f_match.group(1)
+                f_quality = f_match.group(2)
+                if str(idi) == f_id and (quality is None or quality == f_quality):
+                    folder_files.append(f'{normalize_path(base_folder)}{fname}')
+            except Exception:
+                continue
+    return folder_files
+
+
+def file_already_exists_arr(idi: int, quality: str) -> List[str]:
+    scenario = Config.scenario  # type: Optional[DownloadScenario]
+    found_files = list()
+    if scenario:
+        for q in scenario.queries:
+            found_files.extend(file_exists_in_folder_arr(f'{Config.dest_base}{q.subfolder}', idi, quality or q.quality))
+    else:
+        for fullpath in found_filenames_dict:
+            found_files.extend(file_exists_in_folder_arr(fullpath, idi, quality or Config.quality))
+    return found_files
 
 
 def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
