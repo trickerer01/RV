@@ -17,7 +17,7 @@ CONNECT_RETRIES_BASE = 50
 CONNECT_TIMEOUT_BASE = 10
 CONNECT_REQUEST_DELAY = 0.7
 
-MAX_DEST_SCAN_SUB_DEPTH = 2
+MAX_DEST_SCAN_SUB_DEPTH_DEFAULT = 1
 MAX_VIDEOS_QUEUE_SIZE = 8
 MAX_SCAN_QUEUE_SIZE = 1
 DOWNLOAD_STATUS_CHECK_TIMER = 60
@@ -172,7 +172,13 @@ HELP_ARG_IDSEQUENCE = (
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
 )
 HELP_ARG_PATH = 'Download destination. Default is current folder'
-HELP_ARG_FSLEVELUP = 'Folder levels to go up before scanning for existing files. Destination folder is always checked'
+HELP_ARG_FSDEPTH = (
+    f'Number of subfolder levels to walk from base destination folder scanning for existing downloads. '
+    f'Default is \'{MAX_DEST_SCAN_SUB_DEPTH_DEFAULT:d}\''
+)
+HELP_ARG_FSLEVELUP = (
+    'Folder levels to go up before scanning for existing files, increases scan depth. Destination folder is always checked'
+)
 HELP_ARG_SESSION_ID = (
     '\'PHPSESSID\' cookie. Comments as well as some tags to search for are hidden behind login wall.'
     ' Using this cookie from logged in account resolves that problem'

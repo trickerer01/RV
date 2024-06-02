@@ -18,14 +18,15 @@ from defs import (
     HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER, HELP_ARG_VERSION, HELP_ARG_SESSION_ID, SEARCH_RULES, SEARCH_RULE_DEFAULT,
     QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, HELP_ARG_MODEL,
     HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS, HELP_ARG_LOOKAHEAD,
-    HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_FSLEVELUP, HELP_ARG_NOMOVE, HELP_ARG_CHECK_UPLOADER,
+    HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_FSLEVELUP, HELP_ARG_NOMOVE, HELP_ARG_FSDEPTH, HELP_ARG_CHECK_UPLOADER,
+    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT,
 )
 from logger import Log
 from scenario import DownloadScenario
 from tagger import valid_extra_tag, valid_playlist_name, valid_playlist_id, valid_tags, valid_artists, valid_categories
 from validators import (
     valid_int, positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
-    log_level, valid_session_id,
+    log_level, positive_int, valid_session_id,
 )
 
 __all__ = ('prepare_arglist', 'HelpPrintExitException')
@@ -38,6 +39,8 @@ NAMING_DEFAULT = NAMING_FLAGS_DEFAULT
 """0x1F"""
 LOGGING_DEFAULT = LOGGING_FLAGS_DEFAULT
 """0x004"""
+FSDEPTH_DEFAULT = MAX_DEST_SCAN_SUB_DEPTH_DEFAULT
+"""1"""
 
 PARSER_TYPE_PARAM = 'zzzparser_type'
 PARSER_TITLE_FILE = 'file'
@@ -129,6 +132,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-minrating', '--minimum-rating', metavar='#rating', default=0, help=HELP_ARG_MINRATING, type=valid_rating)
     parser_or_group.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
     parser_or_group.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, help=HELP_ARG_UTPOLICY, choices=UNTAGGED_POLICIES)
+    parser_or_group.add_argument('-fsdepth', metavar='#number', default=FSDEPTH_DEFAULT, help=HELP_ARG_FSDEPTH, type=positive_int)
     parser_or_group.add_argument('-fslevelup', metavar='#number', default=0, help=HELP_ARG_FSLEVELUP, type=positive_nonzero_int)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', default=None, help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-timeout', metavar='#seconds', default=0, help=HELP_ARG_TIMEOUT, type=positive_nonzero_int)

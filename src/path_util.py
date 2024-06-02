@@ -24,7 +24,7 @@ found_filenames_dict = dict()  # type: Dict[str, List[str]]
 
 def scan_dest_folder() -> None:
     """
-    Scans base destination folder plus {MAX_DEST_SCAN_SUB_DEPTH} levels of subfolders and
+    Scans base destination folder plus {Config.folder_scan_depth} levels of subfolders and
     stores found files in dict (key=folder_name)\n\n
     |folder1:\n\n
     |__subfolder1:\n\n
@@ -38,7 +38,7 @@ def scan_dest_folder() -> None:
     if path.isdir(Config.dest_base) or Config.folder_scan_levelup:
         Log.info('Scanning dest folder...')
         dest_base = Config.dest_base
-        scan_depth = MAX_DEST_SCAN_SUB_DEPTH + Config.folder_scan_levelup
+        scan_depth = Config.folder_scan_depth + Config.folder_scan_levelup
         for _ in range(Config.folder_scan_levelup):
             longpath, dirname = path.split(path.abspath(dest_base))
             dest_base = normalize_path(longpath)
