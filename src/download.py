@@ -93,10 +93,9 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         Log.warn(f'Warning: cannot extract categories for {sname}.')
         my_categories = list()
     try:
-        my_uploader = str(a_html.find('div', string=' Uploaded By: ').parent.find('a', class_='name').string).strip().lower()
+        vi.uploader = str(a_html.find('div', string=' Uploaded By: ').parent.find('a', class_='name').string).strip().lower()
     except Exception:
         Log.warn(f'Warning: cannot extract uploader for {sname}.')
-        my_uploader = ''
     tdiv = a_html.find('div', string='Tags:')
     if tdiv is None:
         Log.info(f'Warning: video {sname} has no tags!')
@@ -105,8 +104,6 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     for add_tag in [ca.replace(' ', '_') for ca in my_categories + my_authors if len(ca) > 0]:
         if add_tag not in tags_raw:
             tags_raw.append(add_tag)
-    if Config.check_uploader and my_uploader and my_uploader not in tags_raw:
-        tags_raw.append(my_uploader)
     if is_filtered_out_by_extra_tags(vi, tags_raw, Config.extra_tags, Config.id_sequence, vi.subfolder, extra_ids):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
         return DownloadResult.FAIL_FILTERED_OUTER if scenario else DownloadResult.FAIL_SKIPPED

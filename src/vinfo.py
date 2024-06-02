@@ -50,6 +50,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         self.tags = ''
         self.description = ''
         self.comments = ''
+        self.uploader = ''
         self.expected_size = 0
         self.start_size = 0
         self.start_time = 0
