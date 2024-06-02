@@ -303,7 +303,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                         if not try_rename(curfile, normalize_path(path.abspath(vi.my_fullpath), False)):
                             Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
             else:
-                Log.info(f'{vi.sffilename} (or similar) already exists. Skipped.')
+                Log.info(f'{vi.sffilename} (or similar) already exists. Skipped.\n Location: \'{curfile}\'')
                 vi.set_state(VideoInfo.State.DONE)
                 return DownloadResult.FAIL_ALREADY_EXISTS
         if not path.isdir(vi.my_folder):
