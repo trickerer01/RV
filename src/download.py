@@ -291,13 +291,15 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             if Config.continue_mode:
                 if not exact_name:
                     curfile_folder, curfile_name = path.split(curfile)
-                    if Config.no_rename_move is False or (path.isdir(vi.my_folder) and path.samefile(curfile_folder, vi.my_folder)):
-                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing new name (was \'{curfile}\').')
+                    same_loc = path.isdir(vi.my_folder) and path.samefile(curfile_folder, vi.my_folder)
+                    loc_str = f' ({"same" if same_loc else "different"} location)'
+                    if Config.no_rename_move is False or same_loc:
+                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found{loc_str}. Enforcing new name (was \'{curfile}\').')
                         if not try_rename(curfile, vi.my_fullpath):
                             Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
                     else:
                         new_subfolder = normalize_path(path.relpath(curfile_folder, Config.dest_base))
-                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing old path + new name '
+                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found{loc_str}. Enforcing old path + new name '
                                  f'\'{curfile_folder}/{vi.filename}\' due to \'--no-rename-move\' flag (was \'{curfile_name}\').')
                         vi.subfolder = new_subfolder
                         if not try_rename(curfile, normalize_path(path.abspath(vi.my_fullpath), False)):
