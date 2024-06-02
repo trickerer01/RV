@@ -265,6 +265,8 @@ class DownloadResult(IntEnum):
     FAIL_RETRIES = 2
     FAIL_ALREADY_EXISTS = 3
     FAIL_SKIPPED = 4
+    FAIL_DELETED = 5
+    FAIL_FILTERED_OUTER = 6
 
     def __str__(self) -> str:
         return f'{self.name} (0x{self.value:02X})'
