@@ -282,36 +282,35 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
         ret = DownloadResult.FAIL_SKIPPED
     else:
         vi.set_state(VideoInfo.State.DOWNLOADING)
+        curfile_match = re_media_filename.match(vi.filename)
+        curfile_quality = curfile_match.group(2)
+        curfile = file_already_exists(vi.id, curfile_quality)
+        if curfile:
+            exact_name = curfile == vi.my_fullpath
+            vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
+            if Config.continue_mode:
+                if not exact_name:
+                    curfile_folder, curfile_name = path.split(curfile)
+                    if Config.no_rename_move is False or (path.isdir(vi.my_folder) and path.samefile(curfile_folder, vi.my_folder)):
+                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing new name (was \'{curfile}\').')
+                        if not try_rename(curfile, vi.my_fullpath):
+                            Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
+                    else:
+                        new_subfolder = normalize_path(path.relpath(curfile_folder, Config.dest_base))
+                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing old path + new name '
+                                 f'\'{curfile_folder}/{vi.filename}\' due to \'--no-rename-move\' flag (was \'{curfile_name}\').')
+                        vi.subfolder = new_subfolder
+                        if not try_rename(curfile, normalize_path(path.abspath(vi.my_fullpath), False)):
+                            Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
+            else:
+                Log.info(f'{vi.sffilename} (or similar) already exists. Skipped.')
+                vi.set_state(VideoInfo.State.DONE)
+                return DownloadResult.FAIL_ALREADY_EXISTS
         if not path.isdir(vi.my_folder):
             try:
                 makedirs(vi.my_folder)
             except Exception:
                 raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
-        else:
-            curfile_match = re_media_filename.match(vi.filename)
-            curfile_quality = curfile_match.group(2)
-            curfile = file_already_exists(vi.id, curfile_quality)
-            if curfile:
-                exact_name = curfile == vi.my_fullpath
-                vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
-                if Config.continue_mode:
-                    if not exact_name:
-                        curfile_folder, curfile_name = path.split(curfile)
-                        if Config.no_rename_move is False or (path.isdir(vi.my_folder) and path.samefile(curfile_folder, vi.my_folder)):
-                            Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing new name (was \'{curfile}\').')
-                            if not try_rename(curfile, vi.my_fullpath):
-                                Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
-                        else:
-                            new_subfolder = normalize_path(path.relpath(curfile_folder, Config.dest_base))
-                            Log.info(f'{vi.sffilename} {vi.quality} (or similar) found. Enforcing old path + new name '
-                                     f'\'{curfile_folder}/{vi.filename}\' due to \'--no-rename-move\' flag (was \'{curfile_name}\').')
-                            vi.subfolder = new_subfolder
-                            if not try_rename(curfile, normalize_path(path.abspath(vi.my_fullpath), False)):
-                                Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
-                else:
-                    Log.info(f'{vi.sffilename} (or similar) already exists. Skipped.')
-                    vi.set_state(VideoInfo.State.DONE)
-                    return DownloadResult.FAIL_ALREADY_EXISTS
 
     while (not skip) and retries < CONNECT_RETRIES_BASE:
         try:
