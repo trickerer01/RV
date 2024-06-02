@@ -7,13 +7,12 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from os import path, listdir, rename, makedirs
-from typing import List, Optional, Dict, MutableSequence
+from typing import List, Dict, MutableSequence
 
 from config import Config
 from defs import MAX_DEST_SCAN_SUB_DEPTH
 from logger import Log
 from rex import re_media_filename
-from scenario import DownloadScenario
 from util import normalize_path
 from vinfo import VideoInfo
 
@@ -85,17 +84,10 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> str:
 
 
 def file_already_exists(idi: int, quality: str) -> str:
-    scenario = Config.scenario  # type: Optional[DownloadScenario]
-    if scenario:
-        for q in scenario.queries:
-            fullpath = file_exists_in_folder(f'{Config.dest_base}{q.subfolder}', idi, quality or q.quality)
-            if len(fullpath) > 0:
-                return fullpath
-    else:
-        for fullpath in found_filenames_dict:
-            fullpath = file_exists_in_folder(fullpath, idi, quality or Config.quality)
-            if len(fullpath) > 0:
-                return fullpath
+    for fullpath in found_filenames_dict:
+        fullpath = file_exists_in_folder(fullpath, idi, quality or Config.quality)
+        if len(fullpath) > 0:
+            return fullpath
     return ''
 
 
@@ -116,14 +108,9 @@ def file_exists_in_folder_arr(base_folder: str, idi: int, quality: str) -> List[
 
 
 def file_already_exists_arr(idi: int, quality: str) -> List[str]:
-    scenario = Config.scenario  # type: Optional[DownloadScenario]
     found_files = list()
-    if scenario:
-        for q in scenario.queries:
-            found_files.extend(file_exists_in_folder_arr(f'{Config.dest_base}{q.subfolder}', idi, quality or q.quality))
-    else:
-        for fullpath in found_filenames_dict:
-            found_files.extend(file_exists_in_folder_arr(fullpath, idi, quality or Config.quality))
+    for fullpath in found_filenames_dict:
+        found_files.extend(file_exists_in_folder_arr(fullpath, idi, quality or Config.quality))
     return found_files
 
 
