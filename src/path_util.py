@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from os import path, listdir, rename
+from os import path, listdir, rename, makedirs
 from typing import List, Optional, Dict, MutableSequence
 
 from config import Config
@@ -148,6 +148,9 @@ def try_rename(oldpath: str, newpath: str) -> bool:
     try:
         if oldpath == newpath:
             return True
+        newpath_folder = path.split(newpath.strip('/'))[0]
+        if not path.isdir(newpath_folder):
+            makedirs(newpath_folder)
         rename(oldpath, newpath)
         return True
     except Exception:
