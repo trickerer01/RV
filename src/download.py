@@ -190,7 +190,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     fname_part2 = extract_ext(vi.link)
     my_score = (f'{f"+" if score.isnumeric() else ""}{score}' if len(score) > 0
                 else '' if len(rating) > 0 else 'unk')
-    my_rating = (f'{", " if  len(my_score) > 0 else ""}{rating}{"%" if rating.isnumeric() else ""}' if len(rating) > 0
+    my_rating = (f'{", " if len(my_score) > 0 else ""}{rating}{"%" if rating.isnumeric() else ""}' if len(rating) > 0
                  else '' if len(my_score) > 0 else 'unk')
     fname_part1 = (
         f'{prefix}{vi.id:d}'
