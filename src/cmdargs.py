@@ -19,7 +19,8 @@ from defs import (
     QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, HELP_ARG_MODEL,
     HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS, HELP_ARG_LOOKAHEAD,
     HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_FSLEVELUP, HELP_ARG_NOMOVE, HELP_ARG_FSDEPTH, HELP_ARG_CHECK_UPLOADER,
-    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC,
+    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC, HELP_ARG_ID_START, HELP_ARG_ID_COUNT, HELP_ARG_ID_END,
+    HELP_ARG_PAGE_START, HELP_ARG_PAGE_COUNT, HELP_ARG_PAGE_END, HELP_ARG_DUMP_SCREENSHOTS,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -148,7 +149,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-cdump', '--dump-comments', action=ACTION_STORE_TRUE, help=HELP_ARG_DUMP_INFO)
     parser_or_group.add_argument('-dmerge', '--merge-lists', action=ACTION_STORE_TRUE, help=HELP_ARG_MERGE_LISTS)
     parser_or_group.add_argument('-noempty', '--skip-empty-lists', action=ACTION_STORE_TRUE, help=HELP_ARG_SKIP_EMPTY_LISTS)
-    parser_or_group.add_argument('-sdump', '--dump-screenshots', action=ACTION_STORE_TRUE, help='Save screenshots (webp, very slow)')
+    parser_or_group.add_argument('-sdump', '--dump-screenshots', action=ACTION_STORE_TRUE, help=HELP_ARG_DUMP_SCREENSHOTS)
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
     parser_or_group.add_argument('-session_id', default=None, help=HELP_ARG_SESSION_ID, type=valid_session_id)
     parser_or_group.add_argument('-script', '--download-scenario', default=None, help=HELP_ARG_DWN_SCENARIO, type=DownloadScenario)
@@ -167,9 +168,9 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     arggr_start_or_seq = par_cmd.add_mutually_exclusive_group(required=True)
     arggr_count_or_end = par_cmd.add_mutually_exclusive_group()
-    arggr_start_or_seq.add_argument('-start', metavar='#number', help='Start video id. Required', type=positive_nonzero_int)
-    arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help='Ids count to process', type=positive_nonzero_int)
-    arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End video id', type=positive_nonzero_int)
+    arggr_start_or_seq.add_argument('-start', metavar='#number', help=HELP_ARG_ID_START, type=positive_nonzero_int)
+    arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help=HELP_ARG_ID_COUNT, type=positive_nonzero_int)
+    arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help=HELP_ARG_ID_END, type=positive_nonzero_int)
     par_cmd.add_argument('-lookahead', metavar='#number', default=0, help=HELP_ARG_LOOKAHEAD, type=positive_nonzero_int)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
 
@@ -181,11 +182,11 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     parser, par_file, par_cmd = create_parsers()
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
-    par_cmd.add_argument('-start', metavar='#number', default=1, help="Start page number. Default is '1'", type=positive_nonzero_int)
+    par_cmd.add_argument('-start', metavar='#number', default=1, help=HELP_ARG_PAGE_START, type=positive_nonzero_int)
     arggr_count_or_end = par_cmd.add_mutually_exclusive_group(required=True)
     arggr_count_or_end.add_argument('-get_maxid', action=ACTION_STORE_TRUE, help=HELP_ARG_GET_MAXID)
-    arggr_count_or_end.add_argument('-pages', metavar='#number', help='Pages count to process', type=positive_nonzero_int)
-    arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help='End page number', type=positive_nonzero_int)
+    arggr_count_or_end.add_argument('-pages', metavar='#number', help=HELP_ARG_PAGE_COUNT, type=positive_nonzero_int)
+    arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help=HELP_ARG_PAGE_END, type=positive_nonzero_int)
     par_cmd.add_argument('-stop_id', metavar='#number', default=1, help='', type=positive_nonzero_int)
     par_cmd.add_argument('-begin_id', metavar='#number', default=10**9, help=HELP_ARG_BEGIN_STOP_ID, type=positive_nonzero_int)
     par_cmd.add_argument('-pall', '--scan-all-pages', action=ACTION_STORE_TRUE, help=HELP_ARG_ALL_PAGES)
