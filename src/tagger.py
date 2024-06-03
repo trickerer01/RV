@@ -359,7 +359,7 @@ def filtered_tags(tags_list: Collection[str]) -> str:
     if len(tags_list) == 0:
         return ''
 
-    tags_list_final = list()  # type: List[str]
+    tags_list_final: List[str] = list()
 
     for tag in tags_list:
         tag = re_replace_symbols.sub('_', tag.replace('-', '').replace('\'', '').replace('.', ''))
@@ -407,7 +407,9 @@ def filtered_tags(tags_list: Collection[str]) -> str:
                         del tags_list_final[i]
         if do_add:
             if aser_valid:
-                for i, c in enumerate(tag):  # type: int, str
+                i: int
+                c: str
+                for i, c in enumerate(tag):
                     if (i == 0 or tag[i - 1] == '_') and c.isalpha():
                         tag = f'{tag[:i]}{c.upper()}{tag[i + 1:]}'
             tags_list_final.append(tag)

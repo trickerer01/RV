@@ -25,10 +25,10 @@ class ThrottleChecker:
         self._vi = vi
         self._init_size = 0
         self._slow_download_amount_threshold = ThrottleChecker._orig_threshold()
-        self._interrupted_speeds = deque(maxlen=3)  # type: Deque[float]
-        self._speeds = deque(maxlen=5)  # type: Deque[str]
-        self._response = None  # type: Optional[ClientResponse]
-        self._cheker = None  # type: Optional[Task]
+        self._interrupted_speeds: Deque[float] = deque(maxlen=3)
+        self._speeds: Deque[str] = deque(maxlen=5)
+        self._response: Optional[ClientResponse] = None
+        self._cheker: Optional[Task] = None
 
     def prepare(self, response: ClientResponse, init_size: int) -> None:
         self._init_size = init_size

@@ -26,7 +26,7 @@ class VideoScanWorker:
     The main purpose of it being separated from VideoDownloadWorker is to scan videos independently,
     being able to continue even if downloader's active queue is full
     """
-    _instance = None  # type: Optional[VideoScanWorker]
+    _instance: Optional[VideoScanWorker] = None
 
     @staticmethod
     def get() -> Optional[VideoScanWorker]:
@@ -42,9 +42,9 @@ class VideoScanWorker:
 
         self._orig_count = len(self._seq)
         self._404_counter = 0
-        self._extra_ids = list()  # type: List[int]
-        self._scanned_items = deque()  # type: Deque[VideoInfo]
-        self._task_finish_callback = None  # type: Optional[Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]]]
+        self._extra_ids: List[int] = list()
+        self._scanned_items: Deque[VideoInfo] = deque()
+        self._task_finish_callback: Optional[Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]]] = None
 
     def _extend_with_extra(self) -> None:
         extra_cur = Config.lookahead - self._404_counter

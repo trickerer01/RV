@@ -33,7 +33,7 @@ class VideoDownloadWorker:
     Async queue wrapper which binds list of lists of arguments to a download function call and processes them
     asynchronously with a limit of simulteneous downloads defined by MAX_VIDEOS_QUEUE_SIZE
     """
-    _instance = None  # type: Optional[VideoDownloadWorker]
+    _instance: Optional[VideoDownloadWorker] = None
 
     @staticmethod
     def get() -> Optional[VideoDownloadWorker]:
@@ -48,7 +48,7 @@ class VideoDownloadWorker:
 
         self._func = func
         self._seq = [vi for vi in sequence]  # form our own container to erase from
-        self._queue = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)  # type: AsyncQueue[VideoInfo]
+        self._queue: AsyncQueue[VideoInfo] = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)
         self._session = session
         self._orig_count = len(self._seq)
         self._downloaded_count = 0
@@ -58,9 +58,9 @@ class VideoDownloadWorker:
         self._404_count = 0
         self._minmax_id = get_min_max_ids(self._seq)
 
-        self._downloads_active = list()  # type: List[VideoInfo]
-        self._writes_active = list()  # type: List[str]
-        self._failed_items = list()  # type: List[int]
+        self._downloads_active: List[VideoInfo] = list()
+        self._writes_active: List[str] = list()
+        self._failed_items: List[int] = list()
 
         self._total_queue_size_last = 0
         self._download_queue_size_last = 0

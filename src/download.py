@@ -55,9 +55,9 @@ async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, 
 async def scan_video(vi: VideoInfo) -> DownloadResult:
     dwn = VideoDownloadWorker.get()
     scn = VideoScanWorker.get()
-    scenario = Config.scenario  # type: Optional[DownloadScenario]
+    scenario: Optional[DownloadScenario] = Config.scenario
     sname = vi.sname
-    extra_ids = scn.get_extra_ids() if scn else []  # type: List[int]
+    extra_ids: List[int] = scn.get_extra_ids() if scn else []
     my_tags = 'no_tags'
     rating = vi.rating
     score = ''
@@ -263,8 +263,8 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
 
 async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
     ret = DownloadResult.SUCCESS
-    for t in [get_running_loop().create_task(download_sceenshot(vi, scr_idx + 1))
-              for scr_idx in range(SCREENSHOTS_COUNT)]:  # type: Task[DownloadResult]
+    t: Task[DownloadResult]
+    for t in [get_running_loop().create_task(download_sceenshot(vi, scr_idx + 1)) for scr_idx in range(SCREENSHOTS_COUNT)]:
         res = await t
         if res not in (DownloadResult.SUCCESS, ret):
             ret = res
@@ -334,7 +334,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                         vi.set_state(VideoInfo.State.DONE)
                 break
 
-            hkwargs = {'headers': {'Range': f'bytes={file_size:d}-'}} if file_size > 0 else {}  # type: Dict[str, Dict[str, str]]
+            hkwargs: Dict[str, Dict[str, str]] = {'headers': {'Range': f'bytes={file_size:d}-'}} if file_size > 0 else {}
             r = None
             async with await wrap_request(dwn.session, 'GET', vi.link, **hkwargs) as r:
                 content_len = r.content_length or 0

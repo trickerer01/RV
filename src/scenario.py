@@ -28,13 +28,13 @@ UTP_ALWAYS = DOWNLOAD_POLICY_ALWAYS
 class SubQueryParams(object):
     def __init__(self, subfolder: str, extra_tags: List[str], quality: str, minscore: Optional[int], minrating: int,
                  utp: str, id_sequence: List[int]) -> None:
-        self.subfolder = subfolder or ''  # type: str
-        self.extra_tags = extra_tags or list()  # type: List[str]
-        self.quality = quality or ''  # type: str
-        self.minrating = minrating or 0  # type: int
-        self.minscore = minscore  # type: Optional[int]
-        self.untagged_policy = utp or ''  # type: str
-        self.id_sequence = id_sequence or []  # type: List[int]
+        self.subfolder: str = subfolder or ''
+        self.extra_tags: List[str] = extra_tags or list()
+        self.quality: str = quality or ''
+        self.minrating: int = minrating or 0
+        self.minscore: Optional[int] = minscore
+        self.untagged_policy: str = utp or ''
+        self.id_sequence: List[int] = id_sequence or []
 
     @property
     def utp(self) -> str:
@@ -57,7 +57,7 @@ class DownloadScenario(object):
         assert fmt_str
 
         self.fmt_str = fmt_str
-        self.queries = list()  # type: List[SubQueryParams]
+        self.queries: List[SubQueryParams] = list()
 
         parser = ArgumentParser(add_help=False)
         parser.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help='')

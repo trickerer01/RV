@@ -22,51 +22,55 @@ __all__ = ('Config',)
 class BaseConfig:
     """Parameters container for params used in both **pages** and **ids** modules"""
     def __init__(self) -> None:
-        self.dest_base = None  # type: Optional[str]
-        self.proxy = None  # type: Optional[str]
-        self.session_id = None  # type: Optional[str]
-        self.min_rating = None  # type: Optional[int]
-        self.min_score = None  # type: Optional[int]
-        self.quality = None  # type: Optional[str]
-        self.untagged_policy = None  # type: Optional[str]
+        self.dest_base: Optional[str] = None
+        self.proxy: Optional[str] = None
+        self.session_id: Optional[str] = None
+        self.min_rating: Optional[int] = None
+        self.min_score: Optional[int] = None
+        self.quality: Optional[str] = None
+        self.untagged_policy: Optional[str] = None
         self.folder_scan_depth = self.folder_scan_levelup = 0
-        self.download_mode = None  # type: Optional[str]
-        self.continue_mode = None  # type: Optional[bool]
-        self.keep_unfinished = None  # type: Optional[bool]
-        self.no_rename_move = None  # type: Optional[bool]
-        self.save_tags = None  # type: Optional[bool]
-        self.save_descriptions = None  # type: Optional[bool]
-        self.save_comments = None  # type: Optional[bool]
-        self.merge_lists = None  # type: Optional[bool]
-        self.skip_empty_lists = None  # type: Optional[bool]
-        self.save_screenshots = None  # type: Optional[bool]
-        self.extra_tags = None  # type: Optional[List[str]]
-        self.id_sequence = None  # type: Optional[List[int]]
-        self.scenario = None  # type: Optional['DownloadScenario'] # noqa F821
+        self.download_mode: Optional[str] = None
+        self.continue_mode: Optional[bool] = None
+        self.keep_unfinished: Optional[bool] = None
+        self.no_rename_move: Optional[bool] = None
+        self.save_tags: Optional[bool] = None
+        self.save_descriptions: Optional[bool] = None
+        self.save_comments: Optional[bool] = None
+        self.merge_lists: Optional[bool] = None
+        self.skip_empty_lists: Optional[bool] = None
+        self.save_screenshots: Optional[bool] = None
+        self.extra_tags: Optional[List[str]] = None
+        self.id_sequence: Optional[List[int]] = None
+        self.scenario: Optional["DownloadScenario"] = None # noqa F821
         self.naming_flags = self.logging_flags = 0
         self.start = self.end = self.start_id = self.end_id = 0
-        self.timeout = None  # type: Optional[ClientTimeout]
-        self.throttle = None  # type: Optional[int]
-        self.throttle_auto = None  # type: Optional[bool]
-        self.store_continue_cmdfile = None  # type: Optional[bool]
-        self.report_duplicates = None  # type: Optional[bool]
-        self.check_uploader = None  # type: Optional[bool]
-        self.check_title_pos = None  # type: Optional[bool]
-        self.check_title_neg = None  # type: Optional[bool]
-        self.check_description_pos = None  # type: Optional[bool]
-        self.check_description_neg = None  # type: Optional[bool]
+        self.timeout: Optional[ClientTimeout] = None
+        self.throttle: Optional[int] = None
+        self.throttle_auto: Optional[bool] = None
+        self.store_continue_cmdfile: Optional[bool] = None
+        self.report_duplicates: Optional[bool] = None
+        self.check_uploader: Optional[bool] = None
+        self.check_title_pos: Optional[bool] = None
+        self.check_title_neg: Optional[bool] = None
+        self.check_description_pos: Optional[bool] = None
+        self.check_description_neg: Optional[bool] = None
         # module-specific params (pages only or ids only)
-        self.scan_all_pages = None  # type: Optional[bool]
-        self.use_id_sequence = None  # type: Optional[bool]
-        self.lookahead = None  # type: Optional[int]
-        self.search = None  # type: Optional[str]
-        self.search_tags, self.search_arts, self.search_cats = None, None, None  # type: Optional[str]
-        self.search_rule_tag, self.search_rule_art, self.search_rule_cat = None, None, None  # type: Optional[str]
-        self.playlist_id = None  # type: Optional[int]
-        self.playlist_name = None  # type: Optional[str]
-        self.uploader = None  # type: Optional[int]
-        self.model = None  # type: Optional[str]
-        self.get_maxid = None  # type: Optional[bool]
+        self.scan_all_pages: Optional[bool] = None
+        self.use_id_sequence: Optional[bool] = None
+        self.lookahead: Optional[int] = None
+        self.search: Optional[str] = None
+        self.search_tags: Optional[str] = None
+        self.search_arts: Optional[str] = None
+        self.search_cats: Optional[str] = None
+        self.search_rule_tag: Optional[str] = None
+        self.search_rule_art: Optional[str] = None
+        self.search_rule_cat: Optional[str] = None
+        self.playlist_id: Optional[int] = None
+        self.playlist_name: Optional[str] = None
+        self.uploader: Optional[int] = None
+        self.model: Optional[str] = None
+        self.get_maxid: Optional[bool] = None
         # extras (can't be set through cmdline arguments)
         self.nodelay = False
 

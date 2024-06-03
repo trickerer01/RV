@@ -18,12 +18,13 @@ from vinfo import VideoInfo
 
 __all__ = ('file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items')
 
-found_filenames_dict = dict()  # type: Dict[str, List[str]]
+found_filenames_dict: Dict[str, List[str]] = dict()
 
 
 def report_duplicates() -> None:
     found_vs = dict()
-    for k in found_filenames_dict:  # type: str, List[str]
+    k: str
+    for k in found_filenames_dict:
         if not found_filenames_dict[k]:
             continue
         for fname in found_filenames_dict[k]:
@@ -152,7 +153,8 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
     if Config.continue_mode:
         return
 
-    for i in reversed(range(len(vi_list))):  # type: int
+    i: int
+    for i in reversed(range(len(vi_list))):
         fullpath = file_already_exists(vi_list[i].id, '')
         if len(fullpath) > 0:
             Log.info(f'Info: {vi_list[i].sname} found in \'{path.split(fullpath)[0]}/\'. Skipped.')

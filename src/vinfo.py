@@ -46,7 +46,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         self.subfolder = m_subfolder or ''
         self.filename = m_filename or ''
         self.rating = m_rating or ''
-        self.quality = Config.quality or DEFAULT_QUALITY  # type: str
+        self.quality: str = Config.quality or DEFAULT_QUALITY
         self.tags = ''
         self.description = ''
         self.comments = ''
@@ -122,20 +122,20 @@ def get_min_max_ids(seq: Iterable[VideoInfo]) -> Tuple[int, int]:
 
 
 def try_merge_info_files(info_dict: Dict[int, str], subfolder: str, list_type: str) -> List[str]:
-    parsed_files = list()  # type: List[str]
+    parsed_files: List[str] = list()
     if not Config.merge_lists:
         return parsed_files
     dir_fullpath = normalize_path(f'{Config.dest_base}{subfolder}')
     if not path.isdir(dir_fullpath):
         return parsed_files
     # Log.debug(f'\nMerging {Config.dest_base}{subfolder} \'{list_type}\' info lists...')
-    info_lists = sorted(filter(
+    info_lists: List[Match[str]] = sorted(filter(
         lambda x: not not x, [re_infolist_filename.fullmatch(f) for f in listdir(dir_fullpath)
                               if path.isfile(f'{dir_fullpath}{f}') and f.startswith(f'{PREFIX}!{list_type}_')]
-    ), key=lambda m: m.string)  # type: List[Match[str]]
+    ), key=lambda m: m.string)
     if not info_lists:
         return parsed_files
-    parsed_dict = dict()  # type: Dict[int, str]
+    parsed_dict: Dict[int, str] = dict()
     for fmatch in info_lists:
         fmname = fmatch.string
         # Log.debug(f'Parsing {fmname}...')
@@ -175,7 +175,10 @@ def try_merge_info_files(info_dict: Dict[int, str], subfolder: str, list_type: s
 
 def export_video_info(info_list: Iterable[VideoInfo]) -> None:
     """Saves tags, descriptions and comments for each subfolder in scenario and base dest folder based on video info"""
-    tags_dict, desc_dict, comm_dict = dict(), dict(), dict()  # type: Dict[str, Dict[int, str]]
+    tags_dict: Dict[str, Dict[int, str]]
+    desc_dict: Dict[str, Dict[int, str]]
+    comm_dict: Dict[str, Dict[int, str]]
+    tags_dict, desc_dict, comm_dict = dict(), dict(), dict()
     for vi in info_list:
         if vi.link:
             for d, s in zip((tags_dict, desc_dict, comm_dict), (vi.tags, vi.description, vi.comments)):
