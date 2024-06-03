@@ -46,6 +46,7 @@ class BaseConfig:
         self.throttle = None  # type: Optional[int]
         self.throttle_auto = None  # type: Optional[bool]
         self.store_continue_cmdfile = None  # type: Optional[bool]
+        self.report_duplicates = None  # type: Optional[bool]
         self.check_uploader = None  # type: Optional[bool]
         self.check_title_pos = None  # type: Optional[bool]
         self.check_title_neg = None  # type: Optional[bool]
@@ -100,6 +101,7 @@ class BaseConfig:
         self.throttle = params.throttle
         self.throttle_auto = params.throttle_auto
         self.store_continue_cmdfile = params.store_continue_cmdfile
+        self.report_duplicates = getattr(params, 'report_duplicates', self.report_duplicates)
         self.check_uploader = getattr(params, 'check_uploader', self.check_uploader)
         self.check_title_pos = getattr(params, 'check_title_pos', self.check_title_pos)
         self.check_title_neg = getattr(params, 'check_title_neg', self.check_title_neg)
