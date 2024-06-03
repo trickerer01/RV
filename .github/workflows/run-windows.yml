@@ -18,7 +18,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Run Tests:
+  test:
+    name: Run Tests
     strategy:
       fail-fast: false
       matrix:
