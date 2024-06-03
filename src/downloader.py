@@ -18,8 +18,7 @@ from aiohttp import ClientSession
 from config import Config
 from defs import (
     DownloadResult, Mem, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, DOWNLOAD_CONTINUE_FILE_CHECK_TIMER, PREFIX,
-    START_TIME, UTF8, LOGGING_FLAGS, CONNECT_TIMEOUT_BASE, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DEFAULT_QUALITY,
-    DOWNLOAD_MODE_DEFAULT, MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, MAX_DEST_SCAN_UPLEVELS_DEFAULT,
+    START_TIME, UTF8,
 )
 from dscanner import VideoScanWorker
 from logger import Log
@@ -174,39 +173,7 @@ class VideoDownloadWorker:
         minmax_id = self._minmax_id
         continue_file_name = f'{PREFIX}{START_TIME.strftime("%Y-%m-%d_%H_%M_%S")}_{minmax_id[0]:d}-{minmax_id[1]:d}.continue.conf'
         continue_file_fullpath = f'{Config.dest_base}{continue_file_name}'
-        arglist_base = [
-            '-path', Config.dest_base, '-continue', '--store-continue-cmdfile',
-            '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == Config.logging_flags, LOGGING_FLAGS.keys())),
-            *(('-quality', Config.quality) if Config.quality != DEFAULT_QUALITY and not Config.scenario else ()),
-            *(('--report-duplicates',) if Config.report_duplicates else ()),
-            *(('--check-title-pos',) if Config.check_title_pos else ()),
-            *(('--check-title-neg',) if Config.check_title_neg else ()),
-            *(('--check-description-pos',) if Config.check_description_pos else ()),
-            *(('--check-description-neg',) if Config.check_description_neg else ()),
-            *(('-utp', Config.utp) if Config.utp != DOWNLOAD_POLICY_DEFAULT and not Config.scenario else ()),
-            *(('-minrating', Config.min_rating) if Config.min_rating else ()),
-            *(('-minscore', Config.min_score) if Config.min_score else ()),
-            *(('-naming', Config.naming_flags) if Config.naming_flags != NAMING_FLAGS_DEFAULT else ()),
-            *(('-dmode', Config.download_mode) if Config.download_mode != DOWNLOAD_MODE_DEFAULT else ()),
-            *(('-fsdepth', Config.folder_scan_depth) if Config.folder_scan_depth != MAX_DEST_SCAN_SUB_DEPTH_DEFAULT else ()),
-            *(('-fslevel', Config.folder_scan_levelup) if Config.folder_scan_levelup != MAX_DEST_SCAN_UPLEVELS_DEFAULT else ()),
-            *(('-proxy', Config.proxy) if Config.proxy else ()),
-            *(('-throttle', Config.throttle) if Config.throttle else ()),
-            *(('-athrottle',) if Config.throttle_auto else ()),
-            *(('-timeout', int(Config.timeout.connect)) if int(Config.timeout.connect) != CONNECT_TIMEOUT_BASE else ()),
-            *(('-unfinish',) if Config.keep_unfinished else ()),
-            *(('-tdump',) if Config.save_tags else ()),
-            *(('-ddump',) if Config.save_descriptions else ()),
-            *(('-cdump',) if Config.save_comments else ()),
-            *(('-dmerge',) if Config.merge_lists else ()),
-            *(('-dnoempty',) if Config.skip_empty_lists else ()),
-            *(('-sdump',) if Config.save_screenshots else ()),
-            # *(('-previews',) if Config.include_previews else ()),
-            *(('-nomove',) if Config.no_rename_move else ()),
-            *(('-session_id', Config.session_id) if Config.session_id else ()),
-            *Config.extra_tags,
-            *(('-script', Config.scenario.fmt_str) if Config.scenario else ())
-        ]
+        arglist_base = Config.make_continue_arguments()
         base_sleep_time = calc_sleep_time(3.0)
         write_delay = DOWNLOAD_CONTINUE_FILE_CHECK_TIMER
         last_check_seconds = 0

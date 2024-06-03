@@ -7,11 +7,14 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from argparse import Namespace
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from aiohttp import ClientTimeout
 
-from defs import CONNECT_TIMEOUT_BASE
+from defs import (
+    CONNECT_TIMEOUT_BASE, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DOWNLOAD_MODE_DEFAULT, DEFAULT_QUALITY,
+    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, MAX_DEST_SCAN_UPLEVELS_DEFAULT,
+)
 
 __all__ = ('Config',)
 
@@ -124,6 +127,42 @@ class BaseConfig:
         self.uploader = getattr(params, 'uploader', self.uploader)
         self.model = getattr(params, 'model', self.model)
         self.get_maxid = getattr(params, 'get_maxid', self.get_maxid)
+
+    def make_continue_arguments(self) -> List[Union[None, str, int]]:
+        arglist: List[Union[None, str, int]] = [
+            '-path', self.dest_base, '-continue', '--store-continue-cmdfile',
+            '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == self.logging_flags, LOGGING_FLAGS.keys())),
+            *(('-quality', self.quality) if self.quality != DEFAULT_QUALITY and not self.scenario else ()),
+            *(('--report-duplicates',) if self.report_duplicates else ()),
+            *(('--check-title-pos',) if self.check_title_pos else ()),
+            *(('--check-title-neg',) if self.check_title_neg else ()),
+            *(('--check-description-pos',) if self.check_description_pos else ()),
+            *(('--check-description-neg',) if self.check_description_neg else ()),
+            *(('-utp', self.utp) if self.utp != DOWNLOAD_POLICY_DEFAULT and not self.scenario else ()),
+            *(('-minrating', self.min_rating) if self.min_rating else ()),
+            *(('-minscore', self.min_score) if self.min_score else ()),
+            *(('-naming', self.naming_flags) if self.naming_flags != NAMING_FLAGS_DEFAULT else ()),
+            *(('-dmode', self.download_mode) if self.download_mode != DOWNLOAD_MODE_DEFAULT else ()),
+            *(('-fsdepth', self.folder_scan_depth) if self.folder_scan_depth != MAX_DEST_SCAN_SUB_DEPTH_DEFAULT else ()),
+            *(('-fslevel', self.folder_scan_levelup) if self.folder_scan_levelup != MAX_DEST_SCAN_UPLEVELS_DEFAULT else ()),
+            *(('-proxy', self.proxy) if self.proxy else ()),
+            *(('-throttle', self.throttle) if self.throttle else ()),
+            *(('-athrottle',) if self.throttle_auto else ()),
+            *(('-timeout', int(self.timeout.connect)) if int(self.timeout.connect) != CONNECT_TIMEOUT_BASE else ()),
+            *(('-unfinish',) if self.keep_unfinished else ()),
+            *(('-tdump',) if self.save_tags else ()),
+            *(('-ddump',) if self.save_descriptions else ()),
+            *(('-cdump',) if self.save_comments else ()),
+            *(('-dmerge',) if self.merge_lists else ()),
+            *(('-dnoempty',) if self.skip_empty_lists else ()),
+            *(('-sdump',) if self.save_screenshots else ()),
+            # *(('-previews',) if self.include_previews else ()),
+            *(('-nomove',) if self.no_rename_move else ()),
+            *(('-session_id', self.session_id) if self.session_id else ()),
+            *self.extra_tags,
+            *(('-script', self.scenario.fmt_str) if self.scenario else ())
+        ]
+        return arglist
 
     @property
     def utp(self) -> Optional[str]:
