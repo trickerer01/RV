@@ -47,6 +47,10 @@ class BaseConfig:
         self.throttle_auto = None  # type: Optional[bool]
         self.store_continue_cmdfile = None  # type: Optional[bool]
         self.check_uploader = None  # type: Optional[bool]
+        self.check_title_pos = None  # type: Optional[bool]
+        self.check_title_neg = None  # type: Optional[bool]
+        self.check_description_pos = None  # type: Optional[bool]
+        self.check_description_neg = None  # type: Optional[bool]
         # module-specific params (pages only or ids only)
         self.scan_all_pages = None  # type: Optional[bool]
         self.use_id_sequence = None  # type: Optional[bool]
@@ -97,6 +101,10 @@ class BaseConfig:
         self.throttle_auto = params.throttle_auto
         self.store_continue_cmdfile = params.store_continue_cmdfile
         self.check_uploader = getattr(params, 'check_uploader', self.check_uploader)
+        self.check_title_pos = getattr(params, 'check_title_pos', self.check_title_pos)
+        self.check_title_neg = getattr(params, 'check_title_neg', self.check_title_neg)
+        self.check_description_pos = getattr(params, 'check_description_pos', self.check_description_pos)
+        self.check_description_neg = getattr(params, 'check_description_neg', self.check_description_neg)
         # module-specific params (pages only or ids only)
         self.scan_all_pages = getattr(params, 'scan_all_pages', self.scan_all_pages)
         self.use_id_sequence = getattr(params, 'use_id_sequence', self.use_id_sequence)

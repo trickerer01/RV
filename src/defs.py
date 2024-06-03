@@ -225,6 +225,12 @@ HELP_ARG_STORE_CONTINUE_CMDFILE = (
 HELP_ARG_CHECK_UPLOADER = (
     'Apply extra \'tag\' / \'-tag\' filters to uploader name. By default only tags, categories and artists will be checked'
 )
+HELP_ARG_CHECK_TITLEDESC = (
+    'Apply extra \'tag\' / \'-tag\' filters to title / description.'
+    ' All exta \'tag\'s will be converted to wildcard tags and will have underscores replaced with spaces during this match.'
+    ' Post is considered matching extra tags if either its tags or its title / description matches all extra \'tag\'s (positive filtering)'
+    ' and neither its tags nor its title / description matches extra \'-tags\' (negative filtering)'
+)
 HELP_ARG_MINRATING = (
     '[DEPRECATED, DO NOT USE] Rating percentage filter, 0-100.'
     ' Videos having rating below this value will be skipped, unless rating extraction fails - in that case video always gets a pass'

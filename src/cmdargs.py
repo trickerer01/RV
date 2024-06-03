@@ -19,7 +19,7 @@ from defs import (
     QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, HELP_ARG_MODEL,
     HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS, HELP_ARG_LOOKAHEAD,
     HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_FSLEVELUP, HELP_ARG_NOMOVE, HELP_ARG_FSDEPTH, HELP_ARG_CHECK_UPLOADER,
-    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT,
+    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -154,6 +154,10 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-script', '--download-scenario', default=None, help=HELP_ARG_DWN_SCENARIO, type=DownloadScenario)
     parser_or_group.add_argument('--store-continue-cmdfile', action=ACTION_STORE_TRUE, help=HELP_ARG_STORE_CONTINUE_CMDFILE)
     parser_or_group.add_argument('--check-uploader', action=ACTION_STORE_TRUE, help=HELP_ARG_CHECK_UPLOADER)
+    parser_or_group.add_argument('--check-title-pos', action=ACTION_STORE_TRUE, help='')
+    parser_or_group.add_argument('--check-title-neg', action=ACTION_STORE_TRUE, help='')
+    parser_or_group.add_argument('--check-description-pos', action=ACTION_STORE_TRUE, help='')
+    parser_or_group.add_argument('--check-description-neg', action=ACTION_STORE_TRUE, help=HELP_ARG_CHECK_TITLEDESC)
     parser_or_group.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help=HELP_ARG_EXTRA_TAGS)
 
 

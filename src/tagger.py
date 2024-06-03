@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from typing import List, Optional, Collection, Iterable, MutableSequence, Tuple
+from typing import List, Optional, Collection, Iterable, MutableSequence, Tuple, Union, Literal
 
 from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
 from config import Config
@@ -209,7 +209,7 @@ def expand_categories(pwtag: str) -> Iterable[str]:
 
 
 def normalize_wtag(wtag: str) -> str:
-    for c in '.[]()-+':
+    for c in '.()-+':
         wtag = wtag.replace(c, f'\\{c}')
     return wtag.replace('*', '.*').replace('?', '.')
 
@@ -256,6 +256,41 @@ def extract_id_or_group(ex_tags: MutableSequence[str]) -> List[int]:
     return []
 
 
+def convert_extra_tag_for_text_matching(ex_tag: str) -> str:
+    if ex_tag.startswith('-('):
+        wtags, tagtype = ex_tag[2:-1].split(','), 1
+    elif ex_tag.startswith('('):
+        wtags, tagtype = ex_tag[1:-1].split('~'), 2
+    elif ex_tag.startswith('-'):
+        wtags, tagtype = [ex_tag[1:]], 3
+    else:
+        wtags, tagtype = [ex_tag], 4
+
+    # language=PythonRegExp
+    norm_str = r'[ ()\[\]_\'"]'
+    for i, wtag in enumerate(wtags):
+        wtag_begin = '' if wtag.startswith("*") else '*' if wtag.startswith(tuple(norm_str[1:-1].split())) else f'*{norm_str}'
+        wtag_end = '' if wtag.endswith("*") else '*' if wtag.endswith(tuple(norm_str[1:-1].split())) else f'{norm_str}*'
+        wtags[i] = f'{wtag_begin}{wtag.replace("_", " ")}{wtag_end}'
+
+    conv_tag = (
+        f'-({",".join(wtags)})' if tagtype == 1 else f'({"~".join(wtags)})' if tagtype == 2 else
+        f'-{"".join(wtags)}' if tagtype == 3 else f'{"".join(wtags)}'
+    )
+    return conv_tag
+
+
+def match_text(ex_tag: str, text: str, group_type: Literal['or', 'and'] = '') -> Union[None, str, List[str]]:
+    converted_tag = convert_extra_tag_for_text_matching(ex_tag)
+    text = text.replace('\n', ' ').strip().lower()
+    if group_type == 'or':
+        return get_or_group_matching_tag(converted_tag, [text])
+    elif group_type == 'and':
+        return get_neg_and_group_matches(converted_tag, [text])
+    else:
+        return get_matching_tag(converted_tag, [text])
+
+
 def trim_undersores(base_str: str) -> str:
     return re_uscore_mult.sub('_', base_str).strip('_')
 
@@ -270,34 +305,53 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
         Log.trace(f'{sfol}Video {sname} isn\'t contained in id list \'{str(id_seq)}\'. Skipped!',
                   LoggingFlags.EX_MISSING_TAGS)
 
-    taglists_to_check = [tags_raw]
-    if Config.check_uploader and vi.uploader:
-        taglists_to_check.append([vi.uploader])
-    for taglist in taglists_to_check:
-        for extag in extra_tags:
-            if extag.startswith('('):
-                if get_or_group_matching_tag(extag, taglist) is None:
-                    suc = False
-                    Log.trace(f'{sfol}Video {sname} misses required tag matching \'{extag}\'. Skipped!',
-                              LoggingFlags.EX_MISSING_TAGS)
-            elif extag.startswith('-('):
-                neg_matches = get_neg_and_group_matches(extag, taglist)
-                if neg_matches:
-                    suc = False
-                    Log.info(f'{sfol}Video {sname} contains excluded tags combination \'{extag}\': {",".join(neg_matches)}. Skipped!',
-                             LoggingFlags.EX_EXCLUDED_TAGS)
-            else:
-                negative = extag.startswith('-')
-                my_extag = extag[1:] if negative else extag
-                mtag = get_matching_tag(my_extag, taglist)
-                if mtag is not None and negative:
-                    suc = False
-                    Log.info(f'{sfol}Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
-                             LoggingFlags.EX_EXCLUDED_TAGS)
-                elif mtag is None and not negative:
-                    suc = False
-                    Log.trace(f'{sfol}Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
-                              LoggingFlags.EX_MISSING_TAGS)
+    for extag in extra_tags:
+        if extag.startswith('('):
+            or_match_base = get_or_group_matching_tag(extag, tags_raw)
+            or_match_titl = match_text(extag, vi.title, 'or') if Config.check_title_pos and vi.title else None
+            or_match_desc = match_text(extag, vi.description, 'or') if Config.check_description_pos and vi.description else None
+            if or_match_titl:
+                Log.trace(f'{sfol}Video {sname} has TITL POS match: {str(or_match_titl)}')
+            if or_match_desc:
+                Log.trace(f'{sfol}Video {sname} has DESC POS match: {str(or_match_desc)}')
+            if not bool(or_match_base or or_match_titl or or_match_desc):
+                suc = False
+                Log.trace(f'{sfol}Video {sname} misses required tag matching \'{extag}\'. Skipped!',
+                          LoggingFlags.EX_MISSING_TAGS)
+        elif extag.startswith('-('):
+            neg_matches = get_neg_and_group_matches(extag, tags_raw)
+            for conf, td in zip((Config.check_title_neg, Config.check_description_neg), (vi.title, vi.description)):
+                if conf and td:
+                    for tmatch in match_text(extag, td, 'and'):
+                        tmatch_s = tmatch[:30]
+                        Log.trace(f'{sfol}Video {sname} has POST/DESC NEG match: {tmatch_s}')
+                        if tmatch_s not in neg_matches:
+                            neg_matches.append(f'{tmatch_s}...')
+            if neg_matches:
+                suc = False
+                Log.info(f'{sfol}Video {sname} contains excluded tags combination \'{extag}\': {",".join(neg_matches)}. Skipped!',
+                         LoggingFlags.EX_EXCLUDED_TAGS)
+        else:
+            negative = extag.startswith('-')
+            my_extag = extag[1:] if negative else extag
+            mtag = get_matching_tag(my_extag, tags_raw)
+            for conf, td in zip(
+                (Config.check_title_pos, Config.check_title_neg, Config.check_description_pos, Config.check_description_neg),
+                (vi.title, vi.title, vi.description, vi.description)
+            ):
+                if conf and td and not mtag:
+                    mtag = match_text(my_extag, td)
+                    if mtag:
+                        mtag = f'{mtag[:50]}...'
+                        Log.trace(f'{sfol}Video {sname} has POST/DESC {"NEG" if negative else "POS"} match: {mtag}')
+            if mtag is not None and negative:
+                suc = False
+                Log.info(f'{sfol}Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
+                         LoggingFlags.EX_EXCLUDED_TAGS)
+            elif mtag is None and not negative:
+                suc = False
+                Log.trace(f'{sfol}Video {sname} misses required tag matching \'{my_extag}\'. Skipped!',
+                          LoggingFlags.EX_MISSING_TAGS)
     return not suc
 
 
