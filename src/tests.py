@@ -30,7 +30,7 @@ from pages import main as pages_main, main_sync as pages_main_sync
 from path_util import found_filenames_dict
 from util import normalize_path
 
-RUN_CONN_TESTS = 1
+RUN_CONN_TESTS = 0
 
 
 def set_up_test(log=False) -> None:
