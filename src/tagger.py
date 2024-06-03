@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from typing import List, Optional, Collection, Iterable, MutableSequence, Tuple, Union, Literal
+from typing import List, Optional, Collection, Iterable, MutableSequence, Tuple, Union
 
 from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
 from config import Config
@@ -280,7 +280,7 @@ def convert_extra_tag_for_text_matching(ex_tag: str) -> str:
     return conv_tag
 
 
-def match_text(ex_tag: str, text: str, group_type: Literal['or', 'and'] = '') -> Union[None, str, List[str]]:
+def match_text(ex_tag: str, text: str, group_type='') -> Union[None, str, List[str]]:
     converted_tag = convert_extra_tag_for_text_matching(ex_tag)
     text = text.replace('\n', ' ').strip().lower()
     if group_type == 'or':
