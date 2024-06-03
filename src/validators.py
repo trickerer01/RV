@@ -30,6 +30,13 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
     if Config.use_id_sequence in (False, None) and Config.start_id > Config.end_id:
         Log.fatal(f'\nError: invalid video id bounds: start ({Config.start_id:d}) > end ({Config.end_id:d})')
         raise ValueError
+    if Config.lookahead:
+        if Config.use_id_sequence:
+            Log.fatal('\nError: lookahead argument cannot be used together with id sequence!')
+            raise ValueError
+        if Config.store_continue_cmdfile:
+            Log.fatal('\nError: lookahead argument prevents saving continue cmdfile, unexpected behavior possible!')
+            raise ValueError
 
     if Config.get_maxid:
         Config.logging_flags = LoggingFlags.FATAL

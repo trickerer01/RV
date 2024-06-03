@@ -21,6 +21,7 @@ from defs import (
     HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_FSLEVELUP, HELP_ARG_NOMOVE, HELP_ARG_FSDEPTH, HELP_ARG_CHECK_UPLOADER,
     MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC, HELP_ARG_ID_START, HELP_ARG_ID_COUNT, HELP_ARG_ID_END,
     HELP_ARG_PAGE_START, HELP_ARG_PAGE_COUNT, HELP_ARG_PAGE_END, HELP_ARG_REPORT_DUPLICATES, HELP_ARG_DUMP_SCREENSHOTS,
+    MAX_DEST_SCAN_UPLEVELS_DEFAULT,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -42,6 +43,8 @@ LOGGING_DEFAULT = LOGGING_FLAGS_DEFAULT
 """0x004"""
 FSDEPTH_DEFAULT = MAX_DEST_SCAN_SUB_DEPTH_DEFAULT
 """1"""
+FSUP_DEFAULT = MAX_DEST_SCAN_UPLEVELS_DEFAULT
+"""0"""
 
 PARSER_TYPE_PARAM = 'zzzparser_type'
 PARSER_TITLE_FILE = 'file'
@@ -134,7 +137,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
     parser_or_group.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, help=HELP_ARG_UTPOLICY, choices=UNTAGGED_POLICIES)
     parser_or_group.add_argument('-fsdepth', metavar='#number', default=FSDEPTH_DEFAULT, help=HELP_ARG_FSDEPTH, type=positive_int)
-    parser_or_group.add_argument('-fslevelup', metavar='#number', default=0, help=HELP_ARG_FSLEVELUP, type=positive_nonzero_int)
+    parser_or_group.add_argument('-fslevelup', metavar='#number', default=FSUP_DEFAULT, help=HELP_ARG_FSLEVELUP, type=positive_nonzero_int)
     parser_or_group.add_argument('-proxy', metavar='#type://a.d.d.r:port', default=None, help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-timeout', metavar='#seconds', default=0, help=HELP_ARG_TIMEOUT, type=positive_nonzero_int)
     parser_or_group.add_argument('-throttle', metavar='#rate', default=0, help=HELP_ARG_THROTTLE, type=positive_nonzero_int)
@@ -148,7 +151,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-ddump', '--dump-descriptions', action=ACTION_STORE_TRUE, help='')
     parser_or_group.add_argument('-cdump', '--dump-comments', action=ACTION_STORE_TRUE, help=HELP_ARG_DUMP_INFO)
     parser_or_group.add_argument('-dmerge', '--merge-lists', action=ACTION_STORE_TRUE, help=HELP_ARG_MERGE_LISTS)
-    parser_or_group.add_argument('-noempty', '--skip-empty-lists', action=ACTION_STORE_TRUE, help=HELP_ARG_SKIP_EMPTY_LISTS)
+    parser_or_group.add_argument('-dnoempty', '--skip-empty-lists', action=ACTION_STORE_TRUE, help=HELP_ARG_SKIP_EMPTY_LISTS)
     parser_or_group.add_argument('-sdump', '--dump-screenshots', action=ACTION_STORE_TRUE, help=HELP_ARG_DUMP_SCREENSHOTS)
     parser_or_group.add_argument('-dmode', '--download-mode', default=DM_DEFAULT, help=HELP_ARG_DMMODE, choices=DOWNLOAD_MODES)
     parser_or_group.add_argument('-session_id', default=None, help=HELP_ARG_SESSION_ID, type=valid_session_id)

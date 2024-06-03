@@ -82,7 +82,7 @@ class CmdTests(TestCase):
         self.assertEqual(SEARCH_RULE_DEFAULT, c2.search_rule_art)
         self.assertIsNone(c2.use_id_sequence)
         self.assertTrue(c2.skip_empty_lists)
-        parsed3 = prepare_arglist(['-playlist_name', 'commodified', '-start', '3', '-pages', '2', '-quality', '480p', '-noempty',
+        parsed3 = prepare_arglist(['-playlist_name', 'commodified', '-start', '3', '-pages', '2', '-quality', '480p', '-dnoempty',
                                    '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
         c3 = BaseConfig()
         c3.read(parsed3, True)
