@@ -126,7 +126,8 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if Config.check_uploader and vi.uploader and vi.uploader not in tags_raw:
         tags_raw.append(vi.uploader)
     if max(len(my_authors), len(my_categories)) >= 6 and 'compilation' not in tags_raw and 'pmv' not in tags_raw:
-        Log.warn(f'{sname} has {len(my_authors):d} arts and {len(my_categories):d} cats and no pmv type tags! Assuming compilation.')
+        Log.warn(f'{sname} has {len(my_authors):d} arts and {len(my_categories):d} cats and no pmv type tags! Assuming compilation')
+        tags_raw.append('compilation')
     if is_filtered_out_by_extra_tags(vi, tags_raw, Config.extra_tags, Config.id_sequence, vi.subfolder, extra_ids):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
         return DownloadResult.FAIL_FILTERED_OUTER if scenario else DownloadResult.FAIL_SKIPPED
