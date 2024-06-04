@@ -133,13 +133,6 @@ class LoggingFlags(IntEnum):
     WARN = 0x008
     ERROR = 0x010
     FATAL = 0x800
-    # some extra logging flags are merged into normal flags for now
-    EX_MISSING_TAGS = TRACE
-    """0x001"""
-    EX_EXCLUDED_TAGS = INFO
-    """0x004"""
-    EX_LOW_SCORE = INFO
-    """0x004"""
     # unused
     ALL = FATAL | ERROR | WARN | INFO | DEBUG | TRACE
     """0x81F"""
