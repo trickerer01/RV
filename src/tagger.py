@@ -326,7 +326,7 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
             ):
                 if conf and td:
                     for tmatch in match_text(extag, td, 'and'):
-                        tmatch_s = tmatch[:50]
+                        tmatch_s = tmatch[:100]
                         Log.trace(f'{sname} has {cn} NEG match: \'{tmatch_s}\'')
                         if tmatch_s not in neg_matches:
                             neg_matches.append(f'{tmatch_s}...')
@@ -342,13 +342,13 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
             for conf, cn, np, td in zip(
                 (Config.check_title_pos, Config.check_title_neg, Config.check_description_pos, Config.check_description_neg),
                 ('TITL', 'TITL', 'DESC', 'DESC'),
-                ('NEG', 'POS', 'NEG', 'POS'),
+                ('POS', 'NEG', 'POS', 'NEG'),
                 (vi.title, vi.title, vi.description, vi.description)
             ):
                 if conf and td and ((np == 'NEG') == negative) and not mtag:
                     mtag = match_text(my_extag, td)
                     if mtag:
-                        mtag = f'{mtag[:50]}...'
+                        mtag = f'{mtag[:100]}...'
                         if negative is False:
                             Log.trace(f'{sname} has {cn} {np} match: \'{mtag}\'')
             if mtag is not None and negative:
