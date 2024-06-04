@@ -320,11 +320,15 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
                           LoggingFlags.EX_MISSING_TAGS)
         elif extag.startswith('-('):
             neg_matches = get_neg_and_group_matches(extag, tags_raw)
-            for conf, td in zip((Config.check_title_neg, Config.check_description_neg), (vi.title, vi.description)):
+            for conf, cn, td in zip(
+                (Config.check_title_neg, Config.check_description_neg),
+                ('TITL', 'DESC'),
+                (vi.title, vi.description)
+            ):
                 if conf and td:
                     for tmatch in match_text(extag, td, 'and'):
-                        tmatch_s = tmatch[:30]
-                        Log.trace(f'{sfol}Video {sname} has POST/DESC NEG match: {tmatch_s}')
+                        tmatch_s = tmatch[:50]
+                        Log.trace(f'{sfol}Video {sname} has {cn} NEG match: {tmatch_s}')
                         if tmatch_s not in neg_matches:
                             neg_matches.append(f'{tmatch_s}...')
             if neg_matches:
@@ -335,15 +339,17 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
             negative = extag.startswith('-')
             my_extag = extag[1:] if negative else extag
             mtag = get_matching_tag(my_extag, tags_raw)
-            for conf, td in zip(
+            for conf, cn, np, td in zip(
                 (Config.check_title_pos, Config.check_title_neg, Config.check_description_pos, Config.check_description_neg),
+                ('TITL', 'TITL', 'DESC', 'DESC'),
+                ('NEG', 'POS', 'NEG', 'POS'),
                 (vi.title, vi.title, vi.description, vi.description)
             ):
                 if conf and td and not mtag:
                     mtag = match_text(my_extag, td)
                     if mtag:
                         mtag = f'{mtag[:50]}...'
-                        Log.trace(f'{sfol}Video {sname} has POST/DESC {"NEG" if negative else "POS"} match: {mtag}')
+                        Log.trace(f'{sfol}Video {sname} has {cn} {np} match: {mtag}')
             if mtag is not None and negative:
                 suc = False
                 Log.info(f'{sfol}Video {sname} contains excluded tag \'{mtag}\'. Skipped!',
