@@ -75,6 +75,9 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if not vi.title:
         titleh1 = a_html.find('h1', class_='title_video')
         vi.title = titleh1.text if titleh1 else ''
+
+    Log.debug(f'DEBUG: Scanning {sname}: \'{vi.title}\'')
+
     try:
         dislikes_int = 0
         likes_int = int(a_html.find('span', class_='voters count').text.replace(' likes', '').replace(' like', ''))
