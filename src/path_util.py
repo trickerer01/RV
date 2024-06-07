@@ -23,7 +23,7 @@ found_filenames_dict: Dict[str, List[str]] = dict()
 
 def report_duplicates() -> None:
     found_vs = dict()
-    k: str
+    fvks = list()
     for k in found_filenames_dict:
         if not found_filenames_dict[k]:
             continue
@@ -35,14 +35,14 @@ def report_duplicates() -> None:
                 fid = fm.group(1)
                 if fid not in found_vs:
                     found_vs[fid] = [''] * 0
+                elif fid not in fvks:
+                    fvks.append(fid)
                 found_vs[fid].append(k + fname)
-    if found_vs:
+    if fvks:
         Log.info('Duplicates found:')
         n = '\n  - '
-        for kk in found_vs:
-            vv = found_vs[kk]
-            if len(vv) > 1:
-                Log.info(f' {PREFIX}{kk}.{DEFAULT_EXT}:{n}{n.join(vv)}')
+        for kk in fvks:
+            Log.info(f' {PREFIX}{kk}.{DEFAULT_EXT}:{n}{n.join(found_vs[kk])}')
     else:
         Log.info('No duplicates found')
 
