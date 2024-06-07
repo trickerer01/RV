@@ -16,7 +16,7 @@ from aiohttp import ClientSession, ClientPayloadError
 
 from config import Config
 from defs import (
-    Mem, NamingFlags, DownloadResult, CONNECT_RETRIES_BASE, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
+    Mem, NamingFlags, DownloadResult, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
     DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, SITE, SCREENSHOTS_COUNT,
     FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY,
 )
@@ -316,7 +316,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             except Exception:
                 raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
 
-    while (not skip) and retries < CONNECT_RETRIES_BASE:
+    while (not skip) and retries <= Config.retries:
         try:
             file_exists = path.isfile(vi.my_fullpath)
             if file_exists and retries == 0:
@@ -348,7 +348,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     break
                 if r.status == 404:
                     Log.error(f'Got 404 for {vi.sfsname}...!')
-                    retries = CONNECT_RETRIES_BASE - 1
+                    retries = Config.retries
                     ret = DownloadResult.FAIL_NOT_FOUND
                 if r.content_type and 'text' in r.content_type:
                     Log.error(f'File not found at {vi.link}!')
@@ -391,7 +391,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             if dwn.is_writing(vi):
                 dwn.remove_from_writes(vi)
             status_checker.reset()
-            if retries < CONNECT_RETRIES_BASE:
+            if retries <= Config.retries:
                 vi.set_state(VideoInfo.State.DOWNLOADING)
                 await sleep(frand(1.0, 7.0))
             elif Config.keep_unfinished is False and path.isfile(vi.my_fullpath) and vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED):
@@ -399,7 +399,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 remove(vi.my_fullpath)
 
     ret = (ret if ret in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_SKIPPED, DownloadResult.FAIL_ALREADY_EXISTS) else
-           DownloadResult.SUCCESS if retries < CONNECT_RETRIES_BASE else
+           DownloadResult.SUCCESS if retries <= Config.retries else
            DownloadResult.FAIL_RETRIES)
 
     if Config.save_screenshots:

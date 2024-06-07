@@ -13,7 +13,7 @@ from aiohttp import ClientTimeout
 
 from defs import (
     CONNECT_TIMEOUT_BASE, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DOWNLOAD_MODE_DEFAULT, DEFAULT_QUALITY,
-    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, MAX_DEST_SCAN_UPLEVELS_DEFAULT,
+    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, MAX_DEST_SCAN_UPLEVELS_DEFAULT, CONNECT_RETRIES_BASE,
 )
 
 __all__ = ('Config',)
@@ -46,6 +46,7 @@ class BaseConfig:
         self.naming_flags = self.logging_flags = 0
         self.start = self.end = self.start_id = self.end_id = 0
         self.timeout: Optional[ClientTimeout] = None
+        self.retries = 0
         self.throttle: Optional[int] = None
         self.throttle_auto: Optional[bool] = None
         self.store_continue_cmdfile: Optional[bool] = None
@@ -105,6 +106,7 @@ class BaseConfig:
         self.start_id = params.stop_id if pages else self.start
         self.end_id = params.begin_id if pages else self.end
         self.timeout = ClientTimeout(total=None, connect=params.timeout or CONNECT_TIMEOUT_BASE)
+        self.retries = getattr(params, 'retries', CONNECT_RETRIES_BASE)
         self.throttle = params.throttle
         self.throttle_auto = params.throttle_auto
         self.store_continue_cmdfile = params.store_continue_cmdfile
@@ -153,6 +155,7 @@ class BaseConfig:
             *(('-throttle', self.throttle) if self.throttle else ()),
             *(('-athrottle',) if self.throttle_auto else ()),
             *(('-timeout', int(self.timeout.connect)) if int(self.timeout.connect) != CONNECT_TIMEOUT_BASE else ()),
+            *(('-retries', self.retries) if self.retries != CONNECT_RETRIES_BASE else ()),
             *(('-unfinish',) if self.keep_unfinished else ()),
             *(('-tdump',) if self.save_tags else ()),
             *(('-ddump',) if self.save_descriptions else ()),

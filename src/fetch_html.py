@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
 from config import Config
-from defs import Mem, UTF8, CONNECT_RETRIES_BASE, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, MAX_SCAN_QUEUE_SIZE
+from defs import Mem, UTF8, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, MAX_SCAN_QUEUE_SIZE
 from logger import Log
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
@@ -75,12 +75,12 @@ async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> Cli
 
 async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[BeautifulSoup]:
     # very basic, minimum validation
-    tries = tries or CONNECT_RETRIES_BASE
+    tries = tries or Config.retries
 
     r = None
     retries = 0
     retries_403_local = 0
-    while retries < tries:
+    while retries <= tries:
         try:
             async with await wrap_request(
                     session, 'GET', url,
@@ -101,11 +101,11 @@ async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[B
                 retries += 1
             elif r is not None and r.status == 403:
                 retries_403_local += 1
-            if retries < tries:
+            if retries <= tries:
                 await sleep(frand(1.0, 7.0))
             continue
 
-    if retries >= tries:
+    if retries > tries:
         errmsg = f'Unable to connect. Aborting {url}'
         Log.error(errmsg)
     elif r is None:
