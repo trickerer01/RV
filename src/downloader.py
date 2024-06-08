@@ -133,8 +133,9 @@ class VideoDownloadWorker:
             elapsed_seconds = get_elapsed_time_i()
             force_check = elapsed_seconds >= force_check_seconds and elapsed_seconds - last_check_seconds >= force_check_seconds
             if queue_last != queue_size or downloading_last != download_count or write_last != write_count or force_check:
-                Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}, ready: {ready_size:d}, active: {download_count:d} '
-                         f'(writing: {write_count:d}){f" + {self._scn.get_prescanned_count():d} prescanned" if self._scn else ""}')
+                scanner_msg = f' (prescanned: {self._scn.get_prescanned_count():d})' if self._scn else ''
+                Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}{scanner_msg}, ready: {ready_size:d}, '
+                         f'active: {download_count:d} (writing: {write_count:d})')
                 last_check_seconds = elapsed_seconds
                 self._total_queue_size_last = queue_size
                 self._download_queue_size_last = download_count
