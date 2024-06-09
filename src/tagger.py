@@ -52,7 +52,7 @@ def valid_extra_tag(tag: str, log=True) -> str:
         all_valid = True
         if tag.startswith('('):
             assert is_valid_or_group(tag)
-            all_valid &= all_extra_tags_valid(tag[1:-1].split('~'))
+            all_valid &= is_valid_id_or_group(tag) or all_extra_tags_valid(tag[1:-1].split('~'))
         elif tag.startswith('-('):
             assert is_valid_neg_and_group(tag)
             all_valid &= all_extra_tags_valid(tag[2:-1].split(','))
