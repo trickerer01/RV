@@ -60,14 +60,14 @@ class DownloadScenario(object):
         self.queries: List[SubQueryParams] = list()
 
         parser = ArgumentParser(add_help=False)
-        parser.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help='')
-        parser.add_argument('-quality', default=DEFAULT_QUALITY, help='', choices=QUALITIES)
-        parser.add_argument('-minrating', '--minimum-rating', metavar='#0-100', default=0, help='', type=valid_rating)
-        parser.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help='', type=valid_int)
-        parser.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, help='', choices=UNTAGGED_POLICIES)
-        parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE, help='')
+        parser.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE)
+        parser.add_argument('-quality', default=DEFAULT_QUALITY, choices=QUALITIES)
+        parser.add_argument('-minrating', '--minimum-rating', default=0, type=valid_rating)
+        parser.add_argument('-minscore', '--minimum-score', default=None, type=valid_int)
+        parser.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, choices=UNTAGGED_POLICIES)
+        parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE)
 
-        errors_to_print = [''] * 0
+        errors_to_print = list()
         for query_raw in fmt_str.split('; '):
             try:
                 subfolder, args = query_raw.split(': ')
@@ -76,27 +76,27 @@ class DownloadScenario(object):
                     try:
                         assert valid_extra_tag(tag, False)
                     except (AssertionError, ValueError):
-                        errors_to_print.append(f'\nInvalid extra tag: \'{tag}\'')
+                        errors_to_print.append(f'Invalid extra tag: \'{tag}\'')
                 parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
                 if parsed.use_id_sequence is True:
                     id_sequence = extract_id_or_group(parsed.extra_tags)
                     if not id_sequence:
-                        error_to_print = ('\nNo ID \'or\' group provided!' if not parsed.extra_tags else
-                                          f'\nNo valid ID \'or\' group found in \'{str(parsed.extra_tags)}\'!')
+                        error_to_print = ('No ID \'or\' group provided!' if not parsed.extra_tags else
+                                          f'No valid ID \'or\' group found in \'{str(parsed.extra_tags)}\'!')
                         errors_to_print.append(error_to_print)
                 else:
                     id_sequence = []
                 if parsed.untagged_policy == UTP_ALWAYS and self.has_subquery(utp=UTP_ALWAYS):
-                    errors_to_print.append(f'Scenario can only have one subquery with untagged video policy \'{UTP_ALWAYS}\'!\n')
+                    errors_to_print.append(f'Scenario can only have one subquery with untagged video policy \'{UTP_ALWAYS}\'!')
                 self._add_subquery(SubQueryParams(
                     subfolder, parsed.extra_tags, parsed.quality, parsed.minimum_score, parsed.minimum_rating, parsed.untagged_policy,
                     id_sequence
                 ))
             except Exception:
                 import traceback
-                errors_to_print.append(traceback.format_exc())
+                errors_to_print.append(traceback.format_exc().strip())
         if errors_to_print:
-            Log.fatal(''.join(errors_to_print))
+            Log.fatal('\n'.join(errors_to_print))
             raise ValueError
 
         assert len(self) > 0

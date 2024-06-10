@@ -77,7 +77,7 @@ def is_parsed_cmdfile(parsed_result: Namespace) -> bool:
 
 
 def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: ArgumentParser) -> Namespace:
-    errors_to_print = [''] * 0
+    errors_to_print = list()
     try:
         parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
         if not is_parsed_cmdfile(parsed):
@@ -85,13 +85,12 @@ def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: Ar
                 try:
                     assert valid_extra_tag(tag, False)
                 except (AssertionError, ValueError):
-                    errors_to_print.append(f'\nInvalid extra tag: \'{tag}\'')
+                    errors_to_print.append(f'Invalid extra tag: \'{tag}\'')
             if errors_to_print:
-                Log.fatal(''.join(errors_to_print))
+                Log.fatal('\n'.join(errors_to_print))
                 raise ValueError
             parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
     except Exception:
-        # print('\n', e)
         parser.print_help()
         raise
 
