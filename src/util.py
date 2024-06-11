@@ -14,6 +14,7 @@ from config import Config
 from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL, DEFAULT_EXT
 from logger import Log
 from rex import re_replace_symbols, re_ext
+from version import APP_NAME, APP_VERSION
 
 
 def assert_nonempty(container: Iterable, message='') -> Iterable:
@@ -68,7 +69,7 @@ def calc_sleep_time(base_time: float) -> float:
 def at_startup() -> None:
     """Inits logger. Reports python version and run options"""
     Log.init()
-    Log.debug(f'Python {sys.version}\nCommand-line args: {" ".join(sys.argv)}')
+    Log.debug(f'Python {sys.version}\n{APP_NAME} ver {APP_VERSION}\nCommand-line args: {" ".join(sys.argv)}')
 
 #
 #
