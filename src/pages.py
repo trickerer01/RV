@@ -13,7 +13,7 @@ from typing import Sequence
 from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from defs import (
-    SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, SITE_AJAX_REQUEST_MODEL_PAGE,
+    SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, SITE_AJAX_REQUEST_MODEL_PAGE, PREFIX,
     QUALITIES, NamingFlags,
 )
 from download import download, at_interrupt
