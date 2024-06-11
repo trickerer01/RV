@@ -10,9 +10,6 @@ from base64 import b64decode
 from datetime import datetime
 from enum import IntEnum
 
-APP_NAME = 'RV'
-APP_VERSION = '1.8.438'
-
 CONNECT_RETRIES_BASE = 50
 CONNECT_TIMEOUT_BASE = 10
 CONNECT_REQUEST_DELAY = 0.7

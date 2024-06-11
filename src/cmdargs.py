@@ -11,7 +11,7 @@ from os import path
 from typing import List, Sequence, Tuple
 
 from defs import (
-    UTF8, APP_NAME, APP_VERSION, ACTION_STORE_TRUE, HELP_ARG_PATH, HELP_ARG_SEARCH_STR, HELP_ARG_PROXY, HELP_ARG_BEGIN_STOP_ID,
+    UTF8, ACTION_STORE_TRUE, HELP_ARG_PATH, HELP_ARG_SEARCH_STR, HELP_ARG_PROXY, HELP_ARG_BEGIN_STOP_ID,
     HELP_ARG_GET_MAXID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UTPOLICY, UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES,
     DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING,
     HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, HELP_ARG_CONTINUE, HELP_ARG_UNFINISH,
@@ -30,6 +30,7 @@ from validators import (
     valid_int, positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
     log_level, positive_int, valid_session_id,
 )
+from version import APP_NAME, APP_VERSION
 
 __all__ = ('prepare_arglist', 'HelpPrintExitException')
 
