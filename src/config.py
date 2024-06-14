@@ -12,7 +12,7 @@ from typing import Optional, List, Union
 from aiohttp import ClientTimeout
 
 from defs import (
-    CONNECT_TIMEOUT_BASE, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DOWNLOAD_MODE_DEFAULT, DEFAULT_QUALITY,
+    Quality, CONNECT_TIMEOUT_BASE, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DOWNLOAD_MODE_DEFAULT, DEFAULT_QUALITY,
     MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, MAX_DEST_SCAN_UPLEVELS_DEFAULT, CONNECT_RETRIES_BASE,
 )
 
@@ -27,7 +27,7 @@ class BaseConfig:
         self.session_id: Optional[str] = None
         self.min_rating: Optional[int] = None
         self.min_score: Optional[int] = None
-        self.quality: Optional[str] = None
+        self.quality: Optional[Quality] = None
         self.untagged_policy: Optional[str] = None
         self.folder_scan_depth = self.folder_scan_levelup = 0
         self.download_mode: Optional[str] = None
@@ -82,7 +82,7 @@ class BaseConfig:
         self.session_id = getattr(params, 'session_id', self.session_id)
         self.min_rating = params.minimum_rating
         self.min_score = params.minimum_score
-        self.quality = params.quality
+        self.quality = Quality(params.quality)
         self.untagged_policy = params.untagged_policy
         self.folder_scan_depth = params.fsdepth
         self.folder_scan_levelup = params.fslevelup

@@ -16,7 +16,7 @@ from aiohttp import ClientSession, ClientPayloadError
 
 from config import Config
 from defs import (
-    Mem, NamingFlags, DownloadResult, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
+    Mem, NamingFlags, DownloadResult, Quality, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
     DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, SITE, SCREENSHOTS_COUNT,
     FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY,
 )
@@ -288,12 +288,15 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
     else:
         vi.set_state(VideoInfo.State.DOWNLOADING)
         curfile_match = re_media_filename.match(vi.filename)
-        curfile_quality = curfile_match.group(2)
+        curfile_quality = Quality(curfile_match.group(2) or vi.quality)
         curfile = file_already_exists(vi.id, curfile_quality)
         if curfile:
+            curfile_omatch = re_media_filename.match(curfile)
+            curfile_oquality = Quality(curfile_omatch.group(2) or vi.quality)
             exact_name = curfile == vi.my_fullpath
+            exact_quality = curfile_quality == curfile_oquality
             vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
-            if Config.continue_mode:
+            if Config.continue_mode and exact_quality:
                 if not exact_name:
                     curfile_folder, curfile_name = path.split(curfile)
                     same_loc = path.isdir(vi.my_folder) and path.samefile(curfile_folder, vi.my_folder)

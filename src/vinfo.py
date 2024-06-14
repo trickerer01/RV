@@ -12,7 +12,7 @@ from os import path, listdir, remove
 from typing import Dict, Iterable, Union, Tuple, List, Match
 
 from config import Config
-from defs import PREFIX, UTF8, DEFAULT_QUALITY, DEFAULT_EXT
+from defs import Quality, PREFIX, UTF8, DEFAULT_QUALITY, DEFAULT_EXT
 from logger import Log
 from rex import re_infolist_filename
 from util import normalize_path, normalize_filename
@@ -46,7 +46,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         self.subfolder = m_subfolder or ''
         self.filename = m_filename or ''
         self.rating = m_rating or ''
-        self.quality: str = Config.quality or DEFAULT_QUALITY
+        self.quality: Quality = Config.quality or DEFAULT_QUALITY
         self.tags = ''
         self.description = ''
         self.comments = ''

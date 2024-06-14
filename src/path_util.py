@@ -10,7 +10,7 @@ from os import path, listdir, rename, makedirs
 from typing import List, Dict, MutableSequence
 
 from config import Config
-from defs import PREFIX, DEFAULT_EXT
+from defs import Quality, PREFIX, DEFAULT_EXT
 from logger import Log
 from rex import re_media_filename
 from util import normalize_path
@@ -97,22 +97,22 @@ def scan_dest_folder() -> None:
         report_duplicates()
 
 
-def file_exists_in_folder(base_folder: str, idi: int, quality: str) -> str:
+def file_exists_in_folder(base_folder: str, idi: int, quality: Quality) -> str:
     orig_file_names = found_filenames_dict.get(normalize_path(base_folder))
     if path.isdir(base_folder) and orig_file_names is not None:
         for fname in orig_file_names:
             try:
                 f_match = re_media_filename.match(fname)
                 f_id = f_match.group(1)
-                f_quality = f_match.group(2)
-                if str(idi) == f_id and (quality is None or quality == f_quality):
+                f_quality = Quality(f_match.group(2) or '')
+                if str(idi) == f_id and (not quality or not f_quality or quality <= f_quality):
                     return f'{normalize_path(base_folder)}{fname}'
             except Exception:
                 continue
     return ''
 
 
-def file_already_exists(idi: int, quality: str) -> str:
+def file_already_exists(idi: int, quality: Quality) -> str:
     for fullpath in found_filenames_dict:
         fullpath = file_exists_in_folder(fullpath, idi, quality or Config.quality)
         if len(fullpath) > 0:
@@ -120,7 +120,7 @@ def file_already_exists(idi: int, quality: str) -> str:
     return ''
 
 
-def file_exists_in_folder_arr(base_folder: str, idi: int, quality: str) -> List[str]:
+def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> List[str]:
     orig_file_names = found_filenames_dict.get(normalize_path(base_folder))
     folder_files = list()
     if path.isdir(base_folder) and orig_file_names is not None:
@@ -128,15 +128,15 @@ def file_exists_in_folder_arr(base_folder: str, idi: int, quality: str) -> List[
             try:
                 f_match = re_media_filename.match(fname)
                 f_id = f_match.group(1)
-                f_quality = f_match.group(2)
-                if str(idi) == f_id and (quality is None or quality == f_quality):
+                f_quality = Quality(f_match.group(2) or '')
+                if str(idi) == f_id and (not quality or not f_quality or quality <= f_quality):
                     folder_files.append(f'{normalize_path(base_folder)}{fname}')
             except Exception:
                 continue
     return folder_files
 
 
-def file_already_exists_arr(idi: int, quality: str) -> List[str]:
+def file_already_exists_arr(idi: int, quality: Quality) -> List[str]:
     found_files = list()
     for fullpath in found_filenames_dict:
         found_files.extend(file_exists_in_folder_arr(fullpath, idi, quality or Config.quality))
@@ -155,7 +155,7 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
 
     i: int
     for i in reversed(range(len(vi_list))):
-        fullpath = file_already_exists(vi_list[i].id, '')
+        fullpath = file_already_exists(vi_list[i].id, Quality())
         if len(fullpath) > 0:
             Log.info(f'Info: {vi_list[i].sname} found in \'{path.split(fullpath)[0]}/\'. Skipped.')
             del vi_list[i]

@@ -10,7 +10,7 @@ from argparse import ArgumentParser, ZERO_OR_MORE
 from typing import List, Optional
 
 from defs import (
-    UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, DEFAULT_QUALITY, QUALITIES,
+    Quality, UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, DEFAULT_QUALITY, QUALITIES,
 )
 from logger import Log
 from tagger import valid_extra_tag, extract_id_or_group, is_filtered_out_by_extra_tags
@@ -26,11 +26,11 @@ UTP_ALWAYS = DOWNLOAD_POLICY_ALWAYS
 
 
 class SubQueryParams(object):
-    def __init__(self, subfolder: str, extra_tags: List[str], quality: str, minscore: Optional[int], minrating: int,
+    def __init__(self, subfolder: str, extra_tags: List[str], quality: Quality, minscore: Optional[int], minrating: int,
                  utp: str, id_sequence: List[int]) -> None:
         self.subfolder: str = subfolder or ''
         self.extra_tags: List[str] = extra_tags or list()
-        self.quality: str = quality or ''
+        self.quality: Quality = quality or Quality()
         self.minrating: int = minrating or 0
         self.minscore: Optional[int] = minscore
         self.untagged_policy: str = utp or ''
