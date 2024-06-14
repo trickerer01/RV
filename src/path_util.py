@@ -129,7 +129,7 @@ def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> L
                 f_match = re_media_filename.match(fname)
                 f_id = f_match.group(1)
                 f_quality = Quality(f_match.group(2) or '')
-                if str(idi) == f_id and (not quality or not f_quality or quality <= f_quality):
+                if str(idi) == f_id and (not quality or not f_quality or quality == f_quality):
                     folder_files.append(f'{normalize_path(base_folder)}{fname}')
             except Exception:
                 continue
