@@ -291,29 +291,30 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
         curfile_quality = Quality(curfile_match.group(2) or vi.quality)
         curfile = file_already_exists(vi.id, curfile_quality)
         if curfile:
-            curfile_omatch = re_media_filename.match(curfile)
-            curfile_oquality = Quality(curfile_omatch.group(2) or vi.quality)
+            curfile_folder, curfile_name = path.split(curfile)
+            curfile_omatch = re_media_filename.match(curfile_name)
+            curfile_oquality = Quality(curfile_omatch.group(2) or '')
             exact_name = curfile == vi.my_fullpath
-            exact_quality = curfile_quality == curfile_oquality
+            exact_quality = curfile_oquality and curfile_quality == curfile_oquality
             vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
             if Config.continue_mode and exact_quality:
                 if not exact_name:
-                    curfile_folder, curfile_name = path.split(curfile)
                     same_loc = path.isdir(vi.my_folder) and path.samefile(curfile_folder, vi.my_folder)
                     loc_str = f' ({"same" if same_loc else "different"} location)'
                     if Config.no_rename_move is False or same_loc:
-                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found{loc_str}. Enforcing new name (was \'{curfile}\').')
+                        Log.info(f'{vi.sffilename} {vi.quality} found{loc_str}. Enforcing new name (was \'{curfile}\').')
                         if not try_rename(curfile, vi.my_fullpath):
                             Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
                     else:
                         new_subfolder = normalize_path(path.relpath(curfile_folder, Config.dest_base))
-                        Log.info(f'{vi.sffilename} {vi.quality} (or similar) found{loc_str}. Enforcing old path + new name '
+                        Log.info(f'{vi.sffilename} {vi.quality} found{loc_str}. Enforcing old path + new name '
                                  f'\'{curfile_folder}/{vi.filename}\' due to \'--no-rename-move\' flag (was \'{curfile_name}\').')
                         vi.subfolder = new_subfolder
                         if not try_rename(curfile, normalize_path(path.abspath(vi.my_fullpath), False)):
                             Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
             else:
-                Log.info(f'{vi.sffilename} (or similar) already exists. Skipped.\n Location: \'{curfile}\'')
+                qstr = f'\'{curfile_oquality}\' {"==" if exact_quality else ">=" if curfile_oquality else "<?>"} \'{curfile_quality}\''
+                Log.info(f'{vi.sfsname} already exists ({qstr}). Skipped.\n Location: \'{curfile}\'')
                 vi.set_state(VideoInfo.State.DONE)
                 return DownloadResult.FAIL_ALREADY_EXISTS
         if not path.isdir(vi.my_folder):
