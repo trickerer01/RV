@@ -37,6 +37,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
 #### Tags. Categories. Artists. Extra tags
 - `rv_tags.list` file contains all existing tags for current version, same with `rv_cats.list` (categories) and `rv_arts.list` (artists) files. Any tag/category/artist you use is required to be valid and every `extra tag` needs to be a valid tag, category or artist. That is, unless you also utilize...
 - Wildcards. In any `extra tag` you can use symbols `?` and `*` for `any symbol` and `any number of any symbols` repectively
+- Also any square brackets `[...]` are always interpreted as symbol selection group matching any symbol contained between opening and closing bracket. Example: `b[ua]ck` matches both `back` and `buck`. Note: this syntax is converted to regex directly so a single opening bracket `[` encountered causes an error while single closing bracket `]` doesn't
 - `extra tags` containing wildcards aren't validated, they can be anything
 - What makes `extra tags` different from tags/categories/artists is these `tags` or `-tags` are being used as filters instead of search params, normal tags/categories/artists are passed using their own search argument (see full help) and all unknown arguments are automatically considered `extra tags`
 - All spaces **must_be_replaced_with_underscores** ‒ all tag / category / artist names are unified this way for convenience
