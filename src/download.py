@@ -316,6 +316,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             else:
                 qstr = f'\'{curfile_oquality}\' {"==" if exact_quality else ">=" if curfile_oquality else "<?>"} \'{curfile_quality}\''
                 Log.info(f'{vi.sfsname} already exists ({qstr}). Skipped.\n Location: \'{curfile}\'')
+                vi.subfolder = normalize_path(path.relpath(curfile_folder, Config.dest_base))
                 vi.set_state(VideoInfo.State.DONE)
                 return DownloadResult.FAIL_ALREADY_EXISTS
         if not path.isdir(vi.my_folder):
