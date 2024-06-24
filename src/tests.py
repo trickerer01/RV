@@ -26,7 +26,9 @@ from logger import Log
 from pages import main as pages_main, main_sync as pages_main_sync
 # noinspection PyProtectedMember
 from path_util import found_filenames_dict
-from tagger import extract_id_or_group
+from rex import prepare_regex_fullmatch
+# noinspection PyProtectedMember
+from tagger import extract_id_or_group, normalize_wtag
 from util import normalize_path
 from version import APP_NAME, APP_VERSION
 
@@ -156,6 +158,17 @@ class CmdTests(TestCase):
         self.assertEqual(100, c2.lookahead)
         self.assertEqual(DOWNLOAD_MODE_TOUCH, c2.download_mode)
         self.assertTrue(c2.store_continue_cmdfile)
+        print(f'{self._testMethodName} passed')
+
+    def test_cmd_wtags(self):
+        set_up_test()
+        parsed1 = prepare_arglist(['-start', '1', '-pages', '5',
+                                   '-*`[1`-5`]`+`(finger`{1`,3`}|girl`)s`?`.`*',
+                                   '-*`[1`-5`]`+`(finger`{1`,3`}`|`girl`)s`?`.`*``'], True)
+        c2 = BaseConfig()
+        c2.read(parsed1, True)
+        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(c2.extra_tags[0])).pattern)
+        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(c2.extra_tags[1])).pattern)
         print(f'{self._testMethodName} passed')
 
 

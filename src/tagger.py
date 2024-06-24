@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from typing import List, Optional, Collection, Iterable, MutableSequence, Tuple, Union
+from typing import List, Optional, Collection, Iterable, MutableSequence, Union, Dict, Tuple
 
 from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
 from config import Config
@@ -209,10 +209,25 @@ def expand_categories(pwtag: str) -> Iterable[str]:
 
 
 def normalize_wtag(wtag: str) -> str:
-    wtag = wtag.replace('((', '\u2039').replace('))', '\u203A')
-    for c in '.()-+':
+    wtag_freplacements = {
+        '?': '\u203D', '*': '\u20F0',
+        '(': '\u2039', ')': '\u203A', '[': '\u2018', ']': '\u2019', '{': '\u201C', '}': '\u201D',
+        '.': '\u1FBE', ',': '\u201A', '+': '\u2020', '-': '\u2012',
+    }
+    wtag_breplacements: Dict[str, str] = {wtag_freplacements[k]: k for k in wtag_freplacements}
+    wtag_breplacements[wtag_freplacements['(']] = '(?:'
+    escape_char = '`'
+    escape = escape_char in wtag
+    if escape:
+        for fk in wtag_freplacements:
+            wtag = wtag.replace(f'{escape_char}{fk}', wtag_freplacements[fk])
+    for c in '()[]{}.,+-':
         wtag = wtag.replace(c, f'\\{c}')
-    return wtag.replace('*', '.*').replace('?', '.').replace('\u203A', ')').replace('\u2039', '(?:')
+    wtag = wtag.replace('*', '.*').replace('?', '.').replace('`', '')
+    if escape:
+        for bk in wtag_breplacements:
+            wtag = wtag.replace(f'{bk}', wtag_breplacements[bk])
+    return wtag
 
 
 def get_matching_tag(wtag: str, mtags: Iterable[str], *, force_regex=False) -> Optional[str]:

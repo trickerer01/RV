@@ -25,7 +25,7 @@ re_paginator = re_compile(r'from(?:_(?:albums|videos))?:(\d+)')
 re_non_search_symbols = re_compile(r'[^\da-zA-Z._+\-\[\]]')
 re_session_id = re_compile(r'[a-z0-9]{26}')
 # tagger
-re_wtag = re_compile(r'^(?:(?:[^?*\[|]*[?*\[|])|(?:(?!\(\()[^(]*\(\()).*?$')
+re_wtag = re_compile(r'^(?:(?:[^?*|]*[?*|])|(?:[^`]*[`][()\[\]{}?*.,\-+])).*?$')
 re_idval = re_compile(r'^id=\d+?$')
 re_uscore_mult = re_compile(r'_{2,}')
 re_not_a_letter = re_compile(r'[^a-z]+')
