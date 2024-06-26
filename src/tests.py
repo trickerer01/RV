@@ -163,7 +163,7 @@ class CmdTests(TestCase):
     def test_cmd_wtags(self):
         set_up_test()
         parsed1 = prepare_arglist(['-start', '1', '-pages', '5',
-                                   '-*`[1`-5`]`+`(finger`{1`,3`}|girl`)s`?`.`*',
+                                   '-*[1`-5]`+`(finger{1`,3}|girl`)s`?`.`*',
                                    '-*`[1`-5`]`+`(finger`{1`,3`}`|`girl`)s`?`.`*``'], True)
         c2 = BaseConfig()
         c2.read(parsed1, True)

@@ -210,20 +210,21 @@ def expand_categories(pwtag: str) -> Iterable[str]:
 
 def normalize_wtag(wtag: str) -> str:
     wtag_freplacements = {
-        '?': '\u203D', '*': '\u20F0',
-        '(': '\u2039', ')': '\u203A', '[': '\u2018', ']': '\u2019', '{': '\u201C', '}': '\u201D',
+        '?': '\u203D', '*': '\u20F0', '(': '\u2039', ')': '\u203A',
+        # '[': '\u2018', ']': '\u2019', '{': '\u201C', '}': '\u201D',
         '.': '\u1FBE', ',': '\u201A', '+': '\u2020', '-': '\u2012',
     }
     wtag_breplacements: Dict[str, str] = {wtag_freplacements[k]: k for k in wtag_freplacements}
     wtag_breplacements[wtag_freplacements['(']] = '(?:'
+    chars_need_escaping = list(wtag_freplacements.keys())[2:]
     escape_char = '`'
     escape = escape_char in wtag
     if escape:
         for fk in wtag_freplacements:
             wtag = wtag.replace(f'{escape_char}{fk}', wtag_freplacements[fk])
-    for c in '()[]{}.,+-':
+    for c in chars_need_escaping:
         wtag = wtag.replace(c, f'\\{c}')
-    wtag = wtag.replace('*', '.*').replace('?', '.').replace('`', '')
+    wtag = wtag.replace('*', '.*').replace('?', '.').replace(escape_char, '')
     if escape:
         for bk in wtag_breplacements:
             wtag = wtag.replace(f'{bk}', wtag_breplacements[bk])
@@ -283,7 +284,7 @@ def convert_extra_tag_for_text_matching(ex_tag: str) -> str:
         wtags, tagtype = [ex_tag], 4
 
     # language=PythonRegExp
-    norm_str = '`[ ()[]_\'"`]'
+    norm_str = r'[ ()\[\]_\'"]'
     for i, wtag in enumerate(wtags):
         wtag_begin = '' if wtag.startswith("*") else '*' if wtag.startswith(tuple(norm_str[1:-1].split())) else f'*{norm_str}'
         wtag_end = '' if wtag.endswith("*") else '*' if wtag.endswith(tuple(norm_str[1:-1].split())) else f'{norm_str}*'
