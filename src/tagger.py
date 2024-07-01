@@ -284,7 +284,7 @@ def convert_extra_tag_for_text_matching(ex_tag: str) -> str:
         wtags, tagtype = [ex_tag], 4
 
     # language=PythonRegExp
-    norm_str = r'[ ()\[\]_\'"]'
+    norm_str = r'`[ ()\[\]_\'"`]'
     for i, wtag in enumerate(wtags):
         wtag_begin = '' if wtag.startswith("*") else '*' if wtag.startswith(tuple(norm_str[1:-1].split())) else f'*{norm_str}'
         wtag_end = '' if wtag.endswith("*") else '*' if wtag.endswith(tuple(norm_str[1:-1].split())) else f'{norm_str}*'
