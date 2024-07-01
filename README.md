@@ -15,7 +15,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
 #### Search
 - RV provides advanced searching functionality (`pages.py` module). Search is performed using extended website native API
 - There are 4 search arguments available each corresponding to different parts of search API. It's possible to utilize all four at once but usually a single one is enough
-  - `-search <STRING>` - search using raw string, matching any word. Concatenate using `-`:
+  - `-search <STRING>` - search using raw string, matching all words (see below). Concatenate using `-`:
     - `-search after-hours`
   - `-search_tag <TAGS>`, `-search_cat <CATEGORIES>`, `-search_art <ARTISTS>` - search using one or more tag/category/artist names (see below). Concatenate using `,`:
     - `-search_tag 1girl,side_view`
@@ -30,6 +30,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - `-search_art hydrafxx,medeister -search_rule_art any`
 - Note that overall search always obeys `AND` rule:
   - _search string_ `AND` _ANY_OF/ALL the tags_ `AND` _ANY_OF/ALL the artists_ `AND` _ANY_OF/ALL the categories_
+- How raw string search really works: before trying to match word(s) in the search string server performs alias expansion which may lead to some unexpected results, aliases list is unavailable but some of them are straight counterintuitive - too many post may get matched for seemingly no reason. Words in provided string may match title, tags, categories, author, uploader or description, pretty much anything. Matching is partial so word 'all' will match 'tall', 'calling' and everything else containing this symbol sequence
 
 #### Filters
 - Initial search results / ids list can be then filtered further using `extra tags` (see below)
