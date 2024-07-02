@@ -28,7 +28,7 @@ from pages import main as pages_main, main_sync as pages_main_sync
 from path_util import found_filenames_dict
 from rex import prepare_regex_fullmatch
 # noinspection PyProtectedMember
-from tagger import extract_id_or_group, normalize_wtag
+from tagger import extract_id_or_group, normalize_wtag, match_text
 from util import normalize_path
 from version import APP_NAME, APP_VERSION
 
@@ -165,10 +165,14 @@ class CmdTests(TestCase):
         parsed1 = prepare_arglist(['-start', '1', '-pages', '5',
                                    '-*[1`-5]`+`(finger{1`,3}|girl`)s`?`.`*',
                                    '-*`[1`-5`]`+`(finger`{1`,3`}`|`girl`)s`?`.`*``'], True)
+        c1 = BaseConfig()
+        c1.read(parsed1, True)
+        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(c1.extra_tags[0])).pattern)
+        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(c1.extra_tags[1])).pattern)
+        parsed2 = prepare_arglist(['-start', '1', '-pages', '5', 'trigger`(s|ed|ing`)*'], True)
         c2 = BaseConfig()
-        c2.read(parsed1, True)
-        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(c2.extra_tags[0])).pattern)
-        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(c2.extra_tags[1])).pattern)
+        c2.read(parsed2, True)
+        self.assertIsNotNone(match_text(c2.extra_tags[0], 'a triggered bluff'))
         print(f'{self._testMethodName} passed')
 
 
