@@ -129,8 +129,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             vi.comments = ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else ''
     if Config.check_uploader and vi.uploader and vi.uploader not in tags_raw:
         tags_raw.append(vi.uploader)
-    if max(len(my_authors), len(my_categories)) >= 6 and 'compilation' not in tags_raw and 'pmv' not in tags_raw:
-        Log.warn(f'{sname} has {len(my_authors):d} arts and {len(my_categories):d} cats and no pmv type tags! Assuming compilation')
+    va_list = list(filter(lambda x: 'audio' in x or '(va)' in x or x.endswith('va'), my_authors))
+    aucat_count = max(len(my_authors) - len(va_list), len(my_categories))
+    if aucat_count >= 6 and 'compilation' not in tags_raw and 'pmv' not in tags_raw:
+        Log.warn(f'{sname} has {len(my_authors):d} arts ({len(va_list):d} VA) and {len(my_categories):d} cats! Assuming compilation')
         tags_raw.append('compilation')
     if is_filtered_out_by_extra_tags(vi, tags_raw, Config.extra_tags, Config.id_sequence, vi.subfolder, extra_ids):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
