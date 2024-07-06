@@ -60,7 +60,7 @@ class VideoScanWorker:
 
     async def _at_scan_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
         if result in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_RETRIES,
-                      DownloadResult.FAIL_DELETED, DownloadResult.FAIL_FILTERED_OUTER):
+                      DownloadResult.FAIL_DELETED, DownloadResult.FAIL_FILTERED_OUTER, DownloadResult.FAIL_SKIPPED):
             founditems = list(filter(None, [file_already_exists_arr(vi.id, q) for q in QUALITIES]))
             if any(ffs for ffs in founditems):
                 newline = '\n'
