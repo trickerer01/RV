@@ -25,7 +25,7 @@ from dscanner import VideoScanWorker
 from dthrottler import ThrottleChecker
 from fetch_html import fetch_html, wrap_request, make_session
 from logger import Log
-from path_util import file_already_exists, try_rename
+from path_util import file_already_exists, try_rename, is_file_being_used
 from rex import re_media_filename
 from scenario import DownloadScenario
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
@@ -301,6 +301,10 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             exact_quality = curfile_oquality and curfile_quality == curfile_oquality
             vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
             if Config.continue_mode and exact_quality:
+                proc_str = is_file_being_used(curfile)
+                if proc_str:
+                    Log.error(f'Error: file {vi.sffilename} already exists and is locked by \'{proc_str}\'!! Parallel download? Aborted!')
+                    return DownloadResult.FAIL_ALREADY_EXISTS
                 if not exact_name:
                     same_loc = path.isdir(vi.my_folder) and path.samefile(curfile_folder, vi.my_folder)
                     loc_str = f' ({"same" if same_loc else "different"} location)'

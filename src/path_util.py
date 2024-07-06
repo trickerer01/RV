@@ -6,8 +6,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from os import path, listdir, rename, makedirs
+from os import path, listdir, rename, makedirs, getpid
 from typing import List, Dict, MutableSequence
+
+from psutil import Error as PSError, process_iter
 
 from config import Config
 from defs import Quality, PREFIX, DEFAULT_EXT
@@ -16,7 +18,7 @@ from rex import re_media_filename
 from util import normalize_path
 from vinfo import VideoInfo
 
-__all__ = ('file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items')
+__all__ = ('file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items', 'is_file_being_used')
 
 found_filenames_dict: Dict[str, List[str]] = dict()
 
@@ -159,6 +161,35 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
         if len(fullpath) > 0:
             Log.info(f'Info: {vi_list[i].sname} found in \'{path.split(fullpath)[0]}/\'. Skipped.')
             del vi_list[i]
+
+
+def is_file_being_used(filepath: str) -> str:
+    """
+    :param filepath: Path the to file in question
+    :return: Formatted string containing short process identity info or an empty string
+
+    Can only check processes owned by current user unless launched with admin/superuser privileges
+    """
+    mypid = getpid()
+    for p in process_iter():
+        try:
+            with p.oneshot():
+                if p.pid == mypid:
+                    continue
+                if not (p.name().startswith('python') or path.basename(p.exe()).startswith('python')):
+                    continue
+                user_name = p.username()
+                opened_files = p.open_files()
+                for fpath in opened_files:
+                    if path.samefile(filepath, fpath.path):
+                        return f'{p.exe()} <{user_name}> (pid: {p.pid:d})'
+        except Exception as e:
+            if isinstance(e, PSError):
+                pass
+            else:
+                import traceback
+                print(f'is_file_being_used(): Error: {traceback.format_exc()}')
+    return ''
 
 
 def try_rename(oldpath: str, newpath: str) -> bool:
