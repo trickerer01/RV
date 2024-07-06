@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from __future__ import annotations
 from enum import IntEnum
-from os import path, listdir, remove
+from os import path, listdir, remove, makedirs
 from typing import Dict, Iterable, Union, Tuple, List, Match
 
 from config import Config
@@ -200,7 +200,10 @@ def export_video_info(info_list: Iterable[VideoInfo]) -> None:
                 continue
             keys = sorted(sdct.keys())
             min_id, max_id = keys[0], keys[-1]
-            fullpath = f'{normalize_path(f"{Config.dest_base}{subfolder}")}{PREFIX}!{name}_{min_id:d}-{max_id:d}.txt'
+            info_folder = f'{Config.dest_base}{subfolder}'
+            fullpath = f'{normalize_path(info_folder)}{PREFIX}!{name}_{min_id:d}-{max_id:d}.txt'
+            if not path.isdir(info_folder):
+                makedirs(fullpath)
             with open(fullpath, 'wt', encoding=UTF8) as sfile:
                 sfile.writelines(f'{PREFIX}{idi:d}:{proc_cb(sdct[idi])}' for idi in keys)
             [remove(merged_file) for merged_file in merged_files if merged_file != fullpath]
