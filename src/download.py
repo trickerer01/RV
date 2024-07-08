@@ -79,7 +79,8 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     Log.debug(f'DEBUG: Scanning {sname}: \'{vi.title}\'')
 
     try:
-        rating, votes = tuple(a.replace('(', '').replace(')', '') for a in a_html.find('span', class_='voters count').text.split(' ', 1))
+        rating, votes = tuple(a_html.find('span', class_='voters count').text.split(' ', 1))
+        votes = votes[1:-1].replace(',', '')
         rating = rating.replace('%', '')
         dislikes_int = int(votes) * (100 - (int(rating) or 100)) // 100
         likes_int = int(votes) - dislikes_int
