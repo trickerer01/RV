@@ -79,27 +79,28 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     Log.debug(f'DEBUG: Scanning {sname}: \'{vi.title}\'')
 
     try:
-        dislikes_int = 0
-        likes_int = int(a_html.find('span', class_='voters count').text.replace(' likes', '').replace(' like', ''))
-        rating = f'{(likes_int * 100) // (dislikes_int + likes_int):d}' if (dislikes_int + likes_int) > 999999 else rating
+        rating, votes = tuple(a.replace('(', '').replace(')', '') for a in a_html.find('span', class_='voters count').text.split(' ', 1))
+        rating = rating.replace('%', '')
+        dislikes_int = int(votes) * (100 - (int(rating) or 100)) // 100
+        likes_int = int(votes) - dislikes_int
         score = f'{likes_int - dislikes_int:d}'
     except Exception:
         Log.warn(f'Warning: cannot extract score for {sname}.')
     try:
-        my_authors = [str(a.string).lower() for a in a_html.find('div', string='Artist:').parent.find_all('span')]
+        my_authors = [str(a.string).lower() for a in a_html.find('div', string='Artist').parent.find_all('span')]
     except Exception:
         Log.warn(f'Warning: cannot extract authors for {sname}.')
         my_authors = list()
     try:
-        my_categories = [str(c.string).lower() for c in a_html.find('div', string='Categories:').parent.find_all('span')]
+        my_categories = [str(c.string).lower() for c in a_html.find('div', string='Categories').parent.find_all('span')]
     except Exception:
         Log.warn(f'Warning: cannot extract categories for {sname}.')
         my_categories = list()
     try:
-        vi.uploader = str(a_html.find('div', string=' Uploaded By: ').parent.find('a', class_='name').string).strip().lower()
+        vi.uploader = str(a_html.find('div', string='Uploaded by').parent.find('a').get_text(strip=True)).lower()
     except Exception:
         Log.warn(f'Warning: cannot extract uploader for {sname}.')
-    tdiv = a_html.find('div', string='Tags:')
+    tdiv = a_html.find('div', string='Tags')
     if tdiv is None:
         Log.info(f'Warning: video {sname} has no tags!')
     tags = [str(elem.string) for elem in tdiv.parent.find_all('a', class_='tag_item')] if tdiv else ['']
@@ -115,8 +116,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         cudivs = [cidiv.find('a') for cidiv in cidivs]
         ctdivs = [cidiv.find('div', class_='coment-text') for cidiv in cidivs]
         desc_em = a_html.find('em')  # exactly one
-        uploader_div = a_html.find('div', string=' Uploaded By: ')
-        my_uploader = uploader_div.parent.find('a', class_='name').text.lower().strip() if uploader_div else 'unknown'
+        my_uploader = vi.uploader or 'unknown'
         has_description = (cudivs[-1].text.lower() == my_uploader) if (cudivs and ctdivs) else False  # first comment by uploader
         if cudivs and ctdivs:
             assert len(ctdivs) == len(cudivs)
@@ -164,7 +164,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
 
     tries = 0
     while True:
-        ddiv = a_html.find('div', string='Download:')
+        ddiv = a_html.find('div', string='Download')
         if ddiv is not None and ddiv.parent is not None:
             break
         message_span = a_html.find('span', class_='message')
