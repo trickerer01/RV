@@ -112,7 +112,7 @@ async def main(args: Sequence[str]) -> None:
                     elif cur_id in v_entries:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
-                    my_title = str(aref.get('title', ''))
+                    my_title = str(aref.find('div', class_='thumb_title').text)
                     v_entries.append(VideoInfo(cur_id, my_title))
             else:
                 content_div = a_html.find('div', class_='thumbs clearfix')
