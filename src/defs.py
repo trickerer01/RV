@@ -254,7 +254,7 @@ HELP_ARG_CHECK_TITLEDESC = (
     ' and neither its tags nor its title / description matches extra \'-tags\' (negative filtering)'
 )
 HELP_ARG_MINRATING = (
-    '[DEPRECATED, DO NOT USE] Rating percentage filter, 0-100.'
+    'Rating percentage filter, 0-100.'
     ' Videos having rating below this value will be skipped, unless rating extraction fails - in that case video always gets a pass'
 )
 HELP_ARG_MINSCORE = (
