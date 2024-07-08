@@ -22,6 +22,11 @@ def assert_nonempty(container: Iterable, message='') -> Iterable:
     return container
 
 
+def get_time_seconds(timespan: str) -> int:
+    """Converts time from **[hh:][mm:]ss** format to **seconds**"""
+    return sum(int(part) * pow(60, idx) for idx, part in enumerate(list(reversed(timespan.split(':')))))
+
+
 def format_time(seconds: int) -> str:
     """Formats time from seconds to: **hh:mm:ss**"""
     mm, ss = divmod(seconds, 60)

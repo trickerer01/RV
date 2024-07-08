@@ -15,7 +15,7 @@ from config import Config
 from defs import Quality, PREFIX, UTF8, DEFAULT_QUALITY, DEFAULT_EXT
 from logger import Log
 from rex import re_infolist_filename
-from util import normalize_path, normalize_filename
+from util import normalize_path, normalize_filename, format_time
 
 __all__ = ('VideoInfo', 'get_min_max_ids', 'export_video_info')
 
@@ -38,7 +38,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         ALREADY_EXISTED_SIMILAR = 0x2
         FILE_WAS_CREATED = 0x4
 
-    def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='') -> None:
+    def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='', m_duration=0) -> None:
         self._id = m_id or 0
 
         self.title = m_title or ''
@@ -46,6 +46,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         self.subfolder = m_subfolder or ''
         self.filename = m_filename or ''
         self.rating = m_rating or ''
+        self.duration = m_duration or 0
         self.quality: Quality = Config.quality or DEFAULT_QUALITY
         self.tags = ''
         self.description = ''
@@ -74,7 +75,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
 
     def __str__(self) -> str:
         return (
-            f'[{self.state_str}] \'{PREFIX}{self.id:d}_{self.title}.{DEFAULT_EXT}\' ({self.quality})'
+            f'[{self.state_str}] {self.fduration} \'{PREFIX}{self.id:d}_{self.title}.{DEFAULT_EXT}\' ({self.quality})'
             f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.link}\''
         )
 
@@ -83,8 +84,16 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         return self._id
 
     @property
+    def fduration(self) -> str:
+        return f'[{format_time(self.duration)}]'
+
+    @property
     def sname(self) -> str:
         return f'{PREFIX}{self.id:d}.{DEFAULT_EXT}'
+
+    @property
+    def sdname(self) -> str:
+        return f'{self.fduration} {self.sname}'
 
     @property
     def sfsname(self) -> str:

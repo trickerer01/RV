@@ -11,7 +11,9 @@ from ipaddress import IPv4Address
 from os import path
 
 from config import Config
-from defs import NamingFlags, LoggingFlags, SLASH, NAMING_FLAGS, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, SEARCH_RULE_ALL
+from defs import (
+    NamingFlags, LoggingFlags, Duration, SLASH, NAMING_FLAGS, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, DEFAULT_QUALITY, SEARCH_RULE_ALL
+)
 from logger import Log
 from rex import re_non_search_symbols, re_session_id
 from util import normalize_path, has_naming_flag
@@ -73,6 +75,9 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
         if Config.quality != DEFAULT_QUALITY:
             Log.info('Info: running download script, outer quality setting will be ignored')
             delay_for_message = True
+        if Config.duration:
+            Log.info('Info: running download script, outer duration setting will be ignored')
+            delay_for_message = True
     if full_download is False:
         if Config.scenario is not None:
             Log.info('Info: scenarios are ignored for previews!')
@@ -91,6 +96,9 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
             delay_for_message = True
         if Config.min_rating:
             Log.info('Info: rating is not extracted from previews!')
+            delay_for_message = True
+        if Config.duration:
+            Log.info('Info: duration is not extracted from previews!')
             delay_for_message = True
         if Config.naming_flags != NamingFlags.ALL:
             if has_naming_flag(NamingFlags.ALL & ~(NamingFlags.PREFIX | NamingFlags.TITLE)):
@@ -202,6 +210,17 @@ def valid_session_id(sessionid: str) -> str:
     try:
         assert (not sessionid) or re_session_id.fullmatch(sessionid)
         return sessionid
+    except Exception:
+        raise ArgumentError
+
+
+def valid_duration(duration: str) -> Duration:
+    try:
+        parts = duration.split('-', maxsplit=2)
+        assert len(parts) == 2
+        pair = (positive_int(parts[0]), positive_nonzero_int(parts[1]))
+        assert pair[0] <= pair[1]
+        return Duration(pair)
     except Exception:
         raise ArgumentError
 

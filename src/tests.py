@@ -16,7 +16,7 @@ from unittest.mock import patch
 from cmdargs import prepare_arglist
 # noinspection PyProtectedMember
 from config import BaseConfig
-from defs import DOWNLOAD_MODE_TOUCH, SEARCH_RULE_DEFAULT, QUALITIES, QUALITY_480P
+from defs import Duration, DOWNLOAD_MODE_TOUCH, SEARCH_RULE_DEFAULT, QUALITIES, QUALITY_480P
 from downloader import VideoDownloadWorker
 from dscanner import VideoScanWorker
 # noinspection PyProtectedMember
@@ -102,7 +102,7 @@ class CmdTests(TestCase):
         self.assertTrue(c3.save_comments)
         self.assertTrue(c3.save_screenshots)
         self.assertTrue(c3.skip_empty_lists)
-        parsed4 = prepare_arglist(['-model', 'gret', '-start', '3', '-pages', '2', '-quality', '480p',
+        parsed4 = prepare_arglist(['-model', 'gret', '-start', '3', '-pages', '2', '-quality', '480p', '-duration', '15-360',
                                    '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
         c4 = BaseConfig()
         c4.read(parsed4, True)
@@ -111,6 +111,8 @@ class CmdTests(TestCase):
         self.assertEqual(4, c4.end)
         self.assertEqual(QUALITIES[3], c4.quality)
         self.assertEqual('480p', c4.quality)
+        self.assertEqual(Duration((15, 360)), c4.duration)
+        self.assertEqual((15, 360), c4.duration)
         self.assertEqual(12, c4.min_score)
         self.assertTrue(c4.continue_mode)
         self.assertTrue(c4.keep_unfinished)
@@ -148,7 +150,8 @@ class CmdTests(TestCase):
         self.assertEqual(2, len(c1.id_sequence))
         parsed2 = prepare_arglist(['-start', '1000', '-end', '999', '(a2~4k)', '(2d~vr)', '-dmode', 'touch', '--store-continue-cmdfile',
                                    '-lookahead', '100',
-                                   '-script', 'a: 2d; b: 3d; c: a2 -2d; d: * -utp always', '-naming', '0x8', '-log', 'trace'], False)
+                                   '-script', 'a: 2d; b: 3d -duration 10-200; c: a2 -2d -duration 0-9; d: * -utp always',
+                                   '-naming', '0x8', '-log', 'trace'], False)
         c2 = BaseConfig()
         c2.read(parsed2, False)
         self.assertEqual(8, c2.naming_flags)
@@ -158,6 +161,8 @@ class CmdTests(TestCase):
         self.assertEqual(100, c2.lookahead)
         self.assertEqual(DOWNLOAD_MODE_TOUCH, c2.download_mode)
         self.assertTrue(c2.store_continue_cmdfile)
+        self.assertEqual(Duration((10, 200)), c2.scenario.queries[1].duration)
+        self.assertEqual(Duration((0, 9)), c2.scenario.queries[2].duration)
         print(f'{self._testMethodName} passed')
 
     def test_cmd_wtags(self):

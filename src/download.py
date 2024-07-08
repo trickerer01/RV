@@ -26,10 +26,10 @@ from dthrottler import ThrottleChecker
 from fetch_html import fetch_html, wrap_request, make_session
 from logger import Log
 from path_util import file_already_exists, try_rename, is_file_being_used
-from rex import re_media_filename
+from rex import re_media_filename, re_time
 from scenario import DownloadScenario
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
-from util import has_naming_flag, format_time, get_elapsed_time_i, extract_ext, normalize_path
+from util import has_naming_flag, get_time_seconds, format_time, get_elapsed_time_i, extract_ext, normalize_path
 from vinfo import VideoInfo, export_video_info, get_min_max_ids
 
 __all__ = ('download', 'at_interrupt')
@@ -75,8 +75,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if not vi.title:
         titleh1 = a_html.find('h1', class_='title_video')
         vi.title = titleh1.text if titleh1 else ''
+    if not vi.duration:
+        vi.duration = get_time_seconds(str(a_html.find('div', class_='info row').find('span', string=re_time).text))
 
-    Log.debug(f'DEBUG: Scanning {sname}: \'{vi.title}\'')
+    Log.debug(f'DEBUG: Scanning {sname}: {vi.fduration} \'{vi.title}\'')
 
     try:
         rating, votes = tuple(a_html.find('span', class_='voters count').text.split(' ', 1))
@@ -146,6 +148,9 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
                     return DownloadResult.FAIL_SKIPPED
             except Exception:
                 pass
+    if Config.duration and vi.duration and not (Config.duration.first <= vi.duration <= Config.duration.second):
+        Log.info(f'Info: video {sname} duration \'{vi.duration:d}\' is out of bounds ({str(Config.duration)}), skipping...')
+        return DownloadResult.FAIL_SKIPPED
     if scenario is not None:
         matching_sq = scenario.get_matching_subquery(vi, tags_raw, score, rating)
         utpalways_sq = scenario.get_utp_always_subquery() if tdiv is None else None
@@ -345,7 +350,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     vi.set_state(VideoInfo.State.DONE)
                     return DownloadResult.FAIL_ALREADY_EXISTS
                 else:
-                    Log.info(f'Saving<touch> {vi.sname} {0.0:.2f} Mb to {vi.sffilename}')
+                    Log.info(f'Saving<touch> {vi.sdname} {0.0:.2f} Mb to {vi.sffilename}')
                     with open(vi.my_fullpath, 'wb'):
                         vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
                         vi.set_state(VideoInfo.State.DONE)
@@ -376,7 +381,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 vi.last_check_time = vi.start_time = get_elapsed_time_i()
                 starting_str = f' <continuing at {file_size:d}>' if file_size else ''
                 total_str = f' / {vi.expected_size / Mem.MB:.2f}' if file_size else ''
-                Log.info(f'Saving{starting_str} {vi.sname} {content_len / Mem.MB:.2f}{total_str} Mb to {vi.sffilename}')
+                Log.info(f'Saving{starting_str} {vi.sdname} {content_len / Mem.MB:.2f}{total_str} Mb to {vi.sffilename}')
 
                 dwn.add_to_writes(vi)
                 vi.set_state(VideoInfo.State.WRITING)

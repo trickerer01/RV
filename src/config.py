@@ -12,8 +12,8 @@ from typing import Optional, List, Union
 from aiohttp import ClientTimeout
 
 from defs import (
-    Quality, CONNECT_TIMEOUT_BASE, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DOWNLOAD_MODE_DEFAULT, DEFAULT_QUALITY,
-    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, MAX_DEST_SCAN_UPLEVELS_DEFAULT, CONNECT_RETRIES_BASE,
+    Quality, Duration, CONNECT_TIMEOUT_BASE, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DOWNLOAD_MODE_DEFAULT,
+    DEFAULT_QUALITY, MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, MAX_DEST_SCAN_UPLEVELS_DEFAULT, CONNECT_RETRIES_BASE,
 )
 
 __all__ = ('Config',)
@@ -22,12 +22,14 @@ __all__ = ('Config',)
 class BaseConfig:
     """Parameters container for params used in both **pages** and **ids** modules"""
     def __init__(self) -> None:
+        self.is_pages = False
         self.dest_base: Optional[str] = None
         self.proxy: Optional[str] = None
         self.session_id: Optional[str] = None
         self.min_rating: Optional[int] = None
         self.min_score: Optional[int] = None
         self.quality: Optional[Quality] = None
+        self.duration: Optional[Duration] = None
         self.untagged_policy: Optional[str] = None
         self.folder_scan_depth = self.folder_scan_levelup = 0
         self.download_mode: Optional[str] = None
@@ -76,6 +78,7 @@ class BaseConfig:
         self.nodelay = False
 
     def read(self, params: Namespace, pages: bool) -> None:
+        self.is_pages = pages
         self.dest_base = params.path
         self.proxy = params.proxy
         # session_id only exists in RV and RC
@@ -83,6 +86,7 @@ class BaseConfig:
         self.min_rating = params.minimum_rating
         self.min_score = params.minimum_score
         self.quality = Quality(params.quality)
+        self.duration = params.duration
         self.untagged_policy = params.untagged_policy
         self.folder_scan_depth = params.fsdepth
         self.folder_scan_levelup = params.fslevelup
@@ -139,6 +143,7 @@ class BaseConfig:
             '-path', self.dest_base, '-continue', '--store-continue-cmdfile',
             '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == self.logging_flags, LOGGING_FLAGS.keys())),
             *(('-quality', self.quality) if self.quality != DEFAULT_QUALITY and not self.scenario else ()),
+            *(('-duration', str(self.duration)) if self.duration and not self.scenario else ()),
             *(('--report-duplicates',) if self.report_duplicates else ()),
             *(('--check-title-pos',) if self.check_title_pos else ()),
             *(('--check-title-neg',) if self.check_title_neg else ()),

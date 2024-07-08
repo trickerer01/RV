@@ -68,6 +68,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
     - ... -script "s1: *a b (c\~d)*; s2: *f g (h\~i)*; s3: *k*" **-e** `<< "-e" moved outside of script`
   - Besides tags each subquery can also have `-quality` set ‒ videos matching that subquery will be downloaded in this quality
   - Subquery can also have `--use-id-sequence` flag set (see below) and match video ids
+  - Subquery can also have its own `-duration` filter - only videos having duration within `-duration` bounds will be downloaded to that subfolder
   - You can also set `--untagged-policy always` for **one** subquery
 
 3. Downloading a set of video ids

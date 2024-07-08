@@ -21,7 +21,7 @@ from fetch_html import make_session, fetch_html
 from logger import Log
 from path_util import prefilter_existing_items
 from rex import re_page_entry, re_paginator, re_preview_entry
-from util import at_startup, has_naming_flag
+from util import at_startup, get_time_seconds, has_naming_flag
 from validators import find_and_resolve_config_conflicts
 from vinfo import VideoInfo
 from version import APP_NAME
@@ -113,7 +113,8 @@ async def main(args: Sequence[str]) -> None:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
                     my_title = str(aref.find('div', class_='thumb_title').text)
-                    v_entries.append(VideoInfo(cur_id, my_title))
+                    my_duration = get_time_seconds(str(aref.find('div', class_='time').text))
+                    v_entries.append(VideoInfo(cur_id, my_title, m_duration=my_duration))
             else:
                 content_div = a_html.find('div', class_='thumbs clearfix')
 

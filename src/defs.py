@@ -6,9 +6,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from abc import ABC, abstractmethod
 from base64 import b64decode
 from datetime import datetime
 from enum import IntEnum
+from typing import TypeVar, Tuple
 
 CONNECT_RETRIES_BASE = 50
 CONNECT_TIMEOUT_BASE = 10
@@ -214,6 +216,7 @@ HELP_ARG_SEARCH_ACT = (
 HELP_ARG_PLAYLIST = 'Playlist to download (filters still apply)'
 HELP_ARG_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'after-hours\''
 HELP_ARG_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
+HELP_ARG_DURATION = f'Video duration filter (in seconds). Example: \'5-180\' will only allow videos from 5 seconds to 3 minutes'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
 HELP_ARG_UTPOLICY = (
     f'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'
@@ -232,7 +235,7 @@ HELP_ARG_DWN_SCENARIO = (
     ' Useful when you have several queries you need to process for same id range.'
     ' Format:'
     ' "{SUBDIR1}: tag1 tag2; {SUBDIR2}: tag3 tag4".'
-    ' You can also use following arguments in each subquery: -quality, -minscore, -minrating, -utp, -seq.'
+    ' You can also use following arguments in each subquery: -quality, -duration, -minscore, -minrating, -utp, -seq.'
     ' Example:'
     ' \'python ids.py -path ... -start ... -end ... --download-scenario'
     ' "1g: 1girl -quality 480p; 2g: 2girls -quality 720p -minscore 150 -utp always"\''
@@ -306,6 +309,49 @@ class Mem:
     KB = 1024
     MB = KB * 1024
     GB = MB * 1024
+
+
+class Pair(ABC):
+    PT = TypeVar('PT')
+
+    @abstractmethod
+    def __init__(self, vals: Tuple[PT, PT]) -> None:
+        self._first, self._second = vals
+        self._fmt = {int: 'd', bool: 'd', float: '.2f'}.get(type(self._first), '')
+
+    @property
+    def first(self) -> PT:
+        return self._first
+
+    @property
+    def second(self) -> PT:
+        return self._second
+
+    def __bool__(self) -> bool:
+        return bool(self._first) or bool(self._second)
+
+    def __eq__(self, other) -> bool:
+        return (self._first, self._second) == ((other.first, other.second) if isinstance(other, Duration) else other)
+
+    def __str__(self) -> str:
+        return f'first: {self._first:{self._fmt}}, second: {self._second:{self._fmt}}'
+
+    __repr__ = __str__
+
+
+class IntPair(Pair):
+    def __init__(self, vals: Tuple[int, int]) -> None:
+        super().__init__(vals)
+
+
+class StrPair(Pair):
+    def __init__(self, vals: Tuple[str, str]) -> None:
+        super().__init__(vals)
+
+
+class Duration(IntPair):
+    def __str__(self) -> str:
+        return f'{self._first:{self._fmt}}-{self._second:{self._fmt}}'
 
 #
 #
