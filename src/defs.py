@@ -216,7 +216,7 @@ HELP_ARG_SEARCH_ACT = (
 HELP_ARG_PLAYLIST = 'Playlist to download (filters still apply)'
 HELP_ARG_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'after-hours\''
 HELP_ARG_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
-HELP_ARG_DURATION = f'Video duration filter (in seconds). Example: \'5-180\' will only allow videos from 5 seconds to 3 minutes'
+HELP_ARG_DURATION = 'Video duration filter (in seconds). Example: \'5-180\' will only allow videos from 5 seconds to 3 minutes'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
 HELP_ARG_UTPOLICY = (
     f'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'

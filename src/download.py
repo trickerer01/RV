@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from asyncio import Task, sleep, get_running_loop, as_completed
 from os import path, stat, remove, makedirs
 from random import uniform as frand
-from typing import Optional, List, Dict
+from typing import List, Dict
 
 from aiofile import async_open
 from aiohttp import ClientSession, ClientPayloadError
@@ -27,7 +27,6 @@ from fetch_html import fetch_html, wrap_request, make_session
 from logger import Log
 from path_util import file_already_exists, try_rename, is_file_being_used
 from rex import re_media_filename, re_time
-from scenario import DownloadScenario
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
 from util import has_naming_flag, get_time_seconds, format_time, get_elapsed_time_i, extract_ext, normalize_path
 from vinfo import VideoInfo, export_video_info, get_min_max_ids
@@ -55,7 +54,7 @@ async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, 
 async def scan_video(vi: VideoInfo) -> DownloadResult:
     dwn = VideoDownloadWorker.get()
     scn = VideoScanWorker.get()
-    scenario: Optional[DownloadScenario] = Config.scenario
+    scenario = Config.scenario
     sname = vi.sname
     extra_ids: List[int] = scn.get_extra_ids() if scn else []
     my_tags = 'no_tags'
@@ -138,7 +137,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         Log.warn(f'{sname} has {len(my_authors):d} arts ({len(va_list):d} VA) and {len(my_categories):d} cats! Assuming compilation')
         tags_raw.append('compilation')
     if is_filtered_out_by_extra_tags(vi, tags_raw, Config.extra_tags, Config.id_sequence, vi.subfolder, extra_ids):
-        Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario is not None else ""} extra tags, skipping...')
+        Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario else ""} extra tags, skipping...')
         return DownloadResult.FAIL_FILTERED_OUTER if scenario else DownloadResult.FAIL_SKIPPED
     for vsrs, csri, srn, pc in zip((score, rating), (Config.min_score, Config.min_rating), ('score', 'rating'), ('', '%')):
         if len(vsrs) > 0 and csri is not None:
@@ -151,7 +150,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if Config.duration and vi.duration and not (Config.duration.first <= vi.duration <= Config.duration.second):
         Log.info(f'Info: video {sname} duration \'{vi.duration:d}\' is out of bounds ({str(Config.duration)}), skipping...')
         return DownloadResult.FAIL_SKIPPED
-    if scenario is not None:
+    if scenario:
         matching_sq = scenario.get_matching_subquery(vi, tags_raw, score, rating)
         utpalways_sq = scenario.get_utp_always_subquery() if tdiv is None else None
         if matching_sq:
