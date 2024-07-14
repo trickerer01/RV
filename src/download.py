@@ -147,9 +147,6 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
                     return DownloadResult.FAIL_SKIPPED
             except Exception:
                 pass
-    if Config.duration and vi.duration and not (Config.duration.first <= vi.duration <= Config.duration.second):
-        Log.info(f'Info: video {sname} duration \'{vi.duration:d}\' is out of bounds ({str(Config.duration)}), skipping...')
-        return DownloadResult.FAIL_SKIPPED
     if scenario:
         matching_sq = scenario.get_matching_subquery(vi, tags_raw, score, rating)
         utpalways_sq = scenario.get_utp_always_subquery() if tdiv is None else None
@@ -164,6 +161,9 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             return DownloadResult.FAIL_SKIPPED
     elif tdiv is None and len(Config.extra_tags) > 0 and Config.utp != DOWNLOAD_POLICY_ALWAYS:
         Log.warn(f'Warning: could not extract tags from {sname}, skipping due to untagged videos download policy...')
+        return DownloadResult.FAIL_SKIPPED
+    if Config.duration and vi.duration and not (Config.duration.first <= vi.duration <= Config.duration.second):
+        Log.info(f'Info: video {sname} duration \'{vi.duration:d}\' is out of bounds ({str(Config.duration)}), skipping...')
         return DownloadResult.FAIL_SKIPPED
     my_tags = filtered_tags(sorted(tags_raw)) or my_tags
 
