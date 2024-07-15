@@ -166,7 +166,8 @@ class VideoDownloadWorker:
                                            f' {speed_str} Kb/s, ETA: {eta_str} ({dfull_str})')
                         vi.last_check_size = cursize
                         vi.last_check_time = elapsed_seconds
-                    Log.debug('\n'.join(item_states))
+                    if item_states:
+                        Log.debug('\n'.join(item_states))
 
     async def _continue_file_checker(self) -> None:
         if not Config.store_continue_cmdfile:
