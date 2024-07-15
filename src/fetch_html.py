@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 from python_socks import ProxyType
 
 from config import Config
-from defs import Mem, UTF8, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, MAX_SCAN_QUEUE_SIZE
+from defs import Mem, UTF8, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, CONNECT_RETRY_DELAY, MAX_SCAN_QUEUE_SIZE
 from logger import Log
 
 __all__ = ('make_session', 'wrap_request', 'fetch_html')
@@ -103,7 +103,7 @@ async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[B
             elif r is not None and r.status == 403:
                 retries_403_local += 1
             if retries <= tries:
-                await sleep(frand(1.0, 7.0))
+                await sleep(frand(*CONNECT_RETRY_DELAY))
             continue
 
     if retries > tries:

@@ -18,7 +18,7 @@ from config import Config
 from defs import (
     Mem, NamingFlags, DownloadResult, Quality, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
     DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, SITE, SCREENSHOTS_COUNT,
-    FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY,
+    FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY, CONNECT_RETRY_DELAY,
 )
 from downloader import VideoDownloadWorker
 from dscanner import VideoScanWorker
@@ -413,7 +413,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             status_checker.reset()
             if retries <= Config.retries:
                 vi.set_state(VideoInfo.State.DOWNLOADING)
-                await sleep(frand(1.0, 7.0))
+                await sleep(frand(*CONNECT_RETRY_DELAY))
             elif Config.keep_unfinished is False and path.isfile(vi.my_fullpath) and vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED):
                 Log.error(f'Failed to download {vi.sffilename}. Removing unfinished file...')
                 remove(vi.my_fullpath)
