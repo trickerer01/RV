@@ -201,8 +201,8 @@ HELP_ARG_FSLEVELUP = (
     'Folder levels to go up before scanning for existing files, increases scan depth. Destination folder is always checked'
 )
 HELP_ARG_SESSION_ID = (
-    '\'PHPSESSID\' cookie. Comments as well as some tags to search for are hidden behind login wall.'
-    ' Using this cookie from logged in account resolves that problem'
+    '\'PHPSESSID\' cookie. Some tags are hidden and cannot be searched for without logging in.'
+    ' Using this cookie from logged in account resolves that problem (tag/artist/category blacklists still apply)'
 )
 HELP_ARG_SEARCH_RULE = (
     f'Multiple search args of the same type combine logic. Default is \'{SEARCH_RULE_DEFAULT}\'.'
@@ -215,7 +215,10 @@ HELP_ARG_SEARCH_ACT = (
     ' Note that search obeys \'AND\' rule: search string AND ANY_OF/ALL the tags AND ANY_OF/ALL the artists AND ANY_OF/ALL the categories'
 )
 HELP_ARG_PLAYLIST = 'Playlist to download (filters still apply)'
-HELP_ARG_SEARCH_STR = 'Native search using string query (matching any word). Spaces must be replced with \'-\'. Ex. \'after-hours\''
+HELP_ARG_SEARCH_STR = (
+    'Native search using string query (matching all words with alias expansion, check README for more info).'
+    ' Spaces must be replced with \'-\'. Ex. \'after-hours\''
+)
 HELP_ARG_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_DURATION = 'Video duration filter (in seconds). Example: \'5-180\' will only allow videos from 5 seconds to 3 minutes'
 HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
@@ -224,7 +227,7 @@ HELP_ARG_UTPOLICY = (
     f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'
 )
 HELP_ARG_DMMODE = '[Debug] Download (file creation) mode'
-HELP_ARG_ALL_PAGES = 'Do not interrupt pages scan if encountered a page having all posts filtered out'
+HELP_ARG_ALL_PAGES = 'Do not interrupt pages scan if encountered a page having all post ids filtered out'
 HELP_ARG_EXTRA_TAGS = (
     'All remaining \'args\' and \'-args\' count as tags to require or exclude. All spaces must be replaced with \'_\'.'
     ' Videos containing any of \'-tags\', or not containing all \'tags\' will be skipped.'
@@ -242,7 +245,8 @@ HELP_ARG_DWN_SCENARIO = (
     ' "1g: 1girl -quality 480p; 2g: 2girls -quality 720p -minscore 150 -utp always"\''
 )
 HELP_ARG_STORE_CONTINUE_CMDFILE = (
-    'Store and automatically update cmd file which allows to later continue with unfinished download queue (using ids module, file mode)'
+    'Store and automatically update cmd file which allows to later continue with unfinished download queue'
+    ' (using ids module, file mode, check README for more info)'
 )
 HELP_ARG_REPORT_DUPLICATES = (
     f'Report duplicate downloaded posts (regardless of quality) after initial destination folder scan.'
@@ -278,7 +282,7 @@ HELP_ARG_LOGGING = (
     f'Logging level: {{{str(list(LOGGING_FLAGS.keys())).replace(" ", "")[1:-1]}}}.'
     f' All messages equal or above this level will be logged. Default is \'info\''
 )
-HELP_ARG_DUMP_SCREENSHOTS = 'Save screenshots (webp, very slow)'
+HELP_ARG_DUMP_SCREENSHOTS = 'Save timeline screenshots (webp, very slow, ignores download mode)'
 HELP_ARG_DUMP_INFO = 'Save tags / descriptions / comments to text file (separately)'
 HELP_ARG_SKIP_EMPTY_LISTS = 'Do not store tags / descriptions / comments list if it contains no useful data'
 HELP_ARG_MERGE_LISTS = 'Merge exising tags / descriptions / comments list(s) with saved info (only if saving is enabled)'
@@ -290,7 +294,11 @@ HELP_ARG_RETRIES = f'Connection retries count. Default is \'{CONNECT_RETRIES_BAS
 HELP_ARG_THROTTLE = 'Download speed threshold (in KB/s) to assume throttling, drop connection and retry'
 HELP_ARG_THROTTLE_AUTO = 'Enable automatic throttle threshold adjustment when crossed too many times in a row'
 HELP_ARG_UPLOADER = 'Uploader user id (integer, filters still apply)'
-HELP_ARG_MODEL = 'Artist name (download directly from artist\'s page)'
+HELP_ARG_MODEL = 'Artist name (scan artist\'s page(s) instead of using search, filters still apply)'
+# HELP_ARG_ALLOW_DUPLICATE_NAMES = (
+#     'Disable search results deduplication (by name).'
+#     ' By default exact matches will be dropped except the latest one (highest album id)'
+# )
 
 
 class DownloadResult(IntEnum):
