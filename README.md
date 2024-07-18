@@ -38,7 +38,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
 #### Tags. Categories. Artists. Extra tags
 - `rv_tags.list` file contains all existing tags for current version, same with `rv_cats.list` (categories) and `rv_arts.list` (artists) files. Any tag/category/artist you use is required to be valid and every `extra tag` needs to be a valid tag, category or artist. That is, unless you also utilize...
 - Wildcards. In any `extra tag` you can use symbols `?` and `*` for `any symbol` and `any number of any symbols` repectively
-- If even more advanced approach is required you can also use regular expressions. To prevent syntax conflicts following regex symbols must be escaped using `` ` ``: `()?*.,-+`. Example: ``*[1`-5]`+`(finger{1`,3}|girl`)s`?`.`*`` converts to regex ``^.*[1-5]+(?:finger{1,3}|girl)s?.*$``. Notes:
+- If even more advanced approach is required you can also use regular expressions. To prevent syntax conflicts following regex symbols must be escaped using `` ` ``: `()?*.,-+` as well as `(?:` sequence (`` `(?: ``). Example: ``*[1`-5]`+`(finger{1`,3}|girl`)s`?`.`*`` converts to regex ``^.*[1-5]+(?:finger{1,3}|girl)s?.*$``. Notes:
   - No need to specify group as non-capturing
   - Some characters don't need escaping, like `|` or `[` there
   - You can combine wildcards and regular expressions within the same extra tag. Note how first `*` is converted as wildcard symbol while the ending `` `.`* `` specified explicitly as regex converts to the same characters pair
