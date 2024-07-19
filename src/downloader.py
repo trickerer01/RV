@@ -52,8 +52,8 @@ class VideoDownloadWorker:
         self._session = session
         self._orig_count = len(self._seq)
         self._downloaded_count = 0
-        self._filtered_count_pre = filtered_count
-        self._filtered_count_after = 0
+        self._prefiltered_count = filtered_count
+        self._already_exist_count = 0
         self._skipped_count = 0
         self._404_count = 0
         self._minmax_id = get_min_max_ids(self._seq)
@@ -80,10 +80,10 @@ class VideoDownloadWorker:
             self._downloads_active.remove(vi)
             Log.trace(f'[queue] {vi.sname} removed from active')
         if result == DownloadResult.FAIL_ALREADY_EXISTS:
-            self._filtered_count_after += 1
-        elif result == DownloadResult.FAIL_SKIPPED:
+            self._already_exist_count += 1
+        elif result in (DownloadResult.FAIL_SKIPPED, DownloadResult.FAIL_FILTERED_OUTER):
             self._skipped_count += 1
-        elif result == DownloadResult.FAIL_NOT_FOUND:
+        elif result in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_DELETED):
             self._404_count += 1
         elif result == DownloadResult.FAIL_RETRIES:
             self._failed_items.append(vi.id)
@@ -202,9 +202,9 @@ class VideoDownloadWorker:
 
     async def _after_download(self) -> None:
         newline = '\n'
-        Log.info(f'\nDone. {self._downloaded_count:d} / {self._orig_count:d}+{self._filtered_count_pre:d}'
+        Log.info(f'\nDone. {self._downloaded_count:d} / {self._orig_count:d}+{self._prefiltered_count:d}'
                  f'{f"+{self._scn.get_extra_count():d}" if Config.lookahead else ""} file(s) downloaded, '
-                 f'{self._filtered_count_after:d}+{self._filtered_count_pre:d} already existed, '
+                 f'{self._already_exist_count:d}+{self._prefiltered_count:d} already existed, '
                  f'{self._skipped_count:d} skipped, {self._404_count:d} not found')
         workload_size = len(self._seq) + self.get_scanner_workload_size()
         if workload_size > 0:
