@@ -354,21 +354,27 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
         else:
             negative = extag.startswith('-')
             my_extag = extag[1:] if negative else extag
-            mtag = get_matching_tag(my_extag, tags_raw)
-            if negative is False and mtag:
-                Log.trace(f'{sname} has BASE POS match: \'{mtag}\'')
-            for conf, cn, np, td in zip(
-                (Config.check_title_pos, Config.check_title_neg, Config.check_description_pos, Config.check_description_neg),
-                ('TITL', 'TITL', 'DESC', 'DESC'),
-                ('POS', 'NEG', 'POS', 'NEG'),
-                (vi.title, vi.title, vi.description, vi.description)
-            ):
-                if conf and td and ((np == 'NEG') == negative) and not mtag:
-                    mtag = match_text(my_extag, td)
-                    if mtag:
-                        mtag = f'{mtag[:100]}...'
-                        if negative is False:
-                            Log.trace(f'{sname} has {cn} {np} match: \'{mtag}\'')
+            if my_extag.startswith('u:'):
+                my_utag = my_extag[2:]
+                mtag = get_matching_tag(my_utag, (vi.uploader,))
+                if negative is False and mtag:
+                    Log.trace(f'{sname} has BASE POS match: \'{mtag}\' (from utag \'{my_extag}\')')
+            else:
+                mtag = get_matching_tag(my_extag, tags_raw)
+                if negative is False and mtag:
+                    Log.trace(f'{sname} has BASE POS match: \'{mtag}\'')
+                for conf, cn, np, td in zip(
+                    (Config.check_title_pos, Config.check_title_neg, Config.check_description_pos, Config.check_description_neg),
+                    ('TITL', 'TITL', 'DESC', 'DESC'),
+                    ('POS', 'NEG', 'POS', 'NEG'),
+                    (vi.title, vi.title, vi.description, vi.description)
+                ):
+                    if conf and td and ((np == 'NEG') == negative) and not mtag:
+                        mtag = match_text(my_extag, td)
+                        if mtag:
+                            mtag = f'{mtag[:100]}...'
+                            if negative is False:
+                                Log.trace(f'{sname} has {cn} {np} match: \'{mtag}\'')
             if mtag is not None and negative:
                 suc = False
                 Log.info(f'{sname} contains excluded tag \'{mtag}\'. Skipped!')

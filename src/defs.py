@@ -253,7 +253,9 @@ HELP_ARG_REPORT_DUPLICATES = (
     f' Simplified - only names starting with \'{PREFIX}\''
 )
 HELP_ARG_CHECK_UPLOADER = (
-    'Apply extra \'tag\' / \'-tag\' filters to uploader name. By default only tags, categories and artists will be checked'
+    'Apply extra \'tag\' / \'-tag\' filters to uploader name.'
+    ' By default only tags, categories and artists are checked by extra tags'
+    ' and uploader can only be checked using its own syntax: positive \'u:{name}\' or negative \'-u:{name}\''
 )
 HELP_ARG_CHECK_TITLEDESC = (
     'Apply extra \'tag\' / \'-tag\' filters to title / description.'

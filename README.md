@@ -44,6 +44,9 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - You can combine wildcards and regular expressions within the same extra tag. Note how first `*` is converted as wildcard symbol while the ending `` `.`* `` specified explicitly as regex converts to the same characters pair
   - `` ` `` character is used for escaping because it isn't contained in any tag, artist or category name
 - Fuzzy `extra tags` (containing wildcards or regular expressions) aren't validated, they can be anything
+- Using `extra tags` is the only way to filter by uploader (user) name. There are two options available:
+  - Special syntax: `-u:<NAME>`. The `-u:` (or positive `u:`) prefix explicitly tells to use this `extra tag` as uploader filter only, `<NAME>` here is your normal `extra tag` so it can also contain wildcards/regex
+  - Cmd option `--check-uploader` which extends **all** `extra tags` application to also affect uploader in addition to tags/categories/artists, use this with caution
 - What makes `extra tags` different from tags/categories/artists is these `tags` or `-tags` are being used as filters instead of search params, normal tags/categories/artists are passed using their own search argument (see full help) and all unknown arguments are automatically considered `extra tags`
 - All spaces **must_be_replaced_with_underscores** ‒ all tag / category / artist names are unified this way for convenience
 
@@ -128,7 +131,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
     - `-search_tag 1girl,2girls,3girls,...,1boy1girl,2boys,3boys,3boys1girl,...,6girls`
 
 9. Scanning for unpublished posts
-  - There is always some posts which hasn't become public yet, many of them don't pass a review and never get published
+  - There is always a number of posts which haven't become public yet, many of them don't pass a review and never become available
   - Unpublished posts cannot be searched for so using direct link is the only option
   - `ids` module can automatically scan past maximum available post ID until it reaches the actual maximum post ID available.
   - Syntax: `-lookahead <AMOUNT>`. `<AMOUNT>` here is the number of sequential empty post IDs to assume the end of existing posts. Example:
