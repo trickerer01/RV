@@ -28,6 +28,7 @@ class BaseConfig:
         self.is_pages = False
         self.dest_base: Optional[str] = None
         self.proxy: Optional[str] = None
+        self.download_without_proxy: Optional[bool] = None
         self.session_id: Optional[str] = None
         self.min_rating: Optional[int] = None
         self.min_score: Optional[int] = None
@@ -84,6 +85,7 @@ class BaseConfig:
         self.is_pages = pages
         self.dest_base = params.path
         self.proxy = params.proxy
+        self.download_without_proxy = params.download_without_proxy
         # session_id only exists in RV and RC
         self.session_id = getattr(params, 'session_id', self.session_id)
         self.min_rating = params.minimum_rating
@@ -160,6 +162,7 @@ class BaseConfig:
             *(('-fsdepth', self.folder_scan_depth) if self.folder_scan_depth != MAX_DEST_SCAN_SUB_DEPTH_DEFAULT else ()),
             *(('-fslevel', self.folder_scan_levelup) if self.folder_scan_levelup != MAX_DEST_SCAN_UPLEVELS_DEFAULT else ()),
             *(('-proxy', self.proxy) if self.proxy else ()),
+            *(('--download-without-proxy',) if self.download_without_proxy else ()),
             *(('-throttle', self.throttle) if self.throttle else ()),
             *(('-athrottle',) if self.throttle_auto else ()),
             *(('-timeout', int(self.timeout.connect)) if int(self.timeout.connect) != CONNECT_TIMEOUT_BASE else ()),

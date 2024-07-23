@@ -9,18 +9,16 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from asyncio import Lock as AsyncLock, sleep, get_running_loop
 from random import uniform as frand
 from typing import Optional, List
-from urllib.parse import urlparse
 
-from aiohttp import ClientSession, ClientResponse, TCPConnector
+from aiohttp import ClientSession, ClientResponse, TCPConnector, ClientResponseError
 from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
-from python_socks import ProxyType
 
 from config import Config
 from defs import Mem, UTF8, DEFAULT_HEADERS, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, CONNECT_RETRY_DELAY, MAX_SCAN_QUEUE_SIZE
 from logger import Log
 
-__all__ = ('make_session', 'wrap_request', 'fetch_html')
+__all__ = ('make_session', 'wrap_request', 'fetch_html', 'ensure_conn_closed')
 
 
 class RequestQueue:
@@ -48,14 +46,18 @@ class RequestQueue:
             get_running_loop().create_task(RequestQueue._reset())
 
 
-def make_session() -> ClientSession:
-    if Config.proxy:
-        pp = urlparse(Config.proxy)
-        ptype = ProxyType.SOCKS5 if pp.scheme in ('socks5', 'socks5h') else ProxyType.HTTP
-        connector = ProxyConnector(limit=MAX_VIDEOS_QUEUE_SIZE + MAX_SCAN_QUEUE_SIZE, proxy_type=ptype, host=pp.hostname, port=pp.port)
+def ensure_conn_closed(r: Optional[ClientResponse]) -> None:
+    if r is not None and not r.closed:
+        r.close()
+
+
+def make_session(noproxy=False) -> ClientSession:
+    if Config.proxy and noproxy is False:
+        connector = ProxyConnector.from_url(Config.proxy, limit=MAX_VIDEOS_QUEUE_SIZE + MAX_SCAN_QUEUE_SIZE)
     else:
         connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE + MAX_SCAN_QUEUE_SIZE)
     s = ClientSession(connector=connector, read_bufsize=Mem.MB)
+    s.headers.update(DEFAULT_HEADERS.copy())
     # s.cookie_jar.update_cookies({'kt_rt_popAccess': '1'})
     s.cookie_jar.update_cookies({'kt_tcookie': '1', 'kt_is_visited': '1'})
     if Config.session_id:
@@ -63,14 +65,14 @@ def make_session() -> ClientSession:
     return s
 
 
-async def wrap_request(s: ClientSession, method: str, url: str, **kwargs) -> ClientResponse:
+async def wrap_request(s: ClientSession, method: str, url: str, noproxy=False, **kwargs) -> ClientResponse:
     """Queues request, updating headers/proxies beforehand, and returns the response"""
     if Config.nodelay is False:
         await RequestQueue.until_ready(url)
-    s.headers.update(DEFAULT_HEADERS.copy())
     if 'timeout' not in kwargs:
         kwargs.update(timeout=Config.timeout)
-    r = await s.request(method, url, **kwargs)
+    # noinspection PyUnresolvedReferences
+    r = await (s.np if noproxy else s).request(method, url, **kwargs)
     return r
 
 
@@ -78,10 +80,10 @@ async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[B
     # very basic, minimum validation
     tries = tries or Config.retries
 
-    r = None
     retries = 0
     retries_403_local = 0
     while retries <= tries:
+        r = None
         try:
             async with await wrap_request(
                     session, 'GET', url,
@@ -92,12 +94,13 @@ async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[B
                 if retries_403_local > 0:
                     Log.trace(f'fetch_html success: took {retries_403_local:d} tries...')
                 return BeautifulSoup(content, 'html.parser', from_encoding=UTF8)
-        except Exception:
+        except Exception as e:
             if r is not None and '404.' in str(r.url):
                 Log.error('ERROR: 404')
                 assert False
-            elif r is not None:
-                Log.error(f'fetch_html exception: status {r.status:d}')
+            else:
+                Log.error(f'fetch_html exception status {f"{r.status:d}" if r is not None else "???"}: '
+                          f'\'{e.message if isinstance(e, ClientResponseError) else "???"}\'')
             if r is None or r.status != 403:
                 retries += 1
             elif r is not None and r.status == 403:

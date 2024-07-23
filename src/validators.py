@@ -163,16 +163,23 @@ def valid_proxy(prox: str) -> str:
         except ValueError:
             Log.error('Failed to split proxy type and value/port!')
             raise
-        if pt not in {'http', 'https', 'socks5', 'socks5h'}:
+        if pt not in {'http', 'socks4', 'socks5', 'socks5h'}:
             Log.error(f'Invalid proxy type: \'{pt}\'!')
             raise ValueError
         try:
-            pv, pp = tuple(pv.split(':', 1))
+            pv, pp = tuple(pv.rsplit(':', 1))
         except ValueError:
             Log.error('Failed to split proxy address and port!')
             raise
         try:
-            pva = IPv4Address(pv)
+            pup, pvv = tuple(pv.rsplit('@', 1)) if ('@' in pv) else ('', pv)
+            if pup:
+                pup = f'{pup}@'
+        except ValueError:
+            Log.error('Failed to split proxy address and port!')
+            raise
+        try:
+            pva = IPv4Address(pvv)
         except ValueError:
             Log.error(f'Invalid proxy ip address value \'{pv}\'!')
             raise
@@ -182,7 +189,7 @@ def valid_proxy(prox: str) -> str:
         except (ValueError, AssertionError):
             Log.error(f'Invalid proxy port value \'{pp}\'!')
             raise
-        return f'{pt}://{str(pva)}:{ppi:d}'
+        return f'{pt}://{pup}{str(pva)}:{ppi:d}'
     except Exception:
         raise ArgumentError
 

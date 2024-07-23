@@ -10,6 +10,7 @@ from asyncio import Task, sleep, get_running_loop, as_completed
 from os import path, stat, remove, makedirs
 from random import uniform as frand
 from typing import List, Dict
+from urllib.parse import urlparse
 
 from aiofile import async_open
 from aiohttp import ClientSession, ClientPayloadError
@@ -23,7 +24,7 @@ from defs import (
 from downloader import VideoDownloadWorker
 from dscanner import VideoScanWorker
 from dthrottler import ThrottleChecker
-from fetch_html import fetch_html, wrap_request, make_session
+from fetch_html import fetch_html, wrap_request, make_session, ensure_conn_closed
 from logger import Log
 from path_util import file_already_exists, try_rename, is_file_being_used
 from rex import re_media_filename, re_time
@@ -39,7 +40,7 @@ async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, 
     eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(sequence))
     Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n'
              f'\nThis will take at least {eta_min:d} seconds{f" ({format_time(eta_min)})" if eta_min >= 60 else ""}!\n')
-    async with session or make_session() as session:
+    async with session or make_session() as session, make_session(True) as session.np:
         if by_id:
             for cv in as_completed([
                 VideoScanWorker(sequence, scan_video).run(),
@@ -337,6 +338,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 raise IOError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
 
     while (not skip) and retries <= Config.retries:
+        r = None
         try:
             file_exists = path.isfile(vi.my_fullpath)
             if file_exists and retries == 0:
@@ -356,49 +358,54 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 break
 
             hkwargs: Dict[str, Dict[str, str]] = {'headers': {'Range': f'bytes={file_size:d}-'}} if file_size > 0 else {}
-            r = None
-            async with await wrap_request(dwn.session, 'GET', vi.link, **hkwargs) as r:
-                content_len = r.content_length or 0
-                content_range_s = r.headers.get('Content-Range', '/').split('/', 1)
-                content_range = int(content_range_s[1]) if len(content_range_s) > 1 and content_range_s[1].isnumeric() else 1
-                if (content_len == 0 or r.status == 416) and file_size >= content_range:
-                    Log.warn(f'{vi.sfsname} ({vi.quality}) is already completed, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
-                    vi.set_state(VideoInfo.State.DONE)
-                    ret = DownloadResult.FAIL_ALREADY_EXISTS
-                    break
-                if r.status == 404:
-                    Log.error(f'Got 404 for {vi.sfsname}...!')
-                    retries = Config.retries
-                    ret = DownloadResult.FAIL_NOT_FOUND
-                if r.content_type and 'text' in r.content_type:
-                    Log.error(f'File not found at {vi.link}!')
-                    raise FileNotFoundError(vi.link)
-
-                status_checker.prepare(r, file_size)
-                vi.expected_size = file_size + content_len
-                vi.last_check_size = vi.start_size = file_size
-                vi.last_check_time = vi.start_time = get_elapsed_time_i()
-                starting_str = f' <continuing at {file_size:d}>' if file_size else ''
-                total_str = f' / {vi.expected_size / Mem.MB:.2f}' if file_size else ''
-                Log.info(f'Saving{starting_str} {vi.sdname} {content_len / Mem.MB:.2f}{total_str} Mb to {vi.sffilename}')
-
-                dwn.add_to_writes(vi)
-                vi.set_state(VideoInfo.State.WRITING)
-                status_checker.run()
-                async with async_open(vi.my_fullpath, 'ab') as outf:
-                    vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
-                    async for chunk in r.content.iter_chunked(1 * Mem.MB):
-                        await outf.write(chunk)
-                status_checker.reset()
-                dwn.remove_from_writes(vi)
-
-                file_size = stat(vi.my_fullpath).st_size
-                if vi.expected_size and file_size != vi.expected_size:
-                    Log.error(f'Error: file size mismatch for {vi.sfsname}: {file_size:d} / {vi.expected_size:d}')
-                    raise IOError(vi.link)
-
+            ckwargs = dict(allow_redirects=not Config.proxy or not Config.download_without_proxy)
+            r = await wrap_request(dwn.session, 'GET', vi.link, **ckwargs, **hkwargs)
+            while r.status in (301, 302):
+                if urlparse(r.headers['Location']).hostname != urlparse(vi.link).hostname:
+                    ckwargs.update(noproxy=True, allow_redirects=True)
+                ensure_conn_closed(r)
+                r = await wrap_request(dwn.session, 'GET', r.headers['Location'], **ckwargs, **hkwargs)
+            content_len = r.content_length or 0
+            content_range_s = r.headers.get('Content-Range', '/').split('/', 1)
+            content_range = int(content_range_s[1]) if len(content_range_s) > 1 and content_range_s[1].isnumeric() else 1
+            if (content_len == 0 or r.status == 416) and file_size >= content_range:
+                Log.warn(f'{vi.sfsname} ({vi.quality}) is already completed, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
                 vi.set_state(VideoInfo.State.DONE)
+                ret = DownloadResult.FAIL_ALREADY_EXISTS
                 break
+            if r.status == 404:
+                Log.error(f'Got 404 for {vi.sfsname}...!')
+                retries = Config.retries
+                ret = DownloadResult.FAIL_NOT_FOUND
+            if r.content_type and 'text' in r.content_type:
+                Log.error(f'File not found at {vi.link}!')
+                raise FileNotFoundError(vi.link)
+
+            status_checker.prepare(r, file_size)
+            vi.expected_size = file_size + content_len
+            vi.last_check_size = vi.start_size = file_size
+            vi.last_check_time = vi.start_time = get_elapsed_time_i()
+            starting_str = f' <continuing at {file_size:d}>' if file_size else ''
+            total_str = f' / {vi.expected_size / Mem.MB:.2f}' if file_size else ''
+            Log.info(f'Saving{starting_str} {vi.sdname} {content_len / Mem.MB:.2f}{total_str} Mb to {vi.sffilename}')
+
+            dwn.add_to_writes(vi)
+            vi.set_state(VideoInfo.State.WRITING)
+            status_checker.run()
+            async with async_open(vi.my_fullpath, 'ab') as outf:
+                vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
+                async for chunk in r.content.iter_chunked(1 * Mem.MB):
+                    await outf.write(chunk)
+            status_checker.reset()
+            dwn.remove_from_writes(vi)
+
+            file_size = stat(vi.my_fullpath).st_size
+            if vi.expected_size and file_size != vi.expected_size:
+                Log.error(f'Error: file size mismatch for {vi.sfsname}: {file_size:d} / {vi.expected_size:d}')
+                raise IOError(vi.link)
+
+            vi.set_state(VideoInfo.State.DONE)
+            break
         except Exception as e:
             import sys
             print(sys.exc_info()[0], sys.exc_info()[1])
@@ -417,6 +424,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             elif Config.keep_unfinished is False and path.isfile(vi.my_fullpath) and vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED):
                 Log.error(f'Failed to download {vi.sffilename}. Removing unfinished file...')
                 remove(vi.my_fullpath)
+        finally:
+            ensure_conn_closed(r)
 
     ret = (ret if ret in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_SKIPPED, DownloadResult.FAIL_ALREADY_EXISTS) else
            DownloadResult.SUCCESS if retries <= Config.retries else

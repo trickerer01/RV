@@ -15,7 +15,7 @@ from typing import TypeVar, Tuple
 CONNECT_RETRIES_BASE = 50
 CONNECT_TIMEOUT_BASE = 10
 CONNECT_REQUEST_DELAY = 0.7
-CONNECT_RETRY_DELAY = (1.0, 7.0)
+CONNECT_RETRY_DELAY = (4.0, 8.0)
 
 MAX_DEST_SCAN_SUB_DEPTH_DEFAULT = 1
 MAX_DEST_SCAN_UPLEVELS_DEFAULT = 0
@@ -221,7 +221,8 @@ HELP_ARG_SEARCH_STR = (
 )
 HELP_ARG_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_DURATION = 'Video duration filter (in seconds). Example: \'5-180\' will only allow videos from 5 seconds to 3 minutes'
-HELP_ARG_PROXY = 'Proxy to use. Example: http://127.0.0.1:222'
+HELP_ARG_PROXY = 'Proxy to use, supports basic auth. Example: http://user:pass@127.0.0.1:222'
+HELP_ARG_PROXYNODOWN = 'Don\'t use proxy to connect to file servers if they differ from the main host'
 HELP_ARG_UTPOLICY = (
     f'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'
     f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'
