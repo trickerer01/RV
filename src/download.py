@@ -29,7 +29,7 @@ from logger import Log
 from path_util import file_already_exists, try_rename, is_file_being_used
 from rex import re_media_filename, re_time
 from tagger import filtered_tags, is_filtered_out_by_extra_tags
-from util import has_naming_flag, get_time_seconds, format_time, get_elapsed_time_i, extract_ext, normalize_path
+from util import has_naming_flag, format_time, normalize_path, get_elapsed_time_i, get_time_seconds, extract_ext
 from vinfo import VideoInfo, export_video_info, get_min_max_ids
 
 __all__ = ('download', 'at_interrupt')
@@ -78,7 +78,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if not vi.duration:
         vi.duration = get_time_seconds(str(a_html.find('div', class_='info row').find('span', string=re_time).text))
 
-    Log.debug(f'DEBUG: Scanning {sname}: {vi.fduration} \'{vi.title}\'')
+    Log.info(f'Scanning {sname}: {vi.fduration} \'{vi.title}\'')
 
     try:
         rating, votes = tuple(a_html.find('span', class_='voters count').text.split(' ', 1))
@@ -394,6 +394,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             status_checker.run()
             async with async_open(vi.my_fullpath, 'ab') as outf:
                 vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
+                if vi.dstart_time == 0:
+                    vi.dstart_time = get_elapsed_time_i()
                 async for chunk in r.content.iter_chunked(1 * Mem.MB):
                     await outf.write(chunk)
             status_checker.reset()
@@ -403,6 +405,10 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             if vi.expected_size and file_size != vi.expected_size:
                 Log.error(f'Error: file size mismatch for {vi.sfsname}: {file_size:d} / {vi.expected_size:d}')
                 raise IOError(vi.link)
+
+            total_time = get_elapsed_time_i() - vi.dstart_time
+            Log.info(f'[download] {vi.sfsname} ({vi.quality}) completed in {format_time(total_time)} '
+                     f'({(file_size / total_time) / Mem.KB:.1f} Kb/s)')
 
             vi.set_state(VideoInfo.State.DONE)
             break

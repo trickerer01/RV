@@ -112,8 +112,8 @@ class BaseConfig:
         self.logging_flags = params.log_level
         self.start = params.start
         self.end = params.end
-        self.start_id = params.stop_id if pages else self.start
-        self.end_id = params.begin_id if pages else self.end
+        self.start_id = params.stop_id if self.is_pages else self.start
+        self.end_id = params.begin_id if self.is_pages else self.end
         self.timeout = ClientTimeout(total=None, connect=params.timeout or CONNECT_TIMEOUT_BASE)
         self.retries = getattr(params, 'retries', CONNECT_RETRIES_BASE)
         self.throttle = params.throttle
