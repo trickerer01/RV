@@ -261,7 +261,7 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
 
             expected_size = r.content_length
             async with async_open(fullpath, 'wb') as outf:
-                async for chunk in r.content.iter_chunked(4 * Mem.MB):
+                async for chunk in r.content.iter_chunked(256 * Mem.KB):
                     await outf.write(chunk)
 
             file_size = stat(fullpath).st_size
@@ -396,7 +396,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
                 if vi.dstart_time == 0:
                     vi.dstart_time = get_elapsed_time_i()
-                async for chunk in r.content.iter_chunked(1 * Mem.MB):
+                async for chunk in r.content.iter_chunked(512 * Mem.KB):
                     await outf.write(chunk)
             status_checker.reset()
             dwn.remove_from_writes(vi)

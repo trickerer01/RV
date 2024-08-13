@@ -51,6 +51,7 @@ class BaseConfig:
         self.scenario: Optional[DownloadScenario] = None
         self.naming_flags = self.logging_flags = 0
         self.start = self.end = self.start_id = self.end_id = 0
+        self._timeout: Optional[float] = None
         self.timeout: Optional[ClientTimeout] = None
         self.retries = 0
         self.throttle: Optional[int] = None
@@ -114,7 +115,8 @@ class BaseConfig:
         self.end = params.end
         self.start_id = params.stop_id if self.is_pages else self.start
         self.end_id = params.begin_id if self.is_pages else self.end
-        self.timeout = ClientTimeout(total=None, connect=params.timeout or CONNECT_TIMEOUT_BASE)
+        self._timeout = float(params.timeout or CONNECT_TIMEOUT_BASE)
+        self.timeout = ClientTimeout(total=None, connect=self._timeout, sock_connect=self._timeout)
         self.retries = getattr(params, 'retries', CONNECT_RETRIES_BASE)
         self.throttle = params.throttle
         self.throttle_auto = params.throttle_auto
@@ -165,7 +167,7 @@ class BaseConfig:
             *(('--download-without-proxy',) if self.download_without_proxy else ()),
             *(('-throttle', self.throttle) if self.throttle else ()),
             *(('-athrottle',) if self.throttle_auto else ()),
-            *(('-timeout', int(self.timeout.connect)) if int(self.timeout.connect) != CONNECT_TIMEOUT_BASE else ()),
+            *(('-timeout', int(self._timeout)) if self._timeout != CONNECT_TIMEOUT_BASE else ()),
             *(('-retries', self.retries) if self.retries != CONNECT_RETRIES_BASE else ()),
             *(('-unfinish',) if self.keep_unfinished else ()),
             *(('-tdump',) if self.save_tags else ()),
