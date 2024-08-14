@@ -398,6 +398,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     vi.dstart_time = get_elapsed_time_i()
                 async for chunk in r.content.iter_chunked(512 * Mem.KB):
                     await outf.write(chunk)
+                    vi.bytes_written += len(chunk)
             status_checker.reset()
             dwn.remove_from_writes(vi)
 
@@ -408,7 +409,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
 
             total_time = get_elapsed_time_i() - vi.dstart_time
             Log.info(f'[download] {vi.sfsname} ({vi.quality}) completed in {format_time(total_time)} '
-                     f'({(file_size / total_time) / Mem.KB:.1f} Kb/s)')
+                     f'({(vi.bytes_written / total_time) / Mem.KB:.1f} Kb/s)')
 
             vi.set_state(VideoInfo.State.DONE)
             break
