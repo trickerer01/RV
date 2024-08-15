@@ -377,7 +377,7 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags
                                 Log.trace(f'{sname} has {cn} {np} match: \'{mtag}\'')
             if mtag is not None and negative:
                 suc = False
-                Log.info(f'{sname} contains excluded tag \'{mtag}\'. Skipped!')
+                Log.info(f'{sname} contains excluded tag \'{mtag}\' (\'{extag}\'). Skipped!')
             elif mtag is None and not negative:
                 suc = False
                 Log.trace(f'{sname} misses required tag matching \'{my_extag}\'. Skipped!')
