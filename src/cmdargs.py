@@ -92,8 +92,8 @@ def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: Ar
                 raise ValueError
             parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
     except Exception:
-        parser.print_help()
-        raise
+        default_sub.print_help()
+        raise HelpPrintExitException
 
     return parsed
 
@@ -115,8 +115,6 @@ def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Se
         return parsed
     except SystemExit:
         raise HelpPrintExitException
-    except Exception:
-        raise
 
 
 def create_parsers() -> Tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
