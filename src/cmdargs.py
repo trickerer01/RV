@@ -79,22 +79,17 @@ def is_parsed_cmdfile(parsed_result: Namespace) -> bool:
 
 def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: ArgumentParser) -> Namespace:
     errors_to_print = list()
-    try:
-        parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
-        if not is_parsed_cmdfile(parsed):
-            for tag in parsed.extra_tags + unks:
-                try:
-                    assert valid_extra_tag(tag, False)
-                except (AssertionError, ValueError):
-                    errors_to_print.append(f'Invalid extra tag: \'{tag}\'')
-            if errors_to_print:
-                Log.fatal('\n'.join(errors_to_print))
-                raise ValueError
-            parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
-    except Exception:
-        default_sub.print_help()
-        raise HelpPrintExitException
-
+    parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
+    if not is_parsed_cmdfile(parsed):
+        for tag in parsed.extra_tags + unks:
+            try:
+                assert valid_extra_tag(tag, False)
+            except (AssertionError, ValueError):
+                errors_to_print.append(f'Invalid extra tag: \'{tag}\'')
+        if errors_to_print:
+            Log.fatal('\n'.join(errors_to_print))
+            raise ValueError
+        parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
     return parsed
 
 
@@ -114,6 +109,10 @@ def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Se
             parsed = prepare_arglist(read_cmdfile(parsed.path), pages)
         return parsed
     except SystemExit:
+        raise HelpPrintExitException
+    except Exception:
+        from traceback import format_exc
+        print(format_exc())
         raise HelpPrintExitException
 
 
