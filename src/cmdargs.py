@@ -95,6 +95,7 @@ def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: Ar
 
 def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Sequence[str], pages: bool) -> Namespace:
     try:
+        assert args
         parsed = validate_parsed(parser, args, default_sub)
         if (not is_parsed_cmdfile(parsed)) and not (pages and parsed.get_maxid):
             if pages:
@@ -112,6 +113,7 @@ def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Se
         raise HelpPrintExitException
     except Exception:
         from traceback import format_exc
+        default_sub.print_help()
         print(format_exc())
         raise HelpPrintExitException
 
