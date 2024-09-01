@@ -31,8 +31,8 @@ class Log:
     }
 
     @staticmethod
-    def init(disable_colors=False) -> None:
-        if not disable_colors:
+    def init() -> None:
+        if not Config.nocolors:
             colorama_init()
 
     @staticmethod
