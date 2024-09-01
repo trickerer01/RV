@@ -50,6 +50,7 @@ class BaseConfig:
         self.id_sequence: Optional[List[int]] = None
         self.scenario: Optional[DownloadScenario] = None
         self.naming_flags = self.logging_flags = 0
+        self.nocolors: Optional[bool] = None
         self.start = self.end = self.start_id = self.end_id = 0
         self._timeout: Optional[float] = None
         self.timeout: Optional[ClientTimeout] = None
@@ -111,6 +112,7 @@ class BaseConfig:
         self.scenario = params.download_scenario
         self.naming_flags = params.naming
         self.logging_flags = params.log_level
+        self.nocolors = params.disable_log_colors
         self.start = params.start
         self.end = params.end
         self.start_id = params.stop_id if self.is_pages else self.start

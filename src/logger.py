@@ -31,8 +31,9 @@ class Log:
     }
 
     @staticmethod
-    def init() -> None:
-        colorama_init()
+    def init(disable_colors=False) -> None:
+        if not disable_colors:
+            colorama_init()
 
     @staticmethod
     def should_log(flags: LoggingFlags) -> bool:
@@ -44,10 +45,11 @@ class Log:
         if not Log.should_log(flags):
             return
 
-        for f in reversed(Log.COLORS.keys()):
-            if f & flags:
-                text = f'{Log.COLORS[f]}{text}{Fore.RESET}'
-                break
+        if not Config.nocolors:
+            for f in reversed(Log.COLORS.keys()):
+                if f & flags:
+                    text = f'{Log.COLORS[f]}{text}{Fore.RESET}'
+                    break
 
         try:
             print(text)

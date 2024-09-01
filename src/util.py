@@ -73,7 +73,7 @@ def calc_sleep_time(base_time: float) -> float:
 
 def at_startup() -> None:
     """Inits logger. Reports python version and run options"""
-    Log.init()
+    Log.init('--disable-log-colors' in sys.argv or '-nocolors' in sys.argv)
     if '--version' in sys.argv or '--help' in sys.argv:
         return
     Log.debug(f'Python {sys.version}\n{APP_NAME} ver {APP_VERSION}\nCommand-line args: {" ".join(sys.argv)}')

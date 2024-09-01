@@ -285,6 +285,7 @@ HELP_ARG_LOGGING = (
     f'Logging level: {{{str(list(LOGGING_FLAGS.keys())).replace(" ", "")[1:-1]}}}.'
     f' All messages equal or above this level will be logged. Default is \'info\''
 )
+HELP_ARG_NOCOLORS = 'Disable logging level dependent colors in log'
 HELP_ARG_DUMP_SCREENSHOTS = 'Save timeline screenshots (webp, very slow, ignores download mode)'
 HELP_ARG_DUMP_INFO = 'Save tags / descriptions / comments to text file (separately)'
 HELP_ARG_SKIP_EMPTY_LISTS = 'Do not store tags / descriptions / comments list if it contains no useful data'
