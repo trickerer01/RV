@@ -407,7 +407,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 Log.error(f'Error: file size mismatch for {vi.sfsname}: {file_size:d} / {vi.expected_size:d}')
                 raise IOError(vi.link)
 
-            total_time = get_elapsed_time_i() - vi.dstart_time
+            total_time = (get_elapsed_time_i() - vi.dstart_time) or 1
             Log.info(f'[download] {vi.sfsname} ({vi.quality}) completed in {format_time(total_time)} '
                      f'({(vi.bytes_written / total_time) / Mem.KB:.1f} Kb/s)')
 
