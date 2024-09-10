@@ -36,28 +36,28 @@ DEFAULT_EXT = 'mp4'
 EXTENSIONS_V = (DEFAULT_EXT, 'webm')
 START_TIME = datetime.now()
 
-SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eQ==').decode()
+SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20=').decode()
 SITE_AJAX_REQUEST_SEARCH_PAGE = b64decode(
-    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9zZWFyY2gvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc192aWRlb3NfbG'
-    'lzdF9zZWFyY2gmc29ydF9ieT1wb3N0X2RhdGUmdGFnX2lkcz0lcyZtb2RlbF9pZHM9JXMmY2F0ZWdvcnlfaWRzPSVzJnE9JXMmZnJvbV92aWRlb3M9JWQ=').decode()
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vc2VhcmNoLz9tb2RlPWFzeW5jJmZ1bmN0aW9uPWdldF9ibG9jayZibG9ja19pZD1jdXN0b21fbGlzdF92aWRlb3NfdmlkZW9zX2xpc3'
+    'Rfc2VhcmNoJnNvcnRfYnk9cG9zdF9kYXRlJnRhZ19pZHM9JXMmbW9kZWxfaWRzPSVzJmNhdGVnb3J5X2lkcz0lcyZxPSVzJmZyb21fdmlkZW9zPSVk').decode()
 """Params required: **tags**, **artists**, **categories**, **search**, **page** - **str**, **str**, **str**, **str**, **int**\n
 Ex. SITE_AJAX_REQUEST_SEARCH_PAGE % ('1,2', '3,4,5', '6', 'sfw', 1)"""
-SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wb3B1cC12aWRlby8lZC8=').decode()
+SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vcG9wdXAtdmlkZW8vJWQv').decode()
 """Params required: **video_id** - **int**\n
 Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)"""
 SITE_AJAX_REQUEST_PLAYLIST_PAGE = b64decode(
-    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9wbGF5bGlzdHMvJWQvJXMvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPXBsYXlsaXN0X3ZpZXdfcGxheW'
-    'xpc3RfdmlldyZzb3J0X2J5PWFkZGVkMmZhdl9kYXRlJmZyb209JWQ=').decode()
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vcGxheWxpc3RzLyVkLyVzLz9tb2RlPWFzeW5jJmZ1bmN0aW9uPWdldF9ibG9jayZibG9ja19pZD1wbGF5bGlzdF92aWV3X3BsYXlsaX'
+    'N0X3ZpZXcmc29ydF9ieT1hZGRlZDJmYXZfZGF0ZSZmcm9tPSVk').decode()
 """Params required: **playlist_id**, **playlist_name**, **page** - **int**, **str**, **int**\n
 Ex. SITE_AJAX_REQUEST_PLAYLIST_PAGE % (999, 'stuff', 1)"""
 SITE_AJAX_REQUEST_UPLOADER_PAGE = b64decode(
-    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9tZW1iZXJzLyVkL3ZpZGVvcy8/bW9kZT1hc3luYyZmdW5jdGlvbj1nZXRfYmxvY2smYmxvY2tfaWQ9bGlzdF92aWRlb3NfdXBsb2'
-    'FkZWRfdmlkZW9zJnNvcnRfYnk9JmZyb21fdmlkZW9zPSVk').decode()
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vbWVtYmVycy8lZC92aWRlb3MvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWxpc3RfdmlkZW9zX3VwbG9hZG'
+    'VkX3ZpZGVvcyZzb3J0X2J5PSZmcm9tX3ZpZGVvcz0lZA==').decode()
 """Params required: **user_id**, **page** - **int**, **int**\n
 Ex. SITE_AJAX_REQUEST_UPLOADER_PAGE % (158018, 1)"""
 SITE_AJAX_REQUEST_MODEL_PAGE = b64decode(
-    'aHR0cHM6Ly9ydWxlMzR2aWRlby5wYXJ0eS9tb2RlbHMvJXMvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWN1c3RvbV9saXN0X3ZpZGVvc19jb21tb2'
-    '5fdmlkZW9zJnNvcnRfYnk9JmZyb209JWQ=').decode()
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vbW9kZWxzLyVzLz9tb2RlPWFzeW5jJmZ1bmN0aW9uPWdldF9ibG9jayZibG9ja19pZD1jdXN0b21fbGlzdF92aWRlb3NfY29tbW9uX3'
+    'ZpZGVvcyZzb3J0X2J5PSZmcm9tPSVk').decode()
 """Params required: **artist_name**, **page** - **str**, **int**\n
 Ex. SITE_AJAX_REQUEST_MODEL_PAGE % ('gray', 1)"""
 
