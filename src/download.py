@@ -287,6 +287,7 @@ async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
 async def download_video(vi: VideoInfo) -> DownloadResult:
     dwn = VideoDownloadWorker.get()
     retries = 0
+    exact_quality = False
     ret = DownloadResult.SUCCESS
     skip = Config.dm == DOWNLOAD_MODE_SKIP
     status_checker = ThrottleChecker(vi)
@@ -388,6 +389,12 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             starting_str = f' <continuing at {file_size:d}>' if file_size else ''
             total_str = f' / {vi.expected_size / Mem.MB:.2f}' if file_size else ''
             Log.info(f'Saving{starting_str} {vi.sdname} {content_len / Mem.MB:.2f}{total_str} Mb to {vi.sffilename}')
+
+            if Config.continue_mode and exact_quality:
+                proc_str = is_file_being_used(vi.my_fullpath)
+                if proc_str:
+                    Log.error(f'Error: file {vi.sffilename} already exists and is locked by \'{proc_str}\'!! Parallel download? Aborted!')
+                    return DownloadResult.FAIL_ALREADY_EXISTS
 
             dwn.add_to_writes(vi)
             vi.set_state(VideoInfo.State.WRITING)
