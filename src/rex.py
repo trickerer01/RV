@@ -49,7 +49,7 @@ re_tags_exclude_major1 = re_compile(
     r'[a-z]pose|[\da-z_\-]{16,}).*?$'
 )
 re_tags_exclude_major2 = re_compile(
-    r'^(?:a(?:r(?:mor|twork)|udio)|cosplay|m(?:ap|eme|odel)|object|rwby|software)$'
+    r'^(?:a(?:r(?:mor|twork)|udio)|cosplay|m(?:ap|eme|odel)|object|rwby|software|va)$'
 )
 re_tags_to_not_exclude = re_compile(
     r'^(?:'
