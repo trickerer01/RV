@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from typing import List, Optional, Collection, Iterable, MutableSequence, Union, Dict, Tuple
 
-from bigstrings import TAG_ALIASES, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
+from bigstrings import TAG_ALIASES, TAG_CONFLICTS, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
 from config import Config
 from defs import TAGS_CONCAT_CHAR
 from logger import Log
@@ -21,7 +21,7 @@ from util import assert_nonempty
 from vinfo import VideoInfo
 
 __all__ = (
-    'filtered_tags', 'get_matching_tag', 'extract_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags',
+    'filtered_tags', 'get_matching_tag', 'extract_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags', 'solve_tag_conflicts',
     'valid_playlist_name', 'valid_playlist_id', 'valid_tags', 'valid_artists', 'valid_categories',
 )
 
@@ -311,6 +311,15 @@ def match_text(ex_tag: str, text: str, group_type='') -> Union[None, str, List[s
 
 def trim_undersores(base_str: str) -> str:
     return re_uscore_mult.sub('_', base_str).strip('_')
+
+
+def solve_tag_conflicts(vi: VideoInfo, tags_raw: List[str]) -> None:
+    for ctag in TAG_CONFLICTS:
+        if ctag in tags_raw:
+            cposlist, cneglist = TAG_CONFLICTS[ctag]
+            if any(cp in tags_raw for cp in cposlist) and all(cn not in tags_raw for cn in cneglist):
+                Log.info(f'{vi.sname} is tagged with both \'{ctag}\' and \'{"/".join(cposlist)}\'! Removing \'{ctag}\' tag!')
+                tags_raw.remove(ctag)
 
 
 def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: List[str], extra_tags: List[str],

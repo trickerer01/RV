@@ -28,7 +28,7 @@ from fetch_html import fetch_html, wrap_request, make_session, ensure_conn_close
 from logger import Log
 from path_util import file_already_exists, try_rename, is_file_being_used
 from rex import re_media_filename, re_time
-from tagger import filtered_tags, is_filtered_out_by_extra_tags
+from tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
 from util import has_naming_flag, format_time, normalize_path, get_elapsed_time_i, get_time_seconds, extract_ext
 from vinfo import VideoInfo, export_video_info, get_min_max_ids
 
@@ -137,6 +137,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if aucat_count >= 6 and 'compilation' not in tags_raw and 'pmv' not in tags_raw:
         Log.warn(f'{sname} has {len(my_authors):d} arts ({len(va_list):d} VA) and {len(my_categories):d} cats! Assuming compilation')
         tags_raw.append('compilation')
+    solve_tag_conflicts(vi, tags_raw)
     if is_filtered_out_by_extra_tags(vi, tags_raw, Config.extra_tags, Config.id_sequence, vi.subfolder, extra_ids):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario else ""} extra tags, skipping...')
         return DownloadResult.FAIL_FILTERED_OUTER if scenario else DownloadResult.FAIL_SKIPPED
