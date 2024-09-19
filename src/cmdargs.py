@@ -22,6 +22,7 @@ from defs import (
     MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC, HELP_ARG_ID_START, HELP_ARG_ID_COUNT, HELP_ARG_ID_END,
     HELP_ARG_PAGE_START, HELP_ARG_PAGE_COUNT, HELP_ARG_PAGE_END, HELP_ARG_REPORT_DUPLICATES, HELP_ARG_DUMP_SCREENSHOTS,
     MAX_DEST_SCAN_UPLEVELS_DEFAULT, HELP_ARG_RETRIES, CONNECT_RETRIES_BASE, HELP_ARG_PROXYNODOWN, HELP_ARG_NOCOLORS, HELP_ARG_DURATION,
+    HELP_ARG_SOLVE_TAG_CONFLICTS,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -160,6 +161,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-session_id', default=None, help=HELP_ARG_SESSION_ID, type=valid_session_id)
     parser_or_group.add_argument('-script', '--download-scenario', default=None, help=HELP_ARG_DWN_SCENARIO, type=DownloadScenario)
     parser_or_group.add_argument('--store-continue-cmdfile', action=ACTION_STORE_TRUE, help=HELP_ARG_STORE_CONTINUE_CMDFILE)
+    parser_or_group.add_argument('--solve-tag-conflicts', action=ACTION_STORE_TRUE, help=HELP_ARG_SOLVE_TAG_CONFLICTS)
     parser_or_group.add_argument('--report-duplicates', action=ACTION_STORE_TRUE, help=HELP_ARG_REPORT_DUPLICATES)
     parser_or_group.add_argument('--check-uploader', action=ACTION_STORE_TRUE, help=HELP_ARG_CHECK_UPLOADER)
     parser_or_group.add_argument('--check-title-pos', action=ACTION_STORE_TRUE, help='')

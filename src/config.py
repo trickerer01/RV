@@ -58,6 +58,7 @@ class BaseConfig:
         self.throttle: Optional[int] = None
         self.throttle_auto: Optional[bool] = None
         self.store_continue_cmdfile: Optional[bool] = None
+        self.solve_tag_conflicts: Optional[bool] = None
         self.report_duplicates: Optional[bool] = None
         self.check_uploader: Optional[bool] = None
         self.check_title_pos: Optional[bool] = None
@@ -123,6 +124,7 @@ class BaseConfig:
         self.throttle = params.throttle
         self.throttle_auto = params.throttle_auto
         self.store_continue_cmdfile = params.store_continue_cmdfile
+        self.solve_tag_conflicts = params.solve_tag_conflicts
         self.report_duplicates = getattr(params, 'report_duplicates', self.report_duplicates)
         self.check_uploader = getattr(params, 'check_uploader', self.check_uploader)
         self.check_title_pos = getattr(params, 'check_title_pos', self.check_title_pos)
@@ -153,6 +155,7 @@ class BaseConfig:
             '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == self.logging_flags, LOGGING_FLAGS.keys())),
             *(('-quality', self.quality) if self.quality != DEFAULT_QUALITY and not self.scenario else ()),
             *(('-duration', str(self.duration)) if self.duration and not self.scenario else ()),
+            *(('--solve-tag-conflicts',) if self.solve_tag_conflicts else ()),
             *(('--report-duplicates',) if self.report_duplicates else ()),
             *(('--check-title-pos',) if self.check_title_pos else ()),
             *(('--check-title-neg',) if self.check_title_neg else ()),

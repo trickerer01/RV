@@ -137,7 +137,8 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if aucat_count >= 6 and 'compilation' not in tags_raw and 'pmv' not in tags_raw:
         Log.warn(f'{sname} has {len(my_authors):d} arts ({len(va_list):d} VA) and {len(my_categories):d} cats! Assuming compilation')
         tags_raw.append('compilation')
-    solve_tag_conflicts(vi, tags_raw)
+    if Config.solve_tag_conflicts:
+        solve_tag_conflicts(vi, tags_raw)
     if is_filtered_out_by_extra_tags(vi, tags_raw, Config.extra_tags, Config.id_sequence, vi.subfolder, extra_ids):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario else ""} extra tags, skipping...')
         return DownloadResult.FAIL_FILTERED_OUTER if scenario else DownloadResult.FAIL_SKIPPED
