@@ -29,7 +29,7 @@ from logger import Log
 from path_util import file_already_exists, try_rename, is_file_being_used
 from rex import re_media_filename, re_time
 from tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
-from util import has_naming_flag, format_time, normalize_path, get_elapsed_time_i, get_time_seconds, extract_ext
+from util import has_naming_flag, format_time, normalize_path, get_elapsed_time_i, extract_ext, get_time_seconds
 from vinfo import VideoInfo, export_video_info, get_min_max_ids
 
 __all__ = ('download', 'at_interrupt')
