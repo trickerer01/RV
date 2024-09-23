@@ -52,6 +52,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         self.description = ''
         self.comments = ''
         self.uploader = ''
+        self.private = False
         self.expected_size = 0
         self.bytes_written = 0
         self.dstart_time = 0
