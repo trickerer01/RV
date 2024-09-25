@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from __future__ import annotations
 from asyncio.tasks import sleep
 from collections import deque
-from typing import List, Deque, Coroutine, Any, Callable, Optional
+from typing import List, Deque, Coroutine, Any, Callable, Optional, Tuple
 
 from config import Config
 from defs import DownloadResult, QUALITIES
@@ -46,6 +46,8 @@ class VideoScanWorker:
         self._scanned_items: Deque[VideoInfo] = deque()
         self._task_finish_callback: Optional[Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]]] = None
 
+        self._id_gaps: List[Tuple[int, int]] = list()
+
     def _extend_with_extra(self) -> None:
         extra_cur = Config.lookahead - self._404_counter
         if extra_cur > 0:
@@ -71,6 +73,10 @@ class VideoScanWorker:
         else:
             assert self._task_finish_callback
             await self._task_finish_callback(vi, result)
+
+        if Config.detect_id_gaps and Config.is_pages is False and result != DownloadResult.FAIL_NOT_FOUND and self._404_counter:
+            self._id_gaps.append((vi.id - self._404_counter, vi.id))
+
         self._404_counter = self._404_counter + 1 if result == DownloadResult.FAIL_NOT_FOUND else 0
         if len(self._seq) == 1 and not not Config.lookahead:
             self._extend_with_extra()
@@ -82,6 +88,18 @@ class VideoScanWorker:
             await self._at_scan_finish(self._seq[0], result)
             self._seq.popleft()
         Log.debug('[queue] scanner thread stop: scan complete')
+        if self._id_gaps:
+            gap_strings = list()
+            mod3_count = 0
+            for gstart, gstop in self._id_gaps[1:]:
+                is_mod3 = (gstop + 1 - gstart) % 3 == 0
+                mod3_count += 1 if is_mod3 else 0
+                gstring = f'({gstart:d} - {gstop:d}) {"(%3)!" if is_mod3 else ""}'
+                gap_strings.append(gstring)
+            n = '\n - '
+            Log.debug(f'[gaps scanner] detected {len(self._id_gaps):d} id gaps:{n}{n.join(gap_strings)}')
+            if mod3_count > 0 and mod3_count + 1 == len(self._id_gaps):
+                Log.debug('[gaps scanner] all gaps are (%3)!')
 
     def done(self) -> bool:
         return self.get_workload_size() == 0

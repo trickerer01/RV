@@ -83,6 +83,7 @@ class BaseConfig:
         self.get_maxid: Optional[bool] = None
         # extras (can't be set through cmdline arguments)
         self.nodelay = False
+        self.detect_id_gaps = False
 
     def read(self, params: Namespace, pages: bool) -> None:
         self.is_pages = pages
