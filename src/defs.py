@@ -61,7 +61,7 @@ SITE_AJAX_REQUEST_MODEL_PAGE = b64decode(
 """Params required: **artist_name**, **page** - **str**, **int**\n
 Ex. SITE_AJAX_REQUEST_MODEL_PAGE % ('gray', 1)"""
 
-USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.6 Firefox/102.0 PaleMoon/33.0.1'
+USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.7 Firefox/102.0 PaleMoon/33.3.1'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
 
 # untagged videos download policy
