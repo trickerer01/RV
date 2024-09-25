@@ -9,6 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from __future__ import annotations
 from asyncio.tasks import sleep
 from collections import deque
+from contextlib import suppress
 from typing import List, Deque, Coroutine, Any, Callable, Optional, Tuple
 
 from config import Config
@@ -71,6 +72,8 @@ class VideoScanWorker:
         if result == DownloadResult.SUCCESS:
             self._scanned_items.append(vi)
         else:
+            if result == DownloadResult.FAIL_NOT_FOUND:
+                vi.set_flag(VideoInfo.Flags.RETURNED_404)
             assert self._task_finish_callback
             await self._task_finish_callback(vi, result)
 
@@ -126,6 +129,10 @@ class VideoScanWorker:
         while not self._scanned_items and not self.done():
             await sleep(0.1)
         return self._scanned_items.popleft() if self._scanned_items else None
+
+    def find_vinfo(self, id_: int) -> Optional[VideoInfo]:
+        with suppress(StopIteration):
+            return next(filter(lambda vi: vi.id == id_, self._original_sequence))
 
 #
 #

@@ -37,6 +37,7 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         ALREADY_EXISTED_EXACT = 0x1
         ALREADY_EXISTED_SIMILAR = 0x2
         FILE_WAS_CREATED = 0x4
+        RETURNED_404 = 0x8
 
     def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='', m_duration=0) -> None:
         self._id = m_id or 0

@@ -62,6 +62,19 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     rating = vi.rating
     score = ''
 
+    predict_gap1 = Config.predict_id_gaps and 3400000 <= vi.id <= 3900000 and vi.id not in scn.get_extra_ids()
+    if predict_gap1:
+        vi_prev1 = scn.find_vinfo(vi.id - 1)
+        vi_prev2 = scn.find_vinfo(vi.id - 2)
+        if vi_prev1 and vi_prev2:
+            f_404s = [vip.has_flag(VideoInfo.Flags.RETURNED_404) for vip in (vi_prev1, vi_prev2)]
+            skip = f_404s[0] is not f_404s[1]
+        else:
+            skip = vi_prev1 and not vi_prev1.has_flag(VideoInfo.Flags.RETURNED_404)
+        if skip:
+            Log.warn(f'Id gap prediction forces error 404 for {sname}, skipping...')
+            return DownloadResult.FAIL_NOT_FOUND
+
     vi.set_state(VideoInfo.State.SCANNING)
     a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + vi.id % 10:d}', session=dwn.session)
     if a_html is None:
@@ -71,6 +84,17 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if a_html.find('title', string='404 Not Found'):
         Log.error(f'Got error 404 for {sname}, skipping...')
         return DownloadResult.FAIL_NOT_FOUND
+
+    if predict_gap1:
+        # find previous valid id and check the offset
+        id_dec = 3
+        vi_prev_x = scn.find_vinfo(vi.id - id_dec)
+        while vi_prev_x and vi_prev_x.has_flag(VideoInfo.Flags.RETURNED_404):
+            id_dec += 1
+            vi_prev_x = scn.find_vinfo(vi.id - id_dec)
+        if vi_prev_x and (id_dec % 3) != 0:
+            Log.error(f'Error: id gap predictor encountered unexpected valid post offset. Disabling prediction!')
+            Config.predict_id_gaps = False
 
     if not vi.title:
         titleh1 = a_html.find('h1', class_='title_video')

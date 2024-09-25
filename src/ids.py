@@ -43,6 +43,18 @@ async def main(args: Sequence[str]) -> None:
     if find_and_resolve_config_conflicts() is True:
         await sleep(3.0)
 
+    orig_sequence_len = len(Config.id_sequence)
+    removed_ids = set()
+    ridx: int
+    for ridx in reversed(range(len(Config.id_sequence))):
+        if 236 <= Config.id_sequence[ridx] <= 3045049:
+            if not removed_ids:
+                Log.warn('Warning: found ids known to be non-existent. Erasing from sequence...')
+            removed_ids.add(Config.id_sequence[ridx])
+            del Config.id_sequence[ridx]
+    if removed_ids:
+        Log.warn(f'Removed {len(removed_ids):d} / {orig_sequence_len:d} known to be non-existent ids!')
+
     v_entries = [VideoInfo(idi) for idi in Config.id_sequence]
     orig_count = len(v_entries)
 

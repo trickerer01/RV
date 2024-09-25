@@ -69,6 +69,7 @@ class BaseConfig:
         self.scan_all_pages: Optional[bool] = None
         self.use_id_sequence: Optional[bool] = None
         self.lookahead: Optional[int] = None
+        self.predict_id_gaps: Optional[bool] = None
         self.search: Optional[str] = None
         self.search_tags: Optional[str] = None
         self.search_arts: Optional[str] = None
@@ -110,7 +111,7 @@ class BaseConfig:
         self.skip_empty_lists = params.skip_empty_lists
         self.save_screenshots = params.dump_screenshots
         self.extra_tags = params.extra_tags
-        self.id_sequence = []
+        self.id_sequence = [0] * 0
         self.scenario = params.download_scenario
         self.naming_flags = params.naming
         self.logging_flags = params.log_level
@@ -136,6 +137,7 @@ class BaseConfig:
         self.scan_all_pages = getattr(params, 'scan_all_pages', self.scan_all_pages)
         self.use_id_sequence = getattr(params, 'use_id_sequence', self.use_id_sequence)
         self.lookahead = getattr(params, 'lookahead', self.lookahead)
+        self.predict_id_gaps = getattr(params, 'predict_id_gaps', self.predict_id_gaps)
         self.search = getattr(params, 'search', self.search)
         self.search_tags = getattr(params, 'search_tag', '')
         self.search_arts = getattr(params, 'search_art', '')
@@ -156,6 +158,7 @@ class BaseConfig:
             '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == self.logging_flags, LOGGING_FLAGS.keys())),
             *(('-quality', self.quality) if self.quality != DEFAULT_QUALITY and not self.scenario else ()),
             *(('-duration', str(self.duration)) if self.duration and not self.scenario else ()),
+            *(('--predict-id-gaps',) if self.predict_id_gaps else ()),
             *(('--solve-tag-conflicts',) if self.solve_tag_conflicts else ()),
             *(('--report-duplicates',) if self.report_duplicates else ()),
             *(('--check-title-pos',) if self.check_title_pos else ()),

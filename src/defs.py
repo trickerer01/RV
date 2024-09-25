@@ -188,6 +188,12 @@ HELP_ARG_LOOKAHEAD = (
     'Continue scanning indefinitely after reaching end id until number of non-existing videos encountered in a row'
     ' reaches this number'
 )
+HELP_ARG_PREDICT_ID_GAPS = (
+    'Enable ids known to be non-existent prediction. When video is uploaded to the website post id usually gets incremented more than once.'
+    ' This options allows to skip gaps within id ranges known to contain them, this may cut scan time by up to -66%%.'
+    ' Automatically disables itself if encounters a contradicting post validity sequence.'
+    ' WARNING: unsafe - may skip valid posts (not trying to request post info), use at your own risk'
+)
 HELP_ARG_IDSEQUENCE = (
     'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence among'
     ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'

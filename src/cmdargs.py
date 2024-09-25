@@ -22,7 +22,7 @@ from defs import (
     MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC, HELP_ARG_ID_START, HELP_ARG_ID_COUNT, HELP_ARG_ID_END,
     HELP_ARG_PAGE_START, HELP_ARG_PAGE_COUNT, HELP_ARG_PAGE_END, HELP_ARG_REPORT_DUPLICATES, HELP_ARG_DUMP_SCREENSHOTS,
     MAX_DEST_SCAN_UPLEVELS_DEFAULT, HELP_ARG_RETRIES, CONNECT_RETRIES_BASE, HELP_ARG_PROXYNODOWN, HELP_ARG_NOCOLORS, HELP_ARG_DURATION,
-    HELP_ARG_SOLVE_TAG_CONFLICTS,
+    HELP_ARG_SOLVE_TAG_CONFLICTS, HELP_ARG_PREDICT_ID_GAPS,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -181,6 +181,7 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help=HELP_ARG_ID_COUNT, type=positive_nonzero_int)
     arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help=HELP_ARG_ID_END, type=positive_nonzero_int)
     par_cmd.add_argument('-lookahead', metavar='#number', default=0, help=HELP_ARG_LOOKAHEAD, type=positive_nonzero_int)
+    par_cmd.add_argument('-gpred', '--predict-id-gaps', action=ACTION_STORE_TRUE, help=HELP_ARG_PREDICT_ID_GAPS)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
 
     add_common_args(par_cmd)
