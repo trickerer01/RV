@@ -13,7 +13,7 @@ from typing import Iterable
 from config import Config
 from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL, DEFAULT_EXT
 from logger import Log
-from rex import re_replace_symbols, re_ext
+from rex import re_ext
 from version import APP_NAME, APP_VERSION
 
 
@@ -52,9 +52,23 @@ def normalize_path(basepath: str, append_slash=True) -> str:
     return normalized_path
 
 
+def sanitize_filename(filename_base: str) -> str:
+    def char_replace(char: str) -> str:
+        if char in '\n\r\t"*:<>?|/\\':
+            return {'/': '\u29f8', '\\': '\u29f9', '\n': '', '\r': '', '\t': ''}.get(char, chr(ord(char) + 0xfee0))
+        elif ord(char) < 32 or ord(char) == 127:
+            char = ''
+        return char
+
+    filename = ''.join(map(char_replace, filename_base)).replace('\0', '_')
+    while '__' in filename:
+        filename = filename.replace('__', '_')
+    return filename.strip('_')
+
+
 def normalize_filename(filename: str, base_path: str) -> str:
     """Returns full path to a file, normalizing base path and removing disallowed symbols from file name"""
-    return f'{normalize_path(base_path)}{re_replace_symbols.sub("_", filename)}'
+    return f'{normalize_path(base_path)}{sanitize_filename(filename)}'
 
 
 def extract_ext(href: str) -> str:
