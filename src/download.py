@@ -62,7 +62,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     rating = vi.rating
     score = ''
 
-    predict_gap1 = Config.predict_id_gaps and 3400000 <= vi.id <= 3900000 and vi.id not in scn.get_extra_ids()
+    predict_gap1 = Config.predict_id_gaps and 3400000 <= vi.id <= 3900000
     if predict_gap1:
         vi_prev1 = scn.find_vinfo(vi.id - 1)
         vi_prev2 = scn.find_vinfo(vi.id - 2)
