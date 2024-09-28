@@ -93,7 +93,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             id_dec += 1
             vi_prev_x = scn.find_vinfo(vi.id - id_dec)
         if vi_prev_x and (id_dec % 3) != 0:
-            Log.error(f'Error: id gap predictor encountered unexpected valid post offset. Disabling prediction!')
+            Log.error('Error: id gap predictor encountered unexpected valid post offset. Disabling prediction!')
             Config.predict_id_gaps = False
 
     if not vi.title:
