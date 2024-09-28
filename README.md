@@ -1,10 +1,10 @@
 # RV
 
 ### Huh?
-RV is a video downloader with a lot of features, most of which are filters for fine tuning your search
+RV is a video downloader with a lot of features, most of which are filters for fine-tuning your search
 
 ### How to use
-##### Python 3.7 or greater required
+##### Python 3.9 or greater required
 - RV is a cmdline tool, no GUI
 - It consists of 2 main download modules: `pages.py` for pages scanning, `ids.py` ‒ for video ids traversal
 - See `requirements.txt` for additional dependencies. Install with:
