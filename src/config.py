@@ -25,7 +25,7 @@ __all__ = ('Config',)
 class BaseConfig:
     """Parameters container for params used in both **pages** and **ids** modules"""
     def __init__(self) -> None:
-        self.is_pages = False
+        self.is_pages: bool = False
         self.dest_base: str | None = None
         self.proxy: str | None = None
         self.download_without_proxy: bool | None = None
@@ -35,7 +35,8 @@ class BaseConfig:
         self.quality: Quality | None = None
         self.duration: Duration | None = None
         self.untagged_policy: str | None = None
-        self.folder_scan_depth = self.folder_scan_levelup = 0
+        self.folder_scan_depth: int = 0
+        self.folder_scan_levelup: int = 0
         self.download_mode: str | None = None
         self.continue_mode: bool | None = None
         self.keep_unfinished: bool | None = None
@@ -49,12 +50,16 @@ class BaseConfig:
         self.extra_tags: list[str] | None = None
         self.id_sequence: list[int] | None = None
         self.scenario: DownloadScenario | None = None
-        self.naming_flags = self.logging_flags = 0
+        self.naming_flags: int = 0
+        self.logging_flags: int = 0
         self.nocolors: bool | None = None
-        self.start = self.end = self.start_id = self.end_id = 0
+        self.start: int = 0
+        self.end: int = 0
+        self.start_id: int = 0
+        self.end_id: int = 0
         self._timeout: float | None = None
         self.timeout: ClientTimeout | None = None
-        self.retries = 0
+        self.retries: int = 0
         self.throttle: int | None = None
         self.throttle_auto: bool | None = None
         self.store_continue_cmdfile: bool | None = None
@@ -83,8 +88,8 @@ class BaseConfig:
         self.model: str | None = None
         self.get_maxid: bool | None = None
         # extras (can't be set through cmdline arguments)
-        self.nodelay = False
-        self.detect_id_gaps = False
+        self.nodelay: bool = False
+        self.detect_id_gaps: bool = False
 
     def read(self, params: Namespace, pages: bool) -> None:
         self.is_pages = pages

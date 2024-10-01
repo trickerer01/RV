@@ -58,7 +58,7 @@ class DownloadScenario(object):
     def __init__(self, fmt_str: str) -> None:
         assert fmt_str
 
-        self.fmt_str = fmt_str
+        self.fmt_str: str = fmt_str
         self.queries: list[SubQueryParams] = list()
 
         parser = ArgumentParser(add_help=False)

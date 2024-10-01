@@ -43,25 +43,25 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
     def __init__(self, m_id: int, m_title='', m_link='', m_subfolder='', m_filename='', m_rating='', m_duration=0) -> None:
         self._id = m_id or 0
 
-        self.title = m_title or ''
-        self.link = m_link or ''
-        self.subfolder = m_subfolder or ''
-        self.filename = m_filename or ''
-        self.rating = m_rating or ''
-        self.duration = m_duration or 0
+        self.title: str = m_title or ''
+        self.link: str = m_link or ''
+        self.subfolder: str = m_subfolder or ''
+        self.filename: str = m_filename or ''
+        self.rating: str = m_rating or ''
+        self.duration: int = m_duration or 0
         self.quality: Quality = Config.quality or DEFAULT_QUALITY
-        self.tags = ''
-        self.description = ''
-        self.comments = ''
-        self.uploader = ''
-        self.private = False
-        self.expected_size = 0
-        self.bytes_written = 0
-        self.dstart_time = 0
-        self.start_size = 0
-        self.start_time = 0
-        self.last_check_size = 0
-        self.last_check_time = 0
+        self.tags: str = ''
+        self.description: str = ''
+        self.comments: str = ''
+        self.uploader: str = ''
+        self.private: bool = False
+        self.expected_size: int = 0
+        self.bytes_written: int = 0
+        self.dstart_time: int = 0
+        self.start_size: int = 0
+        self.start_time: int = 0
+        self.last_check_size: int = 0
+        self.last_check_time: int = 0
 
         self._state = VideoInfo.State.NEW
         self._flags = VideoInfo.Flags.NONE
