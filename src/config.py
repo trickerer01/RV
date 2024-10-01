@@ -6,8 +6,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from __future__ import annotations
 from argparse import Namespace
-from typing import Optional, List, Union
 
 from aiohttp import ClientTimeout
 
@@ -26,62 +26,62 @@ class BaseConfig:
     """Parameters container for params used in both **pages** and **ids** modules"""
     def __init__(self) -> None:
         self.is_pages = False
-        self.dest_base: Optional[str] = None
-        self.proxy: Optional[str] = None
-        self.download_without_proxy: Optional[bool] = None
-        self.session_id: Optional[str] = None
-        self.min_rating: Optional[int] = None
-        self.min_score: Optional[int] = None
-        self.quality: Optional[Quality] = None
-        self.duration: Optional[Duration] = None
-        self.untagged_policy: Optional[str] = None
+        self.dest_base: str | None = None
+        self.proxy: str | None = None
+        self.download_without_proxy: bool | None = None
+        self.session_id: str | None = None
+        self.min_rating: int | None = None
+        self.min_score: int | None = None
+        self.quality: Quality | None = None
+        self.duration: Duration | None = None
+        self.untagged_policy: str | None = None
         self.folder_scan_depth = self.folder_scan_levelup = 0
-        self.download_mode: Optional[str] = None
-        self.continue_mode: Optional[bool] = None
-        self.keep_unfinished: Optional[bool] = None
-        self.no_rename_move: Optional[bool] = None
-        self.save_tags: Optional[bool] = None
-        self.save_descriptions: Optional[bool] = None
-        self.save_comments: Optional[bool] = None
-        self.merge_lists: Optional[bool] = None
-        self.skip_empty_lists: Optional[bool] = None
-        self.save_screenshots: Optional[bool] = None
-        self.extra_tags: Optional[List[str]] = None
-        self.id_sequence: Optional[List[int]] = None
-        self.scenario: Optional[DownloadScenario] = None
+        self.download_mode: str | None = None
+        self.continue_mode: bool | None = None
+        self.keep_unfinished: bool | None = None
+        self.no_rename_move: bool | None = None
+        self.save_tags: bool | None = None
+        self.save_descriptions: bool | None = None
+        self.save_comments: bool | None = None
+        self.merge_lists: bool | None = None
+        self.skip_empty_lists: bool | None = None
+        self.save_screenshots: bool | None = None
+        self.extra_tags: list[str] | None = None
+        self.id_sequence: list[int] | None = None
+        self.scenario: DownloadScenario | None = None
         self.naming_flags = self.logging_flags = 0
-        self.nocolors: Optional[bool] = None
+        self.nocolors: bool | None = None
         self.start = self.end = self.start_id = self.end_id = 0
-        self._timeout: Optional[float] = None
-        self.timeout: Optional[ClientTimeout] = None
+        self._timeout: float | None = None
+        self.timeout: ClientTimeout | None = None
         self.retries = 0
-        self.throttle: Optional[int] = None
-        self.throttle_auto: Optional[bool] = None
-        self.store_continue_cmdfile: Optional[bool] = None
-        self.solve_tag_conflicts: Optional[bool] = None
-        self.report_duplicates: Optional[bool] = None
-        self.check_uploader: Optional[bool] = None
-        self.check_title_pos: Optional[bool] = None
-        self.check_title_neg: Optional[bool] = None
-        self.check_description_pos: Optional[bool] = None
-        self.check_description_neg: Optional[bool] = None
+        self.throttle: int | None = None
+        self.throttle_auto: bool | None = None
+        self.store_continue_cmdfile: bool | None = None
+        self.solve_tag_conflicts: bool | None = None
+        self.report_duplicates: bool | None = None
+        self.check_uploader: bool | None = None
+        self.check_title_pos: bool | None = None
+        self.check_title_neg: bool | None = None
+        self.check_description_pos: bool | None = None
+        self.check_description_neg: bool | None = None
         # module-specific params (pages only or ids only)
-        self.scan_all_pages: Optional[bool] = None
-        self.use_id_sequence: Optional[bool] = None
-        self.lookahead: Optional[int] = None
-        self.predict_id_gaps: Optional[bool] = None
-        self.search: Optional[str] = None
-        self.search_tags: Optional[str] = None
-        self.search_arts: Optional[str] = None
-        self.search_cats: Optional[str] = None
-        self.search_rule_tag: Optional[str] = None
-        self.search_rule_art: Optional[str] = None
-        self.search_rule_cat: Optional[str] = None
-        self.playlist_id: Optional[int] = None
-        self.playlist_name: Optional[str] = None
-        self.uploader: Optional[int] = None
-        self.model: Optional[str] = None
-        self.get_maxid: Optional[bool] = None
+        self.scan_all_pages: bool | None = None
+        self.use_id_sequence: bool | None = None
+        self.lookahead: int | None = None
+        self.predict_id_gaps: bool | None = None
+        self.search: str | None = None
+        self.search_tags: str | None = None
+        self.search_arts: str | None = None
+        self.search_cats: str | None = None
+        self.search_rule_tag: str | None = None
+        self.search_rule_art: str | None = None
+        self.search_rule_cat: str | None = None
+        self.playlist_id: int | None = None
+        self.playlist_name: str | None = None
+        self.uploader: int | None = None
+        self.model: str | None = None
+        self.get_maxid: bool | None = None
         # extras (can't be set through cmdline arguments)
         self.nodelay = False
         self.detect_id_gaps = False
@@ -152,7 +152,7 @@ class BaseConfig:
         self.model = getattr(params, 'model', self.model)
         self.get_maxid = getattr(params, 'get_maxid', self.get_maxid)
 
-    def make_continue_arguments(self) -> List[Union[None, str, int]]:
+    def make_continue_arguments(self) -> list[None | str | int]:
         arglist = [
             '-path', self.dest_base, '-continue', '--store-continue-cmdfile',
             '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == self.logging_flags, LOGGING_FLAGS.keys())),
@@ -194,7 +194,7 @@ class BaseConfig:
         return arglist
 
     @property
-    def utp(self) -> Optional[str]:
+    def utp(self) -> str | None:
         return self.untagged_policy
 
     @utp.setter
@@ -202,11 +202,11 @@ class BaseConfig:
         self.untagged_policy = value
 
     @property
-    def dm(self) -> Optional[str]:
+    def dm(self) -> str | None:
         return self.download_mode
 
 
-Config = BaseConfig()
+Config: BaseConfig = BaseConfig()
 
 #
 #

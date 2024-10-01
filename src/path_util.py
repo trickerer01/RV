@@ -7,7 +7,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from os import path, listdir, rename, makedirs, getpid
-from typing import List, Dict, Tuple, MutableSequence
+from collections.abc import MutableSequence
 
 from psutil import Error as PSError, process_iter
 
@@ -20,8 +20,8 @@ from vinfo import VideoInfo
 
 __all__ = ('file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items', 'is_file_being_used')
 
-found_filenames_dict: Dict[str, List[str]] = dict()
-media_matches_cache: Dict[str, Tuple[str, Quality]] = dict()
+found_filenames_dict: dict[str, list[str]] = dict()
+media_matches_cache: dict[str, tuple[str, Quality]] = dict()
 
 
 def report_duplicates() -> None:
@@ -100,7 +100,7 @@ def scan_dest_folder() -> None:
         report_duplicates()
 
 
-def get_media_file_match(fname: str) -> Tuple[str, Quality]:
+def get_media_file_match(fname: str) -> tuple[str, Quality]:
     if fname not in media_matches_cache:
         f_match = re_media_filename.match(fname)
         f_id, f_quality = (f_match.group(1), Quality(f_match.group(2) or '')) if f_match else ('', '')
@@ -126,7 +126,7 @@ def file_already_exists(idi: int, quality: Quality, check_folder=True) -> str:
     return ''
 
 
-def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> List[str]:
+def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> list[str]:
     orig_file_names = found_filenames_dict.get(base_folder)
     folder_files = list()
     if path.isdir(base_folder) and orig_file_names is not None:
@@ -137,7 +137,7 @@ def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> L
     return folder_files
 
 
-def file_already_exists_arr(idi: int, quality: Quality) -> List[str]:
+def file_already_exists_arr(idi: int, quality: Quality) -> list[str]:
     found_files = list()
     for fullpath in found_filenames_dict:
         found_files.extend(file_exists_in_folder_arr(fullpath, idi, quality or Config.quality))

@@ -9,7 +9,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from asyncio import Task, sleep, get_running_loop, as_completed
 from os import path, stat, remove, makedirs
 from random import uniform as frand
-from typing import List, Dict
 from urllib.parse import urlparse
 
 from aiofile import async_open
@@ -35,7 +34,7 @@ from vinfo import VideoInfo, export_video_info, get_min_max_ids
 __all__ = ('download', 'at_interrupt')
 
 
-async def download(sequence: List[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
+async def download(sequence: list[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
     minid, maxid = get_min_max_ids(sequence)
     eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(sequence))
     Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n'
@@ -57,7 +56,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     scn = VideoScanWorker.get()
     scenario = Config.scenario
     sname = vi.sname
-    extra_ids: List[int] = scn.get_extra_ids() if scn else []
+    extra_ids: list[int] = scn.get_extra_ids() if scn else []
     my_tags = 'no_tags'
     rating = vi.rating
     score = ''
@@ -384,7 +383,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                         vi.set_state(VideoInfo.State.DONE)
                 break
 
-            hkwargs: Dict[str, Dict[str, str]] = {'headers': {'Range': f'bytes={file_size:d}-'}} if file_size > 0 else {}
+            hkwargs: dict[str, dict[str, str]] = {'headers': {'Range': f'bytes={file_size:d}-'}} if file_size > 0 else {}
             ckwargs = dict(allow_redirects=not Config.proxy or not Config.download_without_proxy)
             r = await wrap_request(dwn.session, 'GET', vi.link, **ckwargs, **hkwargs)
             while r.status in (301, 302):

@@ -6,10 +6,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from __future__ import annotations
 from asyncio import CancelledError, Task, sleep, get_running_loop
 from collections import deque
 from os import path, stat
-from typing import Optional, Deque, Union
 
 from aiohttp import ClientResponse
 
@@ -25,10 +25,10 @@ class ThrottleChecker:
         self._vi = vi
         self._init_size = 0
         self._slow_download_amount_threshold = ThrottleChecker._orig_threshold()
-        self._interrupted_speeds: Deque[float] = deque(maxlen=3)
-        self._speeds: Deque[str] = deque(maxlen=5)
-        self._response: Optional[ClientResponse] = None
-        self._cheker: Optional[Task] = None
+        self._interrupted_speeds = deque[float](maxlen=3)
+        self._speeds = deque[str](maxlen=5)
+        self._response: ClientResponse | None = None
+        self._cheker: Task | None = None
 
     def prepare(self, response: ClientResponse, init_size: int) -> None:
         self._init_size = init_size
@@ -50,7 +50,7 @@ class ThrottleChecker:
         return ThrottleChecker._calc_threshold(Config.throttle)
 
     @staticmethod
-    def _calc_threshold(speed: Union[int, float]) -> int:
+    def _calc_threshold(speed: int | float) -> int:
         return max(1, int(DOWNLOAD_STATUS_CHECK_TIMER * speed * Mem.KB))
 
     @staticmethod

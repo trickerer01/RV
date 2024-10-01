@@ -9,8 +9,9 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from __future__ import annotations
 from asyncio.tasks import sleep
 from collections import deque
+from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from typing import List, Deque, Coroutine, Any, Callable, Optional, Tuple
+from typing import Any
 
 from config import Config
 from defs import DownloadResult, QUALITIES
@@ -27,13 +28,13 @@ class VideoScanWorker:
     The main purpose of it being separated from VideoDownloadWorker is to scan videos independently,
     being able to continue even if downloader's active queue is full
     """
-    _instance: Optional[VideoScanWorker] = None
+    _instance: VideoScanWorker | None = None
 
     @staticmethod
-    def get() -> Optional[VideoScanWorker]:
+    def get() -> VideoScanWorker | None:
         return VideoScanWorker._instance
 
-    def __init__(self, sequence: List[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]]) -> None:
+    def __init__(self, sequence: list[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]]) -> None:
         assert VideoScanWorker._instance is None
         VideoScanWorker._instance = self
 
@@ -43,11 +44,11 @@ class VideoScanWorker:
 
         self._orig_count = len(self._seq)
         self._404_counter = 0
-        self._extra_ids: List[int] = list()
-        self._scanned_items: Deque[VideoInfo] = deque()
-        self._task_finish_callback: Optional[Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]]] = None
+        self._extra_ids: list[int] = list()
+        self._scanned_items = deque[VideoInfo]()
+        self._task_finish_callback: Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]] | None = None
 
-        self._id_gaps: List[Tuple[int, int]] = list()
+        self._id_gaps: list[tuple[int, int]] = list()
 
     def _extend_with_extra(self) -> None:
         extra_cur = Config.lookahead - self._404_counter
@@ -110,7 +111,7 @@ class VideoScanWorker:
     def get_workload_size(self) -> int:
         return len(self._seq) + len(self._scanned_items)
 
-    def get_workload(self) -> List[VideoInfo]:
+    def get_workload(self) -> list[VideoInfo]:
         return list(self._seq) + list(self._scanned_items)
 
     def get_prescanned_count(self) -> int:
@@ -119,18 +120,18 @@ class VideoScanWorker:
     def get_extra_count(self) -> int:
         return len(self._extra_ids)
 
-    def get_extra_ids(self) -> List[int]:
+    def get_extra_ids(self) -> list[int]:
         return self._extra_ids
 
     def register_task_finish_callback(self, callack: Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]]) -> None:
         self._task_finish_callback = callack
 
-    async def try_fetch_next(self) -> Optional[VideoInfo]:
+    async def try_fetch_next(self) -> VideoInfo | None:
         while not self._scanned_items and not self.done():
             await sleep(0.1)
         return self._scanned_items.popleft() if self._scanned_items else None
 
-    def find_vinfo(self, id_: int) -> Optional[VideoInfo]:
+    def find_vinfo(self, id_: int) -> VideoInfo | None:
         with suppress(StopIteration):
             return next(filter(lambda vi: vi.id == id_, self._original_sequence))
 

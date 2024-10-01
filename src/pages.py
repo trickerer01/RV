@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from asyncio import run as run_async, sleep
-from typing import Sequence
+from collections.abc import Sequence
 
 from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config

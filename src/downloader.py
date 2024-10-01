@@ -10,8 +10,9 @@ from __future__ import annotations
 from asyncio import Lock as AsyncLock
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import sleep, as_completed
+from collections.abc import Iterable, Callable, Coroutine
 from os import path, remove, makedirs, stat
-from typing import List, Coroutine, Any, Callable, Optional, Iterable, Union
+from typing import Any
 
 from aiohttp import ClientSession
 
@@ -33,10 +34,10 @@ class VideoDownloadWorker:
     Async queue wrapper which binds list of lists of arguments to a download function call and processes them
     asynchronously with a limit of simulteneous downloads defined by MAX_VIDEOS_QUEUE_SIZE
     """
-    _instance: Optional[VideoDownloadWorker] = None
+    _instance: VideoDownloadWorker | None = None
 
     @staticmethod
-    def get() -> Optional[VideoDownloadWorker]:
+    def get() -> VideoDownloadWorker | None:
         return VideoDownloadWorker._instance
 
     def __init__(self, sequence: Iterable[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
@@ -58,9 +59,9 @@ class VideoDownloadWorker:
         self._404_count = 0
         self._minmax_id = get_min_max_ids(self._seq)
 
-        self._downloads_active: List[VideoInfo] = list()
-        self._writes_active: List[str] = list()
-        self._failed_items: List[int] = list()
+        self._downloads_active: list[VideoInfo] = list()
+        self._writes_active: list[str] = list()
+        self._failed_items: list[int] = list()
 
         self._total_queue_size_last = 0
         self._download_queue_size_last = 0
@@ -236,7 +237,7 @@ class VideoDownloadWorker:
     def session(self) -> ClientSession:
         return self._session
 
-    def is_writing(self, videst: Union[VideoInfo, str]) -> bool:
+    def is_writing(self, videst: VideoInfo | str) -> bool:
         return (videst.my_fullpath if isinstance(videst, VideoInfo) else videst) in self._writes_active
 
     def add_to_writes(self, vi: VideoInfo) -> None:
@@ -251,7 +252,7 @@ class VideoDownloadWorker:
     def get_scanner_workload_size(self) -> int:
         return self._scn.get_workload_size() if self.waiting_for_scanner() else 0
 
-    def get_scanner_workload(self) -> List[VideoInfo]:
+    def get_scanner_workload(self) -> list[VideoInfo]:
         return self._scn.get_workload() if self.waiting_for_scanner() else []
 
     def can_fetch_next(self) -> bool:
@@ -260,7 +261,7 @@ class VideoDownloadWorker:
     def get_workload_size(self) -> int:
         return len(self._seq) + self._queue.qsize() + len(self._downloads_active)
 
-    async def _try_fetch_next(self) -> Optional[VideoInfo]:
+    async def _try_fetch_next(self) -> VideoInfo | None:
         if self._seq:
             vi = self._seq[0]
             del self._seq[0]

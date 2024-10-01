@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from base64 import b64decode
 from datetime import datetime
 from enum import IntEnum
-from typing import TypeVar, Tuple
+from typing import TypeVar
 
 CONNECT_RETRIES_BASE = 50
 CONNECT_TIMEOUT_BASE = 10
@@ -340,7 +340,7 @@ class Pair(ABC):
     PT = TypeVar('PT')
 
     @abstractmethod
-    def __init__(self, vals: Tuple[PT, PT]) -> None:
+    def __init__(self, vals: tuple[PT, PT]) -> None:
         self._first, self._second = vals
         self._fmt = {int: 'd', bool: 'd', float: '.2f'}.get(type(self._first), '')
 
@@ -365,12 +365,12 @@ class Pair(ABC):
 
 
 class IntPair(Pair):
-    def __init__(self, vals: Tuple[int, int]) -> None:
+    def __init__(self, vals: tuple[int, int]) -> None:
         super().__init__(vals)
 
 
 class StrPair(Pair):
-    def __init__(self, vals: Tuple[str, str]) -> None:
+    def __init__(self, vals: tuple[str, str]) -> None:
         super().__init__(vals)
 
 

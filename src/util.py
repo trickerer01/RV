@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import sys
 from datetime import datetime
-from typing import Iterable
+from collections.abc import Iterable
 
 from config import Config
 from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL, DEFAULT_EXT

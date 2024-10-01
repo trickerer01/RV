@@ -6,8 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from re import compile as re_compile
-from typing import Pattern
+from re import Pattern, compile as re_compile
 
 from defs import QUALITIES, EXTENSIONS_V, PREFIX
 

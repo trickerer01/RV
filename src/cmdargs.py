@@ -7,8 +7,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from argparse import ArgumentParser, Namespace, ZERO_OR_MORE
+from collections.abc import Sequence
 from os import path
-from typing import List, Sequence, Tuple
 
 from defs import (
     UTF8, ACTION_STORE_TRUE, HELP_ARG_PATH, HELP_ARG_SEARCH_STR, HELP_ARG_PROXY, HELP_ARG_BEGIN_STOP_ID,
@@ -59,7 +59,7 @@ class HelpPrintExitException(Exception):
     pass
 
 
-def read_cmdfile(cmdfile_path: str) -> List[str]:
+def read_cmdfile(cmdfile_path: str) -> list[str]:
     """Read cmd args from a text file"""
     with open(cmdfile_path, 'rt', encoding=UTF8) as cmdfile:
         args = list()
@@ -119,7 +119,7 @@ def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Se
         raise HelpPrintExitException
 
 
-def create_parsers() -> Tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
+def create_parsers() -> tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
     parser = ArgumentParser(add_help=False)
     subs = parser.add_subparsers()
     par_file = subs.add_parser(PARSER_TITLE_FILE, description='Run using text file containing cmdline', add_help=False)

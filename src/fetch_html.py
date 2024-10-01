@@ -6,9 +6,9 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+from __future__ import annotations
 from asyncio import Lock as AsyncLock, sleep, get_running_loop
 from random import uniform as frand
-from typing import Optional, List
 
 from aiohttp import ClientSession, ClientResponse, TCPConnector, ClientResponseError
 from aiohttp_socks import ProxyConnector
@@ -25,7 +25,7 @@ class RequestQueue:
     """
     Request delayed queue wrapper
     """
-    _queue: List[str] = list()
+    _queue: list[str] = list()
     _ready = True
     _lock = AsyncLock()
 
@@ -46,7 +46,7 @@ class RequestQueue:
             get_running_loop().create_task(RequestQueue._reset())
 
 
-def ensure_conn_closed(r: Optional[ClientResponse]) -> None:
+def ensure_conn_closed(r: ClientResponse | None) -> None:
     if r is not None and not r.closed:
         r.close()
 
@@ -76,7 +76,7 @@ async def wrap_request(s: ClientSession, method: str, url: str, noproxy=False, *
     return r
 
 
-async def fetch_html(url: str, *, tries=0, session: ClientSession) -> Optional[BeautifulSoup]:
+async def fetch_html(url: str, *, tries=0, session: ClientSession) -> BeautifulSoup | None:
     # very basic, minimum validation
     tries = tries or Config.retries
 
