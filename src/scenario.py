@@ -35,7 +35,7 @@ class SubQueryParams(object):
         self.minrating: int = minrating or 0
         self.minscore: int | None = minscore
         self.untagged_policy: str = utp or ''
-        self.id_sequence: list[int] = id_sequence or []
+        self.id_sequence: list[int] = id_sequence or list()
 
     @property
     def utp(self) -> str:

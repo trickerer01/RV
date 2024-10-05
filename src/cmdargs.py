@@ -173,6 +173,11 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
 
 def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     parser, par_file, par_cmd = create_parsers()
+    par_cmd.usage = (
+        '\n       ids.py -start #number -end #number [options...] [extra tags...]'
+        '\n       ids.py -start #number -count #number [options...] [extra tags...]'
+        '\n       ids.py --use-id-sequence [options...] [extra tags...]'
+    )
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     arggr_start_or_seq = par_cmd.add_mutually_exclusive_group(required=True)
@@ -190,6 +195,11 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
 
 def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     parser, par_file, par_cmd = create_parsers()
+    par_cmd.usage = (
+        '\n       pages.py -start #number -end #number [options...] [extra tags...]'
+        '\n       pages.py -start #number -pages #number [options...] [extra tags...]'
+        '\n       pages.py -get_maxid [options...] [extra tags...]'
+    )
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
     par_cmd.add_argument('-start', metavar='#number', default=1, help=HELP_ARG_PAGE_START, type=positive_nonzero_int)
