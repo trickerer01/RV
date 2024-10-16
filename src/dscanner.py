@@ -43,6 +43,7 @@ class VideoScanWorker:
         self._seq = deque(sequence)
 
         self._orig_count = len(self._seq)
+        self._scan_count = 0
         self._404_counter = 0
         self._extra_ids: list[int] = list()
         self._scanned_items = deque[VideoInfo]()
@@ -63,6 +64,7 @@ class VideoScanWorker:
             self._extra_ids.extend(extra_idseq)
 
     async def _at_scan_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
+        self._scan_count += 1
         if result in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_RETRIES,
                       DownloadResult.FAIL_DELETED, DownloadResult.FAIL_FILTERED_OUTER, DownloadResult.FAIL_SKIPPED):
             founditems = list(filter(None, [file_already_exists_arr(vi.id, q) for q in QUALITIES]))
@@ -107,6 +109,9 @@ class VideoScanWorker:
 
     def done(self) -> bool:
         return self.get_workload_size() == 0
+
+    def get_done_count(self) -> int:
+        return self._scan_count
 
     def get_workload_size(self) -> int:
         return len(self._seq) + len(self._scanned_items)

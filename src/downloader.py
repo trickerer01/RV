@@ -126,6 +126,8 @@ class VideoDownloadWorker:
             await sleep(base_sleep_time if len(self._seq) + self._queue.qsize() > 0 or self.waiting_for_scanner() else 1.0)
             queue_size = len(self._seq) + self.get_scanner_workload_size()
             ready_size = self._queue.qsize()
+            scan_count = self.get_scanned_count()
+            extra_count = max(0, scan_count - self._orig_count)
             download_count = len(self._downloads_active)
             write_count = len(self._writes_active)
             queue_last = self._total_queue_size_last
@@ -134,8 +136,9 @@ class VideoDownloadWorker:
             elapsed_seconds = get_elapsed_time_i()
             force_check = elapsed_seconds >= force_check_seconds and elapsed_seconds - last_check_seconds >= force_check_seconds
             if queue_last != queue_size or downloading_last != download_count or write_last != write_count or force_check:
-                scanner_msg = f' (prescanned: {self._scn.get_prescanned_count():d})' if self._scn else ''
-                Log.info(f'[{get_elapsed_time_s()}] queue: {queue_size:d}{scanner_msg}, ready: {ready_size:d}, '
+                scan_msg = f'scanned: {f"{min(scan_count, self._orig_count)}+{extra_count:d}" if Config.lookahead else str(scan_count)}'
+                prescan_msg = f' (prescanned: {self._scn.get_prescanned_count():d})' if self._scn else ''
+                Log.info(f'[{get_elapsed_time_s()}] {scan_msg}, queue: {queue_size:d}{prescan_msg}, ready: {ready_size:d}, '
                          f'active: {download_count:d} (writing: {write_count:d})')
                 last_check_seconds = elapsed_seconds
                 self._total_queue_size_last = queue_size
@@ -248,6 +251,9 @@ class VideoDownloadWorker:
 
     def waiting_for_scanner(self) -> bool:
         return self._scn and not self._scn.done()
+
+    def get_scanned_count(self) -> int:
+        return self._scn.get_done_count()
 
     def get_scanner_workload_size(self) -> int:
         return self._scn.get_workload_size() if self.waiting_for_scanner() else 0
