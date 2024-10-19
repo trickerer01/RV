@@ -118,6 +118,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
 
 7. Interrupt & resume
   - When downloading at large sometimes resulting download queue is so big it's impossible to process within reasonable time period and the process will be inevitably interrupted
+  - There is only one way to make a 'safe' interruption which is to tap 'q' while in active console window and then tap it again after a small time period. This will signal the scanner to skip the rest of its queue and after all remaining downloads get processed the app will exit normally
   - To be able to resume without running the whole search process again use `--store-continue-cmdfile` option. Once initial video queue is formed a special 'continue' file will be stored and periodically updated in base download destination folder
   - Continue file contains cmdline arguments required to resume download, all provided parameters / options / download scenario / extra tags are preserved
   - It is strongly recommended to also include `--continue-mode` and `--keep-unfinished` options when using continue file
