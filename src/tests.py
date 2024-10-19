@@ -127,7 +127,7 @@ class CmdTests(TestCase):
         c5 = BaseConfig()
         c5.read(parsed5, True)
         self.assertEqual('164,3966,5157,5261,5570,5934', c5.search_tags)
-        self.assertEqual('22565,8822', c5.search_arts)
+        self.assertEqual('22565,27156,8822', c5.search_arts)
         self.assertEqual('1433,1970,345,57,73', c5.search_cats)
         self.assertEqual('any', c5.search_rule_tag)
         self.assertEqual('any', c5.search_rule_art)
