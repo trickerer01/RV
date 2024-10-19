@@ -44,20 +44,24 @@ else:
     next_input = partial(sys.stdin.read, 1)
 
 
-async def wait_for_key(key: str, callback: Callable[[], None], *, secondary=False) -> None:
+async def wait_for_key(key: str, count: int, callback: Callable[[], None]) -> None:
     try:
+        stroke_sequence = list[str]()
         with set_terminal_raw():
-            ch = ''
-            while ch != key:
+            while stroke_sequence != [key] * count:
                 await sleep(1.0)
+                if not input_ready():
+                    stroke_sequence.clear()
+                    continue
                 while input_ready():
                     ch = next_input()
-            if secondary:
-                while input_ready():
-                    next_input()
-                callback()
-            else:
-                await wait_for_key(key, callback, secondary=True)
+                    if ch == key:
+                        stroke_sequence.append(ch)
+                    else:
+                        stroke_sequence.clear()
+                        while input_ready():
+                            next_input()
+            callback()
     except CancelledError:
         pass
 

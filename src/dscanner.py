@@ -15,7 +15,10 @@ from contextlib import suppress
 from typing import Any, Optional
 
 from config import Config
-from defs import DownloadResult, QUALITIES, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN, LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, SCAN_CANCEL_KEYSTROKE
+from defs import (
+    DownloadResult, QUALITIES, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN, LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, SCAN_CANCEL_KEYSTROKE,
+    SCAN_CANCEL_KEYCOUNT,
+)
 from input import wait_for_key
 from logger import Log
 from path_util import file_already_exists_arr
@@ -122,7 +125,7 @@ class VideoScanWorker:
 
     async def run(self) -> None:
         Log.debug('[queue] scanner thread start')
-        self._abort_waiter = get_running_loop().create_task(wait_for_key(SCAN_CANCEL_KEYSTROKE, self._on_abort))
+        self._abort_waiter = get_running_loop().create_task(wait_for_key(SCAN_CANCEL_KEYSTROKE, SCAN_CANCEL_KEYCOUNT, self._on_abort))
         while self._seq:
             if self._abort:
                 self._seq.clear()

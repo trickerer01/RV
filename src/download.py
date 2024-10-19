@@ -18,7 +18,7 @@ from config import Config
 from defs import (
     Mem, NamingFlags, DownloadResult, Quality, SITE_AJAX_REQUEST_VIDEO, DOWNLOAD_POLICY_ALWAYS, DOWNLOAD_MODE_TOUCH, PREFIX,
     DOWNLOAD_MODE_SKIP, TAGS_CONCAT_CHAR, SITE, SCREENSHOTS_COUNT,
-    FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY, CONNECT_RETRY_DELAY,
+    FULLPATH_MAX_BASE_LEN, CONNECT_REQUEST_DELAY, CONNECT_RETRY_DELAY, SCAN_CANCEL_KEYSTROKE,
 )
 from downloader import VideoDownloadWorker
 from dscanner import VideoScanWorker
@@ -37,7 +37,8 @@ __all__ = ('download', 'at_interrupt')
 async def download(sequence: list[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
     minid, maxid = get_min_max_ids(sequence)
     eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(sequence))
-    Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...\n'
+    Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...'
+             f'\nPress \'{SCAN_CANCEL_KEYSTROKE}\' twice to stop\n'
              f'\nThis will take at least {eta_min:d} seconds{f" ({format_time(eta_min)})" if eta_min >= 60 else ""}!\n')
     async with session or make_session() as session, make_session(True) as session.np:
         if by_id:
