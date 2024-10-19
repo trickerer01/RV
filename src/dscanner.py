@@ -7,14 +7,16 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from __future__ import annotations
+from asyncio import Task, get_running_loop, CancelledError
 from asyncio.tasks import sleep
 from collections import deque
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from typing import Any
+from typing import Any, Optional
 
 from config import Config
-from defs import DownloadResult, QUALITIES
+from defs import DownloadResult, QUALITIES, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN, LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, SCAN_CANCEL_KEYSTROKE
+from input import wait_for_key
 from logger import Log
 from path_util import file_already_exists_arr
 from vinfo import VideoInfo, get_min_max_ids
@@ -42,28 +44,56 @@ class VideoScanWorker:
         self._func = func
         self._seq = deque(sequence)
 
-        self._orig_count = len(self._seq)
+        self._orig_count = len(self._original_sequence)
         self._scan_count = 0
         self._404_counter = 0
+        self._last_non404_id = self._original_sequence[0].id - 1
         self._extra_ids: list[int] = list()
         self._scanned_items = deque[VideoInfo]()
         self._task_finish_callback: Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]] | None = None
 
+        self._sleep_waiter: Optional[Task] = None
+        self._abort_waiter: Optional[Task] = None
+        self._abort = False
+
         self._id_gaps: list[tuple[int, int]] = list()
 
-    def _extend_with_extra(self) -> None:
-        extra_cur = Config.lookahead - self._404_counter
+    def _on_abort(self) -> None:
+        Log.warn('[queue] scanner thread interrupted, finishing pending tasks...')
+        if self._sleep_waiter:
+            self._sleep_waiter.cancel()
+            self._sleep_waiter: Optional[Task] = None
+        self._abort_waiter: Optional[Task] = None
+        self._abort = True
+
+    @staticmethod
+    async def _sleep_task(sleep_time: int) -> None:
+        try:
+            await sleep(float(sleep_time))
+        except CancelledError:
+            pass
+
+    async def _extend_with_extra(self) -> int:
+        watcher_mode = Config.lookahead < 0 and not not self._extra_ids and self._404_counter >= abs(Config.lookahead)
+        extra_cur = (abs(Config.lookahead) - self._404_counter) if not watcher_mode else abs(Config.lookahead)
         if extra_cur > 0:
-            last_id = Config.end_id + len(self._extra_ids)
+            last_id = (Config.end_id + len(self._extra_ids)) if not watcher_mode else self._last_non404_id
             extra_idseq = [(last_id + i + 1) for i in range(extra_cur)]
             extra_vis = [VideoInfo(idi) for idi in extra_idseq]
             minid, maxid = get_min_max_ids(extra_vis)
-            Log.warn(f'[lookahead] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}')
             self._seq.extend(extra_vis)
             self._original_sequence.extend(extra_vis)
             self._extra_ids.extend(extra_idseq)
+            if not watcher_mode:
+                Log.warn(f'[lookahead] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}')
+            else:
+                rescan_delay = min(LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, max(abs(Config.lookahead) * 12, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN))
+                Log.warn(f'[watcher] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}'
+                         f' (waiting {rescan_delay:d} seconds before rescan)')
+                return rescan_delay
+        return 0
 
-    async def _at_scan_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
+    async def _at_scan_finish(self, vi: VideoInfo, result: DownloadResult) -> int:
         self._scan_count += 1
         if result in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_RETRIES,
                       DownloadResult.FAIL_DELETED, DownloadResult.FAIL_FILTERED_OUTER, DownloadResult.FAIL_SKIPPED):
@@ -84,15 +114,29 @@ class VideoScanWorker:
             self._id_gaps.append((vi.id - self._404_counter, vi.id))
 
         self._404_counter = self._404_counter + 1 if result == DownloadResult.FAIL_NOT_FOUND else 0
+        if result != DownloadResult.FAIL_NOT_FOUND:
+            self._last_non404_id = vi.id
         if len(self._seq) == 1 and not not Config.lookahead:
-            self._extend_with_extra()
+            return await self._extend_with_extra()
+        return 0
 
     async def run(self) -> None:
         Log.debug('[queue] scanner thread start')
+        self._abort_waiter = get_running_loop().create_task(wait_for_key(SCAN_CANCEL_KEYSTROKE, self._on_abort))
         while self._seq:
+            if self._abort:
+                self._seq.clear()
+                continue
             result = await self._func(self._seq[0])
-            await self._at_scan_finish(self._seq[0], result)
+            sleep_time = await self._at_scan_finish(self._seq[0], result)
             self._seq.popleft()
+            if sleep_time:
+                self._sleep_waiter = get_running_loop().create_task(self._sleep_task(sleep_time))
+                await self._sleep_waiter
+                self._sleep_waiter = None
+        if self._abort_waiter:
+            self._abort_waiter.cancel()
+            self._abort_waiter = None
         Log.debug('[queue] scanner thread stop: scan complete')
         if self._id_gaps:
             gap_strings = list()

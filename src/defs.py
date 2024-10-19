@@ -24,6 +24,9 @@ MAX_SCAN_QUEUE_SIZE = 1
 DOWNLOAD_STATUS_CHECK_TIMER = 60
 DOWNLOAD_QUEUE_STALL_CHECK_TIMER = 30
 DOWNLOAD_CONTINUE_FILE_CHECK_TIMER = 30
+SCAN_CANCEL_KEYSTROKE = 'q'
+LOOKAHEAD_WATCH_RESCAN_DELAY_MIN = 300
+LOOKAHEAD_WATCH_RESCAN_DELAY_MAX = 1800
 
 SCREENSHOTS_COUNT = 10
 FULLPATH_MAX_BASE_LEN = 240
@@ -185,8 +188,10 @@ HELP_ARG_PAGE_COUNT = 'Pages count to process'
 HELP_ARG_PAGE_START = 'Start page number. Default is \'1\''
 HELP_ARG_BEGIN_STOP_ID = 'Video id lower / upper bounds filter to only download videos where \'begin_id >= video_id >= stop_id\''
 HELP_ARG_LOOKAHEAD = (
-    'Continue scanning indefinitely after reaching end id until number of non-existing videos encountered in a row'
-    ' reaches this number'
+    f'Continue scanning indefinitely after reaching end id until number of non-existing videos encountered in a row'
+    f' reaches this number.'
+    f' Furthermore, negative value enables watcher mode, periodically re-scanning trailing non-existing videos, this process never finishes'
+    f' on its own but can be interrupted safely by pressing \'{SCAN_CANCEL_KEYSTROKE}\' twice'
 )
 HELP_ARG_PREDICT_ID_GAPS = (
     'Enable ids known to be non-existent prediction. When video is uploaded to the website post id usually gets incremented more than once.'
