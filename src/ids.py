@@ -13,12 +13,12 @@ from collections.abc import Sequence
 from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from download import download, at_interrupt
+from iinfo import VideoInfo
 from logger import Log
 from path_util import prefilter_existing_items
 from tagger import extract_id_or_group
 from util import at_startup
 from validators import find_and_resolve_config_conflicts
-from vinfo import VideoInfo
 
 __all__ = ('main_sync',)
 

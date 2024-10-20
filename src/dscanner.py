@@ -16,13 +16,13 @@ from typing import Any, Optional
 
 from config import Config
 from defs import (
-    DownloadResult, QUALITIES, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN, LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, SCAN_CANCEL_KEYSTROKE,
-    SCAN_CANCEL_KEYCOUNT,
+    DownloadResult, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN, LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, SCAN_CANCEL_KEYSTROKE, SCAN_CANCEL_KEYCOUNT,
+    QUALITIES,
 )
+from iinfo import VideoInfo, get_min_max_ids
 from input import wait_for_key
 from logger import Log
 from path_util import file_already_exists_arr
-from vinfo import VideoInfo, get_min_max_ids
 
 __all__ = ('VideoScanWorker',)
 
@@ -38,6 +38,12 @@ class VideoScanWorker:
     @staticmethod
     def get() -> VideoScanWorker | None:
         return VideoScanWorker._instance
+
+    def __enter__(self) -> VideoScanWorker:
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        VideoScanWorker._instance = None
 
     def __init__(self, sequence: list[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]]) -> None:
         assert VideoScanWorker._instance is None

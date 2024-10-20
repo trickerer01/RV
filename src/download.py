@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import Task, sleep, get_running_loop, as_completed
+from asyncio import Task, sleep, as_completed, get_running_loop
 from os import path, stat, remove, makedirs
 from random import uniform as frand
 from urllib.parse import urlparse
@@ -24,12 +24,12 @@ from downloader import VideoDownloadWorker
 from dscanner import VideoScanWorker
 from dthrottler import ThrottleChecker
 from fetch_html import fetch_html, wrap_request, make_session, ensure_conn_closed
+from iinfo import VideoInfo, export_video_info, get_min_max_ids
 from logger import Log
 from path_util import file_already_exists, try_rename, is_file_being_used
 from rex import re_media_filename, re_time
 from tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
 from util import has_naming_flag, format_time, normalize_path, get_elapsed_time_i, extract_ext, get_time_seconds
-from vinfo import VideoInfo, export_video_info, get_min_max_ids
 
 __all__ = ('download', 'at_interrupt')
 
@@ -41,14 +41,13 @@ async def download(sequence: list[VideoInfo], by_id: bool, filtered_count: int, 
     Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...{interrupt_msg}\n'
              f'\nThis will take at least {eta_min:d} seconds{f" ({format_time(eta_min)})" if eta_min >= 60 else ""}!\n')
     async with session or make_session() as session, make_session(True) as session.np:
-        if by_id:
-            for cv in as_completed([
-                VideoScanWorker(sequence, scan_video).run(),
-                VideoDownloadWorker(sequence, process_video, filtered_count, session).run()
-            ]):
-                await cv
-        else:
-            await VideoDownloadWorker(sequence, download_video, filtered_count, session).run()
+        with (VideoScanWorker(sequence, scan_video) as scn,
+              VideoDownloadWorker(sequence, process_video, filtered_count, session) as dwn):
+            if by_id:
+                for cv in as_completed([scn.run(), dwn.run()]):
+                    await cv
+            else:
+                await dwn.run()
     export_video_info(sequence)
 
 

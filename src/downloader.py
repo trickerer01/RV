@@ -22,9 +22,9 @@ from defs import (
     START_TIME, UTF8,
 )
 from dscanner import VideoScanWorker
+from iinfo import VideoInfo, get_min_max_ids
 from logger import Log
 from util import format_time, get_elapsed_time_i, get_elapsed_time_s, calc_sleep_time
-from vinfo import VideoInfo, get_min_max_ids
 
 __all__ = ('VideoDownloadWorker',)
 
@@ -39,6 +39,12 @@ class VideoDownloadWorker:
     @staticmethod
     def get() -> VideoDownloadWorker | None:
         return VideoDownloadWorker._instance
+
+    def __enter__(self) -> VideoDownloadWorker:
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        VideoDownloadWorker._instance = None
 
     def __init__(self, sequence: Iterable[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
                  filtered_count: int, session: ClientSession) -> None:
@@ -60,7 +66,7 @@ class VideoDownloadWorker:
         self._minmax_id = get_min_max_ids(self._seq)
 
         self._downloads_active: list[VideoInfo] = list()
-        self._writes_active: list[str] = list()
+        self._writes_active: list[VideoInfo] = list()
         self._failed_items: list[int] = list()
 
         self._total_queue_size_last = 0
@@ -240,8 +246,8 @@ class VideoDownloadWorker:
     def session(self) -> ClientSession:
         return self._session
 
-    def is_writing(self, videst: VideoInfo | str) -> bool:
-        return (videst.my_fullpath if isinstance(videst, VideoInfo) else videst) in self._writes_active
+    def is_writing(self, vi: VideoInfo) -> bool:
+        return vi in self._writes_active
 
     def add_to_writes(self, vi: VideoInfo) -> None:
         self._writes_active.append(vi.my_fullpath)

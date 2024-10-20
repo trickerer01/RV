@@ -16,8 +16,8 @@ from aiohttp import ClientResponse
 from config import Config
 from defs import Mem, DOWNLOAD_STATUS_CHECK_TIMER
 from downloader import VideoDownloadWorker
+from iinfo import VideoInfo
 from logger import Log
-from vinfo import VideoInfo
 
 
 class ThrottleChecker:
@@ -71,7 +71,7 @@ class ThrottleChecker:
         try:
             while True:
                 await sleep(float(DOWNLOAD_STATUS_CHECK_TIMER))
-                if not dwn.is_writing(dest):  # finished already
+                if not dwn.is_writing(self._vi):  # finished already
                     Log.error(f'[throttler] {self._vi.sfsname} checker is still running for finished download!')
                     break
                 if self._response is None:

@@ -12,10 +12,10 @@ from argparse import ArgumentParser, ZERO_OR_MORE
 from defs import (
     Quality, Duration, UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_POLICY_ALWAYS, ACTION_STORE_TRUE, DEFAULT_QUALITY, QUALITIES,
 )
+from iinfo import VideoInfo
 from logger import Log
 from tagger import valid_extra_tag, extract_id_or_group, is_filtered_out_by_extra_tags
 from validators import valid_int, valid_rating, valid_duration
-from vinfo import VideoInfo
 
 __all__ = ('DownloadScenario',)
 

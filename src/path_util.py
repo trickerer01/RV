@@ -13,10 +13,10 @@ from psutil import Error as PSError, process_iter
 
 from config import Config
 from defs import Quality, PREFIX, DEFAULT_EXT
+from iinfo import VideoInfo
 from logger import Log
 from rex import re_media_filename
 from util import normalize_path
-from vinfo import VideoInfo
 
 __all__ = ('file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items', 'is_file_being_used')
 
