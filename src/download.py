@@ -37,8 +37,8 @@ __all__ = ('download', 'at_interrupt')
 async def download(sequence: list[VideoInfo], by_id: bool, filtered_count: int, session: ClientSession = None) -> None:
     minid, maxid = get_min_max_ids(sequence)
     eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(sequence))
-    Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...'
-             f'\nPress \'{SCAN_CANCEL_KEYSTROKE}\' twice to stop\n'
+    interrupt_msg = f'\nPress \'{SCAN_CANCEL_KEYSTROKE}\' twice to stop' if by_id else ''
+    Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}. Working...{interrupt_msg}\n'
              f'\nThis will take at least {eta_min:d} seconds{f" ({format_time(eta_min)})" if eta_min >= 60 else ""}!\n')
     async with session or make_session() as session, make_session(True) as session.np:
         if by_id:

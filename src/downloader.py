@@ -200,7 +200,7 @@ class VideoDownloadWorker:
                 except (OSError, IOError):
                     Log.error(f'Unable to save continue file to \'{continue_file_name}\'!')
             await sleep(base_sleep_time)
-        if path.isfile(continue_file_fullpath):
+        if not (self._scn and self._scn.aborted) and path.isfile(continue_file_fullpath):
             Log.trace(f'All files downloaded. Removing continue file \'{continue_file_name}\'...')
             remove(continue_file_fullpath)
 
@@ -253,7 +253,7 @@ class VideoDownloadWorker:
         return self._scn and not self._scn.done()
 
     def get_scanned_count(self) -> int:
-        return self._scn.get_done_count()
+        return self._scn.get_done_count() if self.waiting_for_scanner() else 0
 
     def get_scanner_workload_size(self) -> int:
         return self._scn.get_workload_size() if self.waiting_for_scanner() else 0

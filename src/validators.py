@@ -97,9 +97,6 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
         if Config.min_rating:
             Log.info('Info: rating is not extracted from previews!')
             delay_for_message = True
-        if Config.duration:
-            Log.info('Info: duration is not extracted from previews!')
-            delay_for_message = True
         if Config.naming_flags != NamingFlags.ALL:
             if has_naming_flag(NamingFlags.ALL & ~(NamingFlags.PREFIX | NamingFlags.TITLE)):
                 Log.info('Info: can only use prefix and title naming flags for previews, other flags will be ignored!')
