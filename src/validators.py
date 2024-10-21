@@ -131,6 +131,10 @@ def valid_rating(val: str) -> int:
     return valid_int(val, lb=0, ub=100)
 
 
+def valid_lookahead(val: str) -> int:
+    return valid_int(val, lb=-200, ub=200, nonzero=True)
+
+
 def valid_path(pathstr: str) -> str:
     try:
         newpath = normalize_path(path.expanduser(pathstr.strip('\'"')))

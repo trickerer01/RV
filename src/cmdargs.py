@@ -29,7 +29,7 @@ from scenario import DownloadScenario
 from tagger import valid_extra_tag, valid_playlist_name, valid_playlist_id, valid_tags, valid_artists, valid_categories
 from validators import (
     valid_int, positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
-    log_level, positive_int, nonzero_int, valid_duration, valid_session_id,
+    log_level, positive_int, valid_lookahead, valid_duration, valid_session_id,
 )
 from version import APP_NAME, APP_VERSION
 
@@ -185,7 +185,7 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     arggr_start_or_seq.add_argument('-start', metavar='#number', help=HELP_ARG_ID_START, type=positive_nonzero_int)
     arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help=HELP_ARG_ID_COUNT, type=positive_nonzero_int)
     arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help=HELP_ARG_ID_END, type=positive_nonzero_int)
-    par_cmd.add_argument('-lookahead', metavar='#number', default=0, help=HELP_ARG_LOOKAHEAD, type=nonzero_int)
+    par_cmd.add_argument('-lookahead', metavar='#number', default=0, help=HELP_ARG_LOOKAHEAD, type=valid_lookahead)
     par_cmd.add_argument('-gpred', '--predict-id-gaps', action=ACTION_STORE_TRUE, help=HELP_ARG_PREDICT_ID_GAPS)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
 

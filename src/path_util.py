@@ -18,7 +18,10 @@ from logger import Log
 from rex import re_media_filename
 from util import normalize_path
 
-__all__ = ('file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items', 'is_file_being_used')
+__all__ = (
+    'file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items', 'is_file_being_used',
+    'register_new_file',
+)
 
 found_filenames_dict: dict[str, list[str]] = dict()
 media_matches_cache: dict[str, tuple[str, Quality]] = dict()
@@ -106,6 +109,15 @@ def get_media_file_match(fname: str) -> tuple[str, Quality]:
         f_id, f_quality = (f_match.group(1), Quality(f_match.group(2) or '')) if f_match else ('', '')
         media_matches_cache[fname] = (f_id, f_quality)
     return media_matches_cache[fname]
+
+
+def register_new_file(vi: VideoInfo) -> None:
+    base_folder = vi.my_folder
+    if found_filenames_dict.get(base_folder) is None:
+        found_filenames_dict[base_folder] = list()
+    elif file_exists_in_folder(base_folder, vi.id, vi.quality, False):
+        return
+    found_filenames_dict[base_folder].append(vi.my_fullpath)
 
 
 def file_exists_in_folder(base_folder: str, idi: int, quality: Quality, check_folder: bool) -> str:

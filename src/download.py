@@ -26,7 +26,7 @@ from dthrottler import ThrottleChecker
 from fetch_html import fetch_html, wrap_request, make_session, ensure_conn_closed
 from iinfo import VideoInfo, export_video_info, get_min_max_ids
 from logger import Log
-from path_util import file_already_exists, try_rename, is_file_being_used
+from path_util import file_already_exists, try_rename, is_file_being_used, register_new_file
 from rex import re_media_filename, re_time
 from tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
 from util import has_naming_flag, format_time, normalize_path, get_elapsed_time_i, extract_ext, get_time_seconds
@@ -162,6 +162,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         tags_raw.append('compilation')
     if Config.solve_tag_conflicts:
         solve_tag_conflicts(vi, tags_raw)
+    Log.debug(f'{sname} tags: \'{",".join(tags_raw)}\'')
     if is_filtered_out_by_extra_tags(vi, tags_raw, Config.extra_tags, Config.id_sequence, vi.subfolder, extra_ids):
         Log.info(f'Info: video {sname} is filtered out by{" outer" if scenario else ""} extra tags, skipping...')
         return DownloadResult.FAIL_FILTERED_OUTER if scenario else DownloadResult.FAIL_SKIPPED
@@ -425,6 +426,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             vi.set_state(VideoInfo.State.WRITING)
             status_checker.run()
             async with async_open(vi.my_fullpath, 'ab') as outf:
+                register_new_file(vi)
                 vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
                 if vi.dstart_time == 0:
                     vi.dstart_time = get_elapsed_time_i()

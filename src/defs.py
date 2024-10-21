@@ -189,7 +189,7 @@ HELP_ARG_PAGE_COUNT = 'Pages count to process'
 HELP_ARG_PAGE_START = 'Start page number. Default is \'1\''
 HELP_ARG_BEGIN_STOP_ID = 'Video id lower / upper bounds filter to only download videos where \'begin_id >= video_id >= stop_id\''
 HELP_ARG_LOOKAHEAD = (
-    f'Continue scanning indefinitely after reaching end id until number of non-existing videos encountered in a row'
+    f'-200..-1, 1..200. Continue scanning indefinitely after reaching end id until number of non-existing videos encountered in a row'
     f' reaches this number.'
     f' Furthermore, negative value enables watcher mode, periodically re-scanning trailing non-existing videos, this process never finishes'
     f' on its own but can be interrupted safely by pressing \'{SCAN_CANCEL_KEYSTROKE}\' twice'

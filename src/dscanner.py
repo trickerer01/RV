@@ -89,9 +89,13 @@ class VideoScanWorker:
     async def _extend_with_extra(self) -> int:
         lookahead_abs = abs(Config.lookahead)
         watcher_mode = Config.lookahead < 0 and not not self._extra_ids and self._404_counter >= lookahead_abs
-        extra_cur = (lookahead_abs - self._404_counter) if not watcher_mode else lookahead_abs
+        last_id = Config.end_id + len(set(self._extra_ids))
+        extra_cur = lookahead_abs - self._404_counter
+        if watcher_mode:
+            back_step = min(lookahead_abs, len(self._original_sequence) - 2)
+            last_id = self._last_non404_id - back_step
+            extra_cur = max(lookahead_abs + back_step, self._extra_ids[-1])
         if extra_cur > 0:
-            last_id = (Config.end_id + len(set(self._extra_ids))) if not watcher_mode else (self._last_non404_id - lookahead_abs // 2)
             extra_idseq = [(last_id + i + 1) for i in range(extra_cur)]
             extra_vis = [VideoInfo(idi) for idi in extra_idseq]
             minid, maxid = get_min_max_ids(extra_vis)
@@ -196,7 +200,7 @@ class VideoScanWorker:
 
     def find_vinfo(self, id_: int) -> VideoInfo | None:
         with suppress(StopIteration):
-            return next(filter(lambda vi: vi.id == id_, self._original_sequence))
+            return next(reversed(list(filter(lambda vi: vi.id == id_, self._original_sequence))))
 
 #
 #
