@@ -117,7 +117,7 @@ def register_new_file(vi: VideoInfo) -> None:
         found_filenames_dict[base_folder] = list()
     elif file_exists_in_folder(base_folder, vi.id, vi.quality, False):
         return
-    found_filenames_dict[base_folder].append(vi.my_fullpath)
+    found_filenames_dict[base_folder].append(vi.filename)
 
 
 def file_exists_in_folder(base_folder: str, idi: int, quality: Quality, check_folder: bool) -> str:
