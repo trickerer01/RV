@@ -83,6 +83,7 @@ class ThrottleChecker:
                 if file_size < last_size + self._slow_download_amount_threshold:
                     Log.warn(f'[throttler] {self._vi.sfsname} check failed at {file_size:d} ({last_speed:.2f} KB/s)! '
                              f'Interrupting current try...')
+                    self._vi.last_check_size = file_size
                     self._response.connection.transport.abort()  # abort download task (forcefully - close connection)
                     # calculate normalized threshold if needed
                     if Config.throttle_auto is True and self._orig_threshold() > 10 * Mem.KB:
