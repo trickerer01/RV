@@ -250,10 +250,10 @@ class VideoDownloadWorker:
         return vi in self._writes_active
 
     def add_to_writes(self, vi: VideoInfo) -> None:
-        self._writes_active.append(vi.my_fullpath)
+        self._writes_active.append(vi)
 
     def remove_from_writes(self, vi: VideoInfo) -> None:
-        self._writes_active.remove(vi.my_fullpath)
+        self._writes_active.remove(vi)
 
     def waiting_for_scanner(self) -> bool:
         return self._scn and not self._scn.done()

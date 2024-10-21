@@ -87,10 +87,11 @@ class VideoScanWorker:
             pass
 
     async def _extend_with_extra(self) -> int:
-        watcher_mode = Config.lookahead < 0 and not not self._extra_ids and self._404_counter >= abs(Config.lookahead)
-        extra_cur = (abs(Config.lookahead) - self._404_counter) if not watcher_mode else abs(Config.lookahead)
+        lookahead_abs = abs(Config.lookahead)
+        watcher_mode = Config.lookahead < 0 and not not self._extra_ids and self._404_counter >= lookahead_abs
+        extra_cur = (lookahead_abs - self._404_counter) if not watcher_mode else lookahead_abs
         if extra_cur > 0:
-            last_id = (Config.end_id + len(set(self._extra_ids))) if not watcher_mode else self._last_non404_id
+            last_id = (Config.end_id + len(set(self._extra_ids))) if not watcher_mode else (self._last_non404_id - lookahead_abs // 2)
             extra_idseq = [(last_id + i + 1) for i in range(extra_cur)]
             extra_vis = [VideoInfo(idi) for idi in extra_idseq]
             minid, maxid = get_min_max_ids(extra_vis)
@@ -100,7 +101,7 @@ class VideoScanWorker:
             if not watcher_mode:
                 Log.warn(f'[lookahead] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}')
             else:
-                rescan_delay = min(LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, max(abs(Config.lookahead) * 18, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN))
+                rescan_delay = min(LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, max(lookahead_abs * 18, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN))
                 Log.warn(f'[watcher] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}'
                          f' (waiting {rescan_delay:d} seconds before rescan)')
                 return rescan_delay
