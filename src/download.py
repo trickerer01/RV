@@ -63,8 +63,8 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
 
     predict_gap1 = Config.predict_id_gaps and 3400000 <= vi.id <= 3900000
     if predict_gap1:
-        vi_prev1 = scn.find_vinfo(vi.id - 1)
-        vi_prev2 = scn.find_vinfo(vi.id - 2)
+        vi_prev1 = scn.find_vinfo_last(vi.id - 1)
+        vi_prev2 = scn.find_vinfo_last(vi.id - 2)
         if vi_prev1 and vi_prev2:
             f_404s = [vip.has_flag(VideoInfo.Flags.RETURNED_404) for vip in (vi_prev1, vi_prev2)]
             skip = f_404s[0] is not f_404s[1]
@@ -87,10 +87,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if predict_gap1:
         # find previous valid id and check the offset
         id_dec = 3
-        vi_prev_x = scn.find_vinfo(vi.id - id_dec)
+        vi_prev_x = scn.find_vinfo_last(vi.id - id_dec)
         while vi_prev_x and vi_prev_x.has_flag(VideoInfo.Flags.RETURNED_404):
             id_dec += 1
-            vi_prev_x = scn.find_vinfo(vi.id - id_dec)
+            vi_prev_x = scn.find_vinfo_last(vi.id - id_dec)
         if vi_prev_x and (id_dec % 3) != 0:
             Log.error('Error: id gap predictor encountered unexpected valid post offset. Disabling prediction!')
             Config.predict_id_gaps = False
@@ -192,6 +192,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if Config.duration and vi.duration and not (Config.duration.first <= vi.duration <= Config.duration.second):
         Log.info(f'Info: video {sname} duration \'{vi.duration:d}\' is out of bounds ({str(Config.duration)}), skipping...')
         return DownloadResult.FAIL_SKIPPED
+    scanned_vi = scn.find_vinfo_first(vi.id)
+    if scanned_vi and VideoInfo.State.ACTIVE <= scanned_vi.state <= VideoInfo.State.DONE:
+        Log.info(f'{sname} was already processed, skipping...')
+        return DownloadResult.FAIL_ALREADY_EXISTS
     my_tags = filtered_tags(sorted(tags_raw)) or my_tags
 
     tries = 0
