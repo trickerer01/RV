@@ -94,7 +94,7 @@ class VideoScanWorker:
         if watcher_mode:
             back_step = min(lookahead_abs, len(self._original_sequence) - 2)
             last_id = self._last_non404_id - back_step
-            extra_cur = max(lookahead_abs + back_step, self._extra_ids[-1])
+            extra_cur = lookahead_abs + back_step
         if extra_cur > 0:
             extra_idseq = [(last_id + i + 1) for i in range(extra_cur)]
             extra_vis = [VideoInfo(idi) for idi in extra_idseq]
