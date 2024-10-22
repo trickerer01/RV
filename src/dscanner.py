@@ -198,9 +198,9 @@ class VideoScanWorker:
             await sleep(0.1)
         return self._scanned_items.popleft() if self._scanned_items else None
 
-    def find_vinfo_first(self, id_: int) -> VideoInfo | None:
+    def find_vinfo_pred(self, pred: Callable[[VideoInfo], bool]) -> VideoInfo | None:
         with suppress(StopIteration):
-            return next(filter(lambda vi: vi.id == id_, self._original_sequence))
+            return next(filter(pred, self._original_sequence))
 
     def find_vinfo_last(self, id_: int) -> VideoInfo | None:
         with suppress(StopIteration):
