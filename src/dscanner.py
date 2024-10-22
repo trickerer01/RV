@@ -23,6 +23,7 @@ from iinfo import VideoInfo, get_min_max_ids
 from input import wait_for_key
 from logger import Log
 from path_util import file_already_exists_arr
+from util import get_local_time_s
 
 __all__ = ('VideoScanWorker',)
 
@@ -107,7 +108,7 @@ class VideoScanWorker:
             else:
                 rescan_delay = min(LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, max(lookahead_abs * 18, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN))
                 Log.warn(f'[watcher] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}'
-                         f' (waiting {rescan_delay:d} seconds before rescan)')
+                         f' (waiting {rescan_delay:d} seconds, next re-scan at [{get_local_time_s(offset=rescan_delay)}])')
                 return rescan_delay
         return 0
 
@@ -171,6 +172,9 @@ class VideoScanWorker:
 
     def done(self) -> bool:
         return self.get_workload_size() == 0
+
+    def watcher_wait_active(self) -> bool:
+        return self._sleep_waiter is not None
 
     def get_done_count(self) -> int:
         return self._scan_count

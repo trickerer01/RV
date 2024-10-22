@@ -7,8 +7,9 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import sys
-from datetime import datetime
 from collections.abc import Iterable
+from datetime import datetime
+from time import localtime
 
 from config import Config
 from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL, DEFAULT_EXT
@@ -42,6 +43,16 @@ def get_elapsed_time_i() -> int:
 def get_elapsed_time_s() -> str:
     """Returns time since launch in format: **hh:mm:ss**"""
     return format_time(get_elapsed_time_i())
+
+
+def get_local_time_i() -> int:
+    """Returns **local** time since epoch in **seconds**"""
+    return int(datetime.now().timestamp()) + localtime().tm_gmtoff
+
+
+def get_local_time_s(*, offset=0) -> str:
+    """Returns **local** time **[+offset]** in 24hr format: **hh:mm:ss**"""
+    return format_time((get_local_time_i() + offset) % 86400)
 
 
 def normalize_path(basepath: str, append_slash=True) -> str:
