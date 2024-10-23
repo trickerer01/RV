@@ -126,8 +126,8 @@ class VideoDownloadWorker:
 
     async def _state_reporter(self) -> None:
         base_sleep_time = calc_sleep_time(3.0)
-        force_check_seconds = DOWNLOAD_QUEUE_STALL_CHECK_TIMER
-        last_check_seconds = 0
+        force_check_secs = DOWNLOAD_QUEUE_STALL_CHECK_TIMER
+        last_check_secs = 0
         while self.get_workload_size() > 0 or self.waiting_for_scanner():
             await sleep(base_sleep_time if len(self._seq) + self._queue.qsize() > 0 or self.waiting_for_scanner() else 1.0)
             queue_size = len(self._seq) + self.get_scanner_workload_size()
@@ -140,13 +140,13 @@ class VideoDownloadWorker:
             downloading_last = self._download_queue_size_last
             write_last = self._write_queue_size_last
             elapsed_seconds = get_elapsed_time_i()
-            force_check = elapsed_seconds - last_check_seconds >= force_check_seconds and (write_count or not self.waiting_for_watcher())
+            force_check = elapsed_seconds - last_check_secs >= force_check_secs and bool(write_count or not self.waiting_for_watcher())
             if queue_last != queue_size or downloading_last != download_count or write_last != write_count or force_check:
                 scan_msg = f'scanned: {f"{min(scan_count, self._orig_count)}+{extra_count:d}" if Config.lookahead else str(scan_count)}'
                 prescan_msg = f' (prescanned: {self._scn.get_prescanned_count():d})' if self._scn else ''
                 Log.info(f'[{get_elapsed_time_s()}] {scan_msg}, queue: {queue_size:d}{prescan_msg}, ready: {ready_size:d}, '
                          f'active: {download_count:d} (writing: {write_count:d})')
-                last_check_seconds = elapsed_seconds
+                last_check_secs = elapsed_seconds
                 self._total_queue_size_last = queue_size
                 self._download_queue_size_last = download_count
                 self._write_queue_size_last = write_count
