@@ -140,7 +140,7 @@ class VideoDownloadWorker:
             downloading_last = self._download_queue_size_last
             write_last = self._write_queue_size_last
             elapsed_seconds = get_elapsed_time_i()
-            force_check = elapsed_seconds - last_check_seconds >= force_check_seconds and not self.waiting_for_watcher()
+            force_check = elapsed_seconds - last_check_seconds >= force_check_seconds and (write_count or not self.waiting_for_watcher())
             if queue_last != queue_size or downloading_last != download_count or write_last != write_count or force_check:
                 scan_msg = f'scanned: {f"{min(scan_count, self._orig_count)}+{extra_count:d}" if Config.lookahead else str(scan_count)}'
                 prescan_msg = f' (prescanned: {self._scn.get_prescanned_count():d})' if self._scn else ''

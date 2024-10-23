@@ -90,7 +90,7 @@ class VideoScanWorker:
     async def _extend_with_extra(self) -> int:
         lookahead_abs = abs(Config.lookahead)
         watcher_mode = Config.lookahead < 0 and not not self._extra_ids and self._404_counter >= lookahead_abs
-        last_id = Config.end_id + len(set(self._extra_ids))
+        last_id = self._last_non404_id + self._404_counter
         extra_cur = lookahead_abs - self._404_counter
         if watcher_mode:
             back_step = min(lookahead_abs, len(self._original_sequence) - 2)
