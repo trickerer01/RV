@@ -129,8 +129,14 @@ class NamingFlags:
     TITLE = 0x04
     TAGS = 0x08
     QUALITY = 0x10
-    ALL = PREFIX | SCORE | TITLE | TAGS | QUALITY
+    # extra
+    USE_URL_TITLE = 0x20
+    ALL_DEFAULT = PREFIX | SCORE | TITLE | TAGS | QUALITY
     """0x1F"""
+    ALL_EXTRA = USE_URL_TITLE
+    """0x20"""
+    ALL = ALL_DEFAULT | ALL_EXTRA
+    """0x3F"""
 
 
 NAMING_FLAGS = {
@@ -140,13 +146,14 @@ NAMING_FLAGS = {
     'title': f'0x{NamingFlags.TITLE:02X}',
     'tags': f'0x{NamingFlags.TAGS:02X}',
     'quality': f'0x{NamingFlags.QUALITY:02X}',
-    'full': f'0x{NamingFlags.ALL:02X}'
+    'full': f'0x{NamingFlags.ALL_DEFAULT:02X}',
+    'urltitle': f'0x{NamingFlags.USE_URL_TITLE:02X}',
 }
 """
 {\n\n'none': '0x00',\n\n'prefix': '0x01',\n\n'score': '0x02',\n\n'title': '0x04',\n\n'tags': '0x08',\n\n'quality': '0x10',
-\n\n'full': '0x1F'\n\n}
+\n\n'full': '0x1F'\n\n'urltitle': '0x20'\n\n}
 """
-NAMING_FLAGS_DEFAULT = NamingFlags.ALL
+NAMING_FLAGS_DEFAULT = NamingFlags.ALL_DEFAULT
 """0x1F"""
 
 

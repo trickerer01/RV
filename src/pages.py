@@ -13,8 +13,8 @@ from collections.abc import Sequence
 from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from defs import (
-    SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, SITE_AJAX_REQUEST_MODEL_PAGE, PREFIX,
-    QUALITIES, NamingFlags,
+    NamingFlags, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, PREFIX, QUALITIES,
+    SITE_AJAX_REQUEST_MODEL_PAGE,
 )
 from download import download, at_interrupt
 from fetch_html import make_session, fetch_html
@@ -22,7 +22,7 @@ from iinfo import VideoInfo
 from logger import Log
 from path_util import prefilter_existing_items
 from rex import re_page_entry, re_paginator, re_preview_entry
-from util import at_startup, get_time_seconds, has_naming_flag
+from util import at_startup, has_naming_flag, get_time_seconds
 from validators import find_and_resolve_config_conflicts
 from version import APP_NAME
 
@@ -113,8 +113,10 @@ async def main(args: Sequence[str]) -> None:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
                     my_title = str(aref.find('div', class_='thumb_title').text)
+                    my_utitle = str(aref['href'][:-1][aref['href'][:-1].rfind('/') + 1:])
                     my_duration = get_time_seconds(str(aref.find('div', class_='time').text))
-                    v_entries.append(VideoInfo(cur_id, my_title, m_duration=my_duration))
+                    use_utitle = has_naming_flag(NamingFlags.USE_URL_TITLE)
+                    v_entries.append(VideoInfo(cur_id, my_utitle if use_utitle else my_title, m_duration=my_duration))
             else:
                 content_div = a_html.find('div', class_='thumbs clearfix')
 
@@ -124,10 +126,12 @@ async def main(args: Sequence[str]) -> None:
 
                 prev_all = content_div.find_all('div', class_='img wrap_image')
                 titl_all = content_div.find_all('div', class_='thumb_title')
+                utitl_all = content_div.find_all('a', class_='th js-open-popup')
                 orig_count = len(prev_all)
                 for i, p in enumerate(prev_all):
                     link = str(p.get('data-preview'))
                     title = str(titl_all[i].text)
+                    urltitle = str(utitl_all[i]['href'][:-1][utitl_all[i]['href'][:-1].rfind('/') + 1:])
                     v_id = re_preview_entry.search(link)
                     cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
                     bound_res = check_id_bounds(cur_id)
@@ -138,9 +142,12 @@ async def main(args: Sequence[str]) -> None:
                     elif cur_id in v_entries:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
+                    use_prefix = has_naming_flag(NamingFlags.PREFIX)
+                    use_title = has_naming_flag(NamingFlags.TITLE)
+                    use_utitle = has_naming_flag(NamingFlags.USE_URL_TITLE)
                     v_entries.append(VideoInfo(
-                        cur_id, '', link, '', f'{PREFIX if has_naming_flag(NamingFlags.PREFIX) else ""}{cur_id:d}'
-                        f'{f"_{title}" if has_naming_flag(NamingFlags.TITLE) else ""}_preview.{cur_ext}',
+                        cur_id, '', link, '', f'{PREFIX if use_prefix else ""}{cur_id:d}'
+                        f'{f"_{urltitle if use_utitle else title}" if use_title else ""}_preview.{cur_ext}',
                     ))
 
             if pi - 1 > Config.start and lower_count == orig_count > 0 and not Config.scan_all_pages:
