@@ -83,7 +83,7 @@ class VideoDownloadWorker:
         Log.trace(f'[queue] {vi.sname} added to active')
 
     async def _at_task_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
-        if vi in self._downloads_active:
+        if vi in self._downloads_active and not (Config.watcher_mode and vi in self._writes_active):
             self._downloads_active.remove(vi)
             Log.trace(f'[queue] {vi.sname} removed from active')
         if result == DownloadResult.FAIL_ALREADY_EXISTS:

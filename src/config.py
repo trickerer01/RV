@@ -126,7 +126,7 @@ class BaseConfig:
         self.start_id = params.stop_id if self.is_pages else self.start
         self.end_id = params.begin_id if self.is_pages else self.end
         self._timeout = float(params.timeout or CONNECT_TIMEOUT_BASE)
-        self.timeout = ClientTimeout(total=None, connect=self._timeout, sock_connect=self._timeout, sock_read=300.0)
+        self.timeout = ClientTimeout(total=None, connect=self._timeout, sock_connect=self._timeout, sock_read=60.0)
         self.retries = getattr(params, 'retries', CONNECT_RETRIES_BASE)
         self.throttle = params.throttle
         self.throttle_auto = params.throttle_auto
@@ -209,6 +209,10 @@ class BaseConfig:
     @property
     def dm(self) -> str | None:
         return self.download_mode
+
+    @property
+    def watcher_mode(self) -> bool:
+        return self.lookahead and self.lookahead < 0
 
 
 Config: BaseConfig = BaseConfig()

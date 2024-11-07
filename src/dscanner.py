@@ -129,8 +129,9 @@ class VideoScanWorker:
             assert self._task_finish_callback
             await self._task_finish_callback(vi, result)
 
-        if Config.detect_id_gaps and Config.is_pages is False and result != DownloadResult.FAIL_NOT_FOUND and self._404_counter:
-            self._id_gaps.append((vi.id - self._404_counter, vi.id))
+        if Config.detect_id_gaps and not Config.is_pages and not Config.watcher_mode:
+            if result != DownloadResult.FAIL_NOT_FOUND and self._404_counter:
+                self._id_gaps.append((vi.id - self._404_counter, vi.id))
 
         self._404_counter = self._404_counter + 1 if result == DownloadResult.FAIL_NOT_FOUND else 0
         if result != DownloadResult.FAIL_NOT_FOUND:
@@ -159,16 +160,22 @@ class VideoScanWorker:
         Log.debug('[queue] scanner thread stop: scan complete')
         if self._id_gaps:
             gap_strings = list()
-            mod3_count = 0
+            mod2_count = mod3_count = mod4_count = 0
             for gstart, gstop in self._id_gaps[1:]:
-                is_mod3 = (gstop + 1 - gstart) % 3 == 0
+                is_mod2, is_mod3, is_mod4 = tuple((gstop + 1 - gstart) % _ == 0 for _ in (2, 3, 4))
+                mod4_count += 1 if is_mod4 else 0
                 mod3_count += 1 if is_mod3 else 0
-                gstring = f'({gstart:d} - {gstop:d}) {"(%3)!" if is_mod3 else ""}'
+                mod2_count += 1 if is_mod2 else 0
+                gstring = f'({gstart:d} - {gstop:d}){" %4" if is_mod4 else ""}{" %3" if is_mod3 else ""}{" %2" if is_mod2 else ""}'
                 gap_strings.append(gstring)
             n = '\n - '
             Log.debug(f'[gaps scanner] detected {len(self._id_gaps):d} id gaps:{n}{n.join(gap_strings)}')
+            if mod2_count > 0 and mod2_count + 1 == len(self._id_gaps):
+                Log.debug('[gaps scanner] all gaps are (%2)!')
             if mod3_count > 0 and mod3_count + 1 == len(self._id_gaps):
                 Log.debug('[gaps scanner] all gaps are (%3)!')
+            if mod4_count > 0 and mod4_count + 1 == len(self._id_gaps):
+                Log.debug('[gaps scanner] all gaps are (%4)!')
 
     def done(self) -> bool:
         return self.get_workload_size() == 0

@@ -54,6 +54,16 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
 
     delay_for_message = False
 
+    if Config.watcher_mode:
+        Log.info('Info: watcher mode enabled, disabling id gaps detection')
+        Config.detect_id_gaps = False
+        delay_for_message = True
+    if Config.detect_id_gaps:
+        if Config.predict_id_gaps:
+            Log.info('Info: id gaps detection is enabled, disabling id gaps prediction')
+            Config.predict_id_gaps = False
+            delay_for_message = True
+
     if Config.scan_all_pages and Config.start_id <= 1:
         Log.info('Info: \'--scan-all-pages\' flag was set but post id lower bound was not provided, ignored')
         delay_for_message = True
@@ -74,9 +84,6 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
             delay_for_message = True
         if Config.quality != DEFAULT_QUALITY:
             Log.info('Info: running download script, outer quality setting will be ignored')
-            delay_for_message = True
-        if Config.duration:
-            Log.info('Info: running download script, outer duration setting will be ignored')
             delay_for_message = True
     if full_download is False:
         if Config.scenario is not None:
