@@ -118,6 +118,10 @@ def valid_categories(categories_str: str) -> str:
     return ','.join(sorted(category_ids))
 
 
+def is_utag(tag: str) -> bool:
+    return tag.startswith('u:')
+
+
 def is_wtag(tag: str) -> bool:
     return not not re_wtag.fullmatch(tag)
 
@@ -132,7 +136,7 @@ def all_extra_tags_valid(tags: list[str]) -> bool:
 
 
 def is_valid_extra_tag(extag: str) -> bool:
-    return is_wtag(extag) or is_valid_tag(extag) or is_valid_artist(extag) or is_valid_category(extag)
+    return is_utag(extag) or is_wtag(extag) or is_valid_tag(extag) or is_valid_artist(extag) or is_valid_category(extag)
 
 
 def get_tag_num(tag: str, assert_=False) -> str | None:
@@ -364,7 +368,7 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: list[str], extra_tags
         else:
             negative = extag.startswith('-')
             my_extag = extag[1:] if negative else extag
-            if my_extag.startswith('u:'):
+            if is_utag(my_extag):
                 my_utag = my_extag[2:]
                 mtag = get_matching_tag(my_utag, (vi.uploader,))
                 if negative is False and mtag:
