@@ -54,6 +54,11 @@ SITE_AJAX_REQUEST_PLAYLIST_PAGE = b64decode(
     'N0X3ZpZXcmc29ydF9ieT1hZGRlZDJmYXZfZGF0ZSZmcm9tPSVk').decode()
 """Params required: **playlist_id**, **playlist_name**, **page** - **int**, **str**, **int**\n
 Ex. SITE_AJAX_REQUEST_PLAYLIST_PAGE % (999, 'stuff', 1)"""
+SITE_AJAX_REQUEST_FAVOURITES_PAGE = b64decode(
+    'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vbWVtYmVycy8lZC9mYXZvdXJpdGVzL3ZpZGVvcy8/bW9kZT1hc3luYyZmdW5jdGlvbj1nZXRfYmxvY2smYmxvY2tfaWQ9bGlzdF92aW'
+    'Rlb3NfZmF2b3VyaXRlX3ZpZGVvcyZzb3J0X2J5PSZmcm9tX2Zhdl92aWRlb3M9JWQ=').decode()
+"""Params required: **user_id**, **page** - **int**, **int**\n
+Ex. SITE_AJAX_REQUEST_FAVOURITES_PAGE % (2083334, 1)"""
 SITE_AJAX_REQUEST_UPLOADER_PAGE = b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vbWVtYmVycy8lZC92aWRlb3MvP21vZGU9YXN5bmMmZnVuY3Rpb249Z2V0X2Jsb2NrJmJsb2NrX2lkPWxpc3RfdmlkZW9zX3VwbG9hZG'
     'VkX3ZpZGVvcyZzb3J0X2J5PSZmcm9tX3ZpZGVvcz0lZA==').decode()
@@ -322,6 +327,7 @@ HELP_ARG_TIMEOUT = f'Connection timeout (in seconds). Default is \'{CONNECT_TIME
 HELP_ARG_RETRIES = f'Connection retries count. Default is \'{CONNECT_RETRIES_BASE:d}\''
 HELP_ARG_THROTTLE = 'Download speed threshold (in KB/s) to assume throttling, drop connection and retry'
 HELP_ARG_THROTTLE_AUTO = 'Enable automatic throttle threshold adjustment when crossed too many times in a row'
+HELP_ARG_FAVORITES = 'User id (integer, filters still apply)'
 HELP_ARG_UPLOADER = 'Uploader user id (integer, filters still apply)'
 HELP_ARG_MODEL = 'Artist name (scan artist\'s page(s) instead of using search, filters still apply)'
 # HELP_ARG_ALLOW_DUPLICATE_NAMES = (

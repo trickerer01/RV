@@ -84,6 +84,7 @@ class BaseConfig:
         self.search_rule_cat: str | None = None
         self.playlist_id: int | None = None
         self.playlist_name: str | None = None
+        self.favourites: int | None = None
         self.uploader: int | None = None
         self.model: str | None = None
         self.get_maxid: bool | None = None
@@ -153,6 +154,7 @@ class BaseConfig:
         self.playlist_id, self.playlist_name = (
             getattr(params, 'playlist_id') if getattr(params, 'playlist_id', (0,))[0] else getattr(params, 'playlist_name')
         ) if hasattr(params, 'playlist_id') or hasattr(params, 'playlist_name') else (self.playlist_id, self.playlist_name)
+        self.favourites = getattr(params, 'favourites', self.favourites)
         self.uploader = getattr(params, 'uploader', self.uploader)
         self.model = getattr(params, 'model', self.model)
         self.get_maxid = getattr(params, 'get_maxid', self.get_maxid)

@@ -22,7 +22,7 @@ from defs import (
     MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC, HELP_ARG_ID_START, HELP_ARG_ID_COUNT, HELP_ARG_ID_END,
     HELP_ARG_PAGE_START, HELP_ARG_PAGE_COUNT, HELP_ARG_PAGE_END, HELP_ARG_REPORT_DUPLICATES, HELP_ARG_DUMP_SCREENSHOTS,
     MAX_DEST_SCAN_UPLEVELS_DEFAULT, HELP_ARG_RETRIES, CONNECT_RETRIES_BASE, HELP_ARG_PROXYNODOWN, HELP_ARG_NOCOLORS, HELP_ARG_DURATION,
-    HELP_ARG_SOLVE_TAG_CONFLICTS, HELP_ARG_PREDICT_ID_GAPS,
+    HELP_ARG_SOLVE_TAG_CONFLICTS, HELP_ARG_PREDICT_ID_GAPS, HELP_ARG_FAVORITES,
 )
 from logger import Log
 from scenario import DownloadScenario
@@ -213,6 +213,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     arggr_pl_upl = par_cmd.add_mutually_exclusive_group()
     arggr_pl_upl.add_argument('-playlist_id', metavar='#number', default=(0, ''), help='', type=valid_playlist_id)
     arggr_pl_upl.add_argument('-playlist_name', metavar='#name', default=(0, ''), help=HELP_ARG_PLAYLIST, type=valid_playlist_name)
+    arggr_pl_upl.add_argument('-favourites', metavar='#user_id', default=0, help=HELP_ARG_FAVORITES, type=positive_nonzero_int)
     arggr_pl_upl.add_argument('-uploader', metavar='#user_id', default=0, help=HELP_ARG_UPLOADER, type=positive_nonzero_int)
     arggr_pl_upl.add_argument('-model', metavar='#name', default=0, help=HELP_ARG_MODEL)
     par_cmd.add_argument('-search', metavar='#string', default='', help=HELP_ARG_SEARCH_STR, type=valid_search_string)
