@@ -14,7 +14,7 @@ from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from defs import (
     NamingFlags, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, PREFIX, QUALITIES,
-    SITE_AJAX_REQUEST_MODEL_PAGE, SITE_AJAX_REQUEST_FAVOURITES_PAGE,
+    SITE_AJAX_REQUEST_FAVOURITES_PAGE, SITE_AJAX_REQUEST_MODEL_PAGE,
 )
 from download import download, at_interrupt
 from fetch_html import make_session, fetch_html
