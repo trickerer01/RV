@@ -64,21 +64,16 @@ class VideoScanWorker:
 
         self._sleep_waiter: Optional[Task] = None
         self._abort_waiter: Optional[Task] = None
-        self._abort = False
 
         self._id_gaps: list[tuple[int, int]] = list()
 
-    @property
-    def aborted(self) -> bool:
-        return self._abort
-
     def _on_abort(self) -> None:
         Log.warn('[queue] scanner thread interrupted, finishing pending tasks...')
+        Config.on_scan_abort()
         if self._sleep_waiter:
             self._sleep_waiter.cancel()
             self._sleep_waiter: Optional[Task] = None
         self._abort_waiter: Optional[Task] = None
-        self._abort = True
 
     @staticmethod
     async def _sleep_task(sleep_time: int) -> None:
@@ -144,7 +139,7 @@ class VideoScanWorker:
         Log.debug('[queue] scanner thread start')
         self._abort_waiter = get_running_loop().create_task(wait_for_key(SCAN_CANCEL_KEYSTROKE, SCAN_CANCEL_KEYCOUNT, self._on_abort))
         while self._seq:
-            if self._abort:
+            if Config.aborted:
                 self._seq.clear()
                 continue
             result = await self._func(self._seq[0])

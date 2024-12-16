@@ -206,7 +206,7 @@ class VideoDownloadWorker:
                 except (OSError, IOError):
                     Log.error(f'Unable to save continue file to \'{continue_file_name}\'!')
             await sleep(base_sleep_time)
-        if not (self._scn and self._scn.aborted) and path.isfile(continue_file_fullpath):
+        if not Config.aborted and path.isfile(continue_file_fullpath):
             Log.trace(f'All files downloaded. Removing continue file \'{continue_file_name}\'...')
             remove(continue_file_fullpath)
 

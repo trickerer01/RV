@@ -105,6 +105,8 @@ async def fetch_html(url: str, *, tries=0, session: ClientSession) -> BeautifulS
                 retries += 1
             elif r is not None and r.status == 403:
                 retries_403_local += 1
+            if Config.aborted:
+                break
             if retries <= tries:
                 await sleep(frand(*CONNECT_RETRY_DELAY))
             continue

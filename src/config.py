@@ -25,7 +25,10 @@ __all__ = ('Config',)
 class BaseConfig:
     """Parameters container for params used in both **pages** and **ids** modules"""
     def __init__(self) -> None:
+        # states
         self.is_pages: bool = False
+        self.aborted: bool = False
+        # common
         self.dest_base: str | None = None
         self.proxy: str | None = None
         self.download_without_proxy: bool | None = None
@@ -93,7 +96,9 @@ class BaseConfig:
         self.detect_id_gaps: bool = False
 
     def read(self, params: Namespace, pages: bool) -> None:
+        # states
         self.is_pages = pages
+        # common
         self.dest_base = params.path
         self.proxy = params.proxy
         self.download_without_proxy = params.download_without_proxy
@@ -199,6 +204,9 @@ class BaseConfig:
             *(('-script', self.scenario.fmt_str) if self.scenario else ())
         ]
         return arglist
+
+    def on_scan_abort(self) -> None:
+        self.aborted = True
 
     @property
     def utp(self) -> str | None:
