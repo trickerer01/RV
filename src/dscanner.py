@@ -101,7 +101,7 @@ class VideoScanWorker:
             if not watcher_mode:
                 Log.warn(f'[lookahead] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}')
             else:
-                rescan_delay = min(LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, max(lookahead_abs * 18, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN))
+                rescan_delay = min(LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, max(lookahead_abs * 10, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN))
                 Log.warn(f'[watcher] extending queue after {last_id:d} with {extra_cur:d} extra ids: {minid:d}-{maxid:d}'
                          f' (waiting {rescan_delay:d} seconds, next re-scan at [{get_local_time_s(offset=rescan_delay)}])')
                 return rescan_delay

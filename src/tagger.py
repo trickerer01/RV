@@ -8,10 +8,14 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from __future__ import annotations
 from collections.abc import Collection, Iterable, MutableSequence
+from json import load as load_json
+from os import path
 
-from bigstrings import TAG_ALIASES, TAG_CONFLICTS, TAG_NUMS_DECODED, ART_NUMS_DECODED, CAT_NUMS_DECODED, PLA_NUMS_DECODED
 from config import Config
-from defs import TAGS_CONCAT_CHAR
+from defs import (
+    TAGS_CONCAT_CHAR, UTF8, FILE_LOC_PLAS,
+    FILE_LOC_TAG_ALIASES, FILE_LOC_TAG_CONFLICTS, FILE_LOC_TAGS, FILE_LOC_CATS, FILE_LOC_ARTS,
+)
 from iinfo import VideoInfo
 from logger import Log
 from rex import (
@@ -19,17 +23,26 @@ from rex import (
     re_neg_and_group, re_tags_to_process, re_bracketed_tag, re_tags_exclude_major1, re_tags_exclude_major2, re_tags_to_not_exclude,
     prepare_regex_fullmatch,
 )
-from util import assert_nonempty
+from util import normalize_path, assert_nonempty
 
 __all__ = (
     'filtered_tags', 'get_matching_tag', 'extract_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags', 'solve_tag_conflicts',
     'valid_playlist_name', 'valid_playlist_id', 'valid_tags', 'valid_artists', 'valid_categories',
 )
 
+TAG_NUMS: dict[str, str] = dict()
+ART_NUMS: dict[str, str] = dict()
+CAT_NUMS: dict[str, str] = dict()
+PLA_NUMS: dict[str, str] = dict()
+TAG_ALIASES: dict[str, str] = dict()
+TAG_CONFLICTS: dict[str, tuple[list[str], list[str]]] = dict()
+
 
 def valid_playlist_name(plist: str) -> tuple[int, str]:
     try:
-        plist_v = PLA_NUMS_DECODED[plist]
+        if not PLA_NUMS:
+            load_playlist_nums()
+        plist_v = PLA_NUMS[plist]
         plist_name, plist_numb = plist, int(plist_v)
         return (plist_numb, plist_name)
     except Exception:
@@ -39,7 +52,9 @@ def valid_playlist_name(plist: str) -> tuple[int, str]:
 def valid_playlist_id(plist: str) -> tuple[int, str]:
     try:
         assert plist.isnumeric()
-        for k, v in PLA_NUMS_DECODED.items():
+        if not PLA_NUMS:
+            load_playlist_nums()
+        for k, v in PLA_NUMS.items():
             if v == plist:
                 plist_name, plist_numb = k, int(plist)
                 return (plist_numb, plist_name)
@@ -140,7 +155,9 @@ def is_valid_extra_tag(extag: str) -> bool:
 
 
 def get_tag_num(tag: str, assert_=False) -> str | None:
-    return TAG_NUMS_DECODED[tag] if assert_ else TAG_NUMS_DECODED.get(tag)
+    if not TAG_NUMS:
+        load_tag_nums()
+    return TAG_NUMS[tag] if assert_ else TAG_NUMS.get(tag)
 
 
 def is_valid_tag(tag: str) -> bool:
@@ -148,7 +165,9 @@ def is_valid_tag(tag: str) -> bool:
 
 
 def get_artist_num(artist: str, assert_=False) -> str | None:
-    return ART_NUMS_DECODED[artist] if assert_ else ART_NUMS_DECODED.get(artist)
+    if not ART_NUMS:
+        load_artist_nums()
+    return ART_NUMS[artist] if assert_ else ART_NUMS.get(artist)
 
 
 def is_valid_artist(artist: str) -> bool:
@@ -156,7 +175,9 @@ def is_valid_artist(artist: str) -> bool:
 
 
 def get_category_num(category: str, assert_=False) -> str | None:
-    return CAT_NUMS_DECODED[category] if assert_ else CAT_NUMS_DECODED.get(category)
+    if not CAT_NUMS:
+        load_category_nums()
+    return CAT_NUMS[category] if assert_ else CAT_NUMS.get(category)
 
 
 def is_valid_category(category: str) -> bool:
@@ -176,9 +197,11 @@ def expand_tags(pwtag: str) -> Iterable[str]:
     if not is_wtag(pwtag):
         expanded_tags.add(pwtag)
     else:
+        if not TAG_NUMS:
+            load_tag_nums()
         Log.debug(f'Expanding tags from wtag \'{pwtag}\'...')
         pat = prepare_regex_fullmatch(normalize_wtag(pwtag))
-        for tag in TAG_NUMS_DECODED:
+        for tag in TAG_NUMS:
             if pat.fullmatch(tag):
                 Log.debug(f' - \'{tag}\'')
                 expanded_tags.add(tag)
@@ -190,9 +213,11 @@ def expand_artists(pwtag: str) -> Iterable[str]:
     if not is_wtag(pwtag):
         expanded_artists.add(pwtag)
     else:
+        if not ART_NUMS:
+            load_artist_nums()
         Log.debug(f'Expanding artists from wtag \'{pwtag}\'...')
         pat = prepare_regex_fullmatch(normalize_wtag(pwtag))
-        for artist in ART_NUMS_DECODED:
+        for artist in ART_NUMS:
             if pat.fullmatch(artist):
                 Log.debug(f' - \'{artist}\'')
                 expanded_artists.add(artist)
@@ -204,9 +229,11 @@ def expand_categories(pwtag: str) -> Iterable[str]:
     if not is_wtag(pwtag):
         expanded_categories.add(pwtag)
     else:
+        if not CAT_NUMS:
+            load_category_nums()
         Log.debug(f'Expanding categories from wtag \'{pwtag}\'...')
         pat = prepare_regex_fullmatch(normalize_wtag(pwtag))
-        for category in CAT_NUMS_DECODED:
+        for category in CAT_NUMS:
             if pat.fullmatch(category):
                 Log.debug(f' - \'{category}\'')
                 expanded_categories.add(category)
@@ -319,6 +346,8 @@ def trim_undersores(base_str: str) -> str:
 
 
 def solve_tag_conflicts(vi: VideoInfo, tags_raw: list[str]) -> None:
+    if not TAG_CONFLICTS:
+        load_tag_conflicts()
     for ctag in TAG_CONFLICTS:
         if ctag in tags_raw:
             cposlist, cneglist = TAG_CONFLICTS[ctag]
@@ -402,6 +431,9 @@ def filtered_tags(tags_list: Collection[str]) -> str:
     if len(tags_list) == 0:
         return ''
 
+    if not TAG_ALIASES:
+        load_tag_aliases()
+
     tags_list_final: list[str] = list()
 
     for tag in tags_list:
@@ -458,6 +490,43 @@ def filtered_tags(tags_list: Collection[str]) -> str:
             tags_list_final.append(tag)
 
     return trim_undersores(TAGS_CONCAT_CHAR.join(sorted(tags_list_final)))
+
+
+def load_actpac_json(src_file: str, dest_dict: dict[str, str] | dict[str, tuple[list[str], list[str]]], name: str, *, extract=True) -> None:
+    try:
+        Log.trace(f'Loading {name}...')
+        with open(src_file, 'r', encoding=UTF8) as json_file:
+            if extract:
+                dest_dict.update({k: (v[:v.find(',')] if ',' in v else v) for k, v in load_json(json_file).items()})
+            else:
+                dest_dict.update(load_json(json_file))
+    except Exception:
+        Log.error(f'Failed to load {name} from {normalize_path(path.abspath(src_file), False)}')
+        dest_dict.update({'': ''})
+
+
+def load_tag_nums() -> None:
+    load_actpac_json(FILE_LOC_TAGS, TAG_NUMS, 'tag nums')
+
+
+def load_artist_nums() -> None:
+    load_actpac_json(FILE_LOC_ARTS, ART_NUMS, 'artist nums')
+
+
+def load_category_nums() -> None:
+    load_actpac_json(FILE_LOC_CATS, CAT_NUMS, 'category nums')
+
+
+def load_playlist_nums() -> None:
+    load_actpac_json(FILE_LOC_PLAS, PLA_NUMS, 'playlist nums')
+
+
+def load_tag_aliases() -> None:
+    load_actpac_json(FILE_LOC_TAG_ALIASES, TAG_ALIASES, 'tag aliases', extract=False)
+
+
+def load_tag_conflicts() -> None:
+    load_actpac_json(FILE_LOC_TAG_CONFLICTS, TAG_CONFLICTS, 'tag conflicts', extract=False)
 
 #
 #
