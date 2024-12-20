@@ -26,7 +26,10 @@ from pages import main as pages_main, main_sync as pages_main_sync
 from path_util import found_filenames_dict
 from rex import prepare_regex_fullmatch
 # noinspection PyProtectedMember
-from tagger import extract_id_or_group, normalize_wtag, match_text
+from tagger import (
+    extract_id_or_group, normalize_wtag, match_text, load_tag_nums, load_artist_nums, load_category_nums, load_playlist_nums,
+    load_tag_aliases, load_tag_conflicts, TAG_NUMS, ART_NUMS, CAT_NUMS, PLA_NUMS, TAG_ALIASES, TAG_CONFLICTS
+)
 from util import normalize_path
 from version import APP_NAME, APP_VERSION
 
@@ -36,6 +39,44 @@ RUN_CONN_TESTS = 0
 def set_up_test(log=False) -> None:
     found_filenames_dict.clear()
     Log._disabled = not log
+
+
+class FileCheckTests(TestCase):
+    def test_filecheck01_tags(self) -> None:
+        set_up_test()
+        load_tag_nums()
+        self.assertIsNone(TAG_NUMS.get(''))
+        print(f'{self._testMethodName} passed')
+
+    def test_filecheck02_arts(self) -> None:
+        set_up_test()
+        load_artist_nums()
+        self.assertIsNone(ART_NUMS.get(''))
+        print(f'{self._testMethodName} passed')
+
+    def test_filecheck03_cats(self) -> None:
+        set_up_test()
+        load_category_nums()
+        self.assertIsNone(CAT_NUMS.get(''))
+        print(f'{self._testMethodName} passed')
+
+    def test_filecheck04_plas(self) -> None:
+        set_up_test()
+        load_playlist_nums()
+        self.assertIsNone(PLA_NUMS.get(''))
+        print(f'{self._testMethodName} passed')
+
+    def test_filecheck05_tag_aliases(self) -> None:
+        set_up_test()
+        load_tag_aliases()
+        self.assertIsNone(TAG_ALIASES.get(''))
+        print(f'{self._testMethodName} passed')
+
+    def test_filecheck06_tag_conflicts(self) -> None:
+        set_up_test()
+        load_tag_conflicts()
+        self.assertIsNone(TAG_CONFLICTS.get(''))
+        print(f'{self._testMethodName} passed')
 
 
 class CmdTests(TestCase):
