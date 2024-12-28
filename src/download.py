@@ -61,18 +61,26 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     rating = vi.rating
     score = ''
 
-    predict_gap1 = Config.predict_id_gaps and 3400000 <= vi.id <= 3900000
+    predict_gap1 = Config.predict_id_gaps and 3400000 <= vi.id <= 3638827
+    predict_gap2 = Config.predict_id_gaps and 3638828 <= vi.id <= 3999999
+    predicted_skip = False
+    predicted_prefix = ''
     if predict_gap1:
+        predicted_prefix = '1'
         vi_prev1 = scn.find_vinfo_last(vi.id - 1)
         vi_prev2 = scn.find_vinfo_last(vi.id - 2)
         if vi_prev1 and vi_prev2:
             f_404s = [vip.has_flag(VideoInfo.Flags.RETURNED_404) for vip in (vi_prev1, vi_prev2)]
-            skip = f_404s[0] is not f_404s[1]
+            predicted_skip = f_404s[0] is not f_404s[1]
         else:
-            skip = vi_prev1 and not vi_prev1.has_flag(VideoInfo.Flags.RETURNED_404)
-        if skip:
-            Log.warn(f'Id gap prediction forces error 404 for {sname}, skipping...')
-            return DownloadResult.FAIL_NOT_FOUND
+            predicted_skip = vi_prev1 and not vi_prev1.has_flag(VideoInfo.Flags.RETURNED_404)
+    elif predict_gap2:
+        predicted_prefix = '2'
+        vi_prev1 = scn.find_vinfo_last(vi.id - 1)
+        predicted_skip = vi_prev1 and not vi_prev1.has_flag(VideoInfo.Flags.RETURNED_404)
+    if predicted_skip:
+        Log.warn(f'Id gap prediction {predicted_prefix} forces error 404 for {sname}, skipping...')
+        return DownloadResult.FAIL_NOT_FOUND
 
     vi.set_state(VideoInfo.State.SCANNING)
     a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + vi.id % 10:d}', session=dwn.session)
