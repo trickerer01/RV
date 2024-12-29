@@ -61,8 +61,8 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     rating = vi.rating
     score = ''
 
-    predict_gap1 = Config.predict_id_gaps and 3400000 <= vi.id <= 3638827
-    predict_gap2 = Config.predict_id_gaps and 3638828 <= vi.id <= 3999999
+    predict_gap1 = Config.predict_id_gaps and (3400000 <= vi.id <= 3638827 or 3639246 <= vi.id <= 3999999)
+    predict_gap2 = Config.predict_id_gaps and 3638828 <= vi.id <= 3639245
     predicted_skip = False
     predicted_prefix = ''
     if predict_gap1:
