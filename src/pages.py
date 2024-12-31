@@ -17,7 +17,7 @@ from defs import (
     SITE_AJAX_REQUEST_FAVOURITES_PAGE, SITE_AJAX_REQUEST_MODEL_PAGE,
 )
 from download import download, at_interrupt
-from fetch_html import make_session, fetch_html
+from fetch_html import create_session, fetch_html
 from iinfo import VideoInfo
 from logger import Log
 from path_util import prefilter_existing_items
@@ -56,7 +56,7 @@ async def main(args: Sequence[str]) -> None:
     maxpage = Config.end if Config.start == Config.end else 0
 
     pi = Config.start
-    async with make_session() as s:
+    async with create_session():
         while pi <= Config.end:
             if pi > maxpage > 0:
                 Log.info('reached parsed max page, page scan completed')
@@ -69,7 +69,7 @@ async def main(args: Sequence[str]) -> None:
                 (SITE_AJAX_REQUEST_MODEL_PAGE % (Config.model, pi)) if Config.model else
                 (SITE_AJAX_REQUEST_SEARCH_PAGE % (Config.search_tags, Config.search_arts, Config.search_cats, Config.search, pi))
             )
-            a_html = await fetch_html(page_addr, session=s)
+            a_html = await fetch_html(page_addr)
             if not a_html:
                 Log.error(f'Error: cannot get html for page {pi:d}')
                 continue
@@ -171,7 +171,7 @@ async def main(args: Sequence[str]) -> None:
                 Log.fatal('\nNo videos found. Aborted.')
             return
 
-        await download(v_entries, full_download, removed_count, s)
+        await download(v_entries, full_download, removed_count)
 
 
 async def run_main(args: Sequence[str]) -> None:

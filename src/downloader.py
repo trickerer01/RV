@@ -14,8 +14,6 @@ from collections.abc import Iterable, Callable, Coroutine
 from os import path, remove, makedirs, stat
 from typing import Any
 
-from aiohttp import ClientSession
-
 from config import Config
 from defs import (
     DownloadResult, Mem, MAX_VIDEOS_QUEUE_SIZE, DOWNLOAD_QUEUE_STALL_CHECK_TIMER, DOWNLOAD_CONTINUE_FILE_CHECK_TIMER, PREFIX,
@@ -47,7 +45,7 @@ class VideoDownloadWorker:
         VideoDownloadWorker._instance = None
 
     def __init__(self, sequence: Iterable[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
-                 filtered_count: int, session: ClientSession) -> None:
+                 filtered_count: int) -> None:
         assert VideoDownloadWorker._instance is None
         VideoDownloadWorker._instance = self
 
@@ -56,7 +54,6 @@ class VideoDownloadWorker:
         self._func = func
         self._seq = [vi for vi in sequence]  # form our own container to erase from
         self._queue: AsyncQueue[VideoInfo] = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)
-        self._session = session
         self._orig_count = len(self._seq)
         self._downloaded_count = 0
         self._prefiltered_count = filtered_count
@@ -241,10 +238,6 @@ class VideoDownloadWorker:
             for vi in active_items:
                 Log.debug(f'at_interrupt: trying to remove \'{vi.my_fullpath}\'...')
                 remove(vi.my_fullpath)
-
-    @property
-    def session(self) -> ClientSession:
-        return self._session
 
     def is_writing(self, vi: VideoInfo) -> bool:
         return vi in self._writes_active

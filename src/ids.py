@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from download import download, at_interrupt
+from fetch_html import create_session
 from iinfo import VideoInfo
 from logger import Log
 from path_util import prefilter_existing_items
@@ -70,7 +71,8 @@ async def main(args: Sequence[str]) -> None:
             Log.fatal('\nNo videos found. Aborted.')
         return
 
-    await download(v_entries, True, removed_count)
+    async with create_session():
+        await download(v_entries, True, removed_count)
 
 
 async def run_main(args: Sequence[str]) -> None:
