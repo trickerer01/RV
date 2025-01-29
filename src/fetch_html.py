@@ -149,7 +149,7 @@ async def wrap_request(method: str, url: str, **kwargs) -> ClientResponse:
     return r
 
 
-async def fetch_html(url: str, *, tries=0) -> BeautifulSoup | None:
+async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup | None:
     # very basic, minimum validation
     tries = tries or Config.retries
 
@@ -160,7 +160,7 @@ async def fetch_html(url: str, *, tries=0) -> BeautifulSoup | None:
         try:
             async with await wrap_request(
                     'GET', url,
-                    headers={'Connection': 'keep-alive', 'X-fancyBox': 'true', 'X-Requested-With': 'XMLHttpRequest'}) as r:
+                    headers={'Connection': 'keep-alive', 'X-fancyBox': 'true', 'X-Requested-With': 'XMLHttpRequest'}, **kwargs) as r:
                 if r.status != 404:
                     r.raise_for_status()
                 content = await r.read()
