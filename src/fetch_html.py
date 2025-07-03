@@ -81,10 +81,11 @@ class ClientSessionWrapper:
 
     @staticmethod
     def ignore_unclosed_session_exc_handler(self: AbstractEventLoop, context: dict) -> None:
-        if context.get('message') not in ('Event loop is closed',):
+        message = context.get('message')
+        if message not in ('Event loop is closed',) and sessionw is not None and sessionw.default_exc_handler is not None:
             sessionw.default_exc_handler(self, context)
         else:
-            Log.trace(f'{context.get("message")} exception ignored...')
+            Log.trace(f'{message} exception ignored...')
 
     @staticmethod
     def make_session(noproxy=False) -> ClientSession:
