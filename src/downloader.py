@@ -95,13 +95,16 @@ class VideoDownloadWorker:
             self._downloaded_count += 1
 
     async def _prod(self) -> None:
-        while self.can_fetch_next():
-            if self._queue.full() is False:
-                async with self._lock:
-                    vi = await self._try_fetch_next()
-                    if vi:
-                        vi.set_state(VideoInfo.State.QUEUED)
-                        await self._queue.put(vi)
+        while True:
+            async with self._lock:
+                if self.can_fetch_next() is False:
+                    break
+                qfull = self._queue.full()
+            if qfull is False:
+                vi = await self._try_fetch_next()
+                if vi:
+                    vi.set_state(VideoInfo.State.QUEUED)
+                    await self._queue.put(vi)
             else:
                 await sleep(0.2)
 
