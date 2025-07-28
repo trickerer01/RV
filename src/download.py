@@ -119,7 +119,11 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         titleh1 = a_html.find('h1', class_='title_video')
         vi.title = titleh1.text if titleh1 else ''
     if not vi.duration:
-        vi.duration = get_time_seconds(str(a_html.find('div', class_='info row').find('span', string=re_time).text))
+        try:
+            vi.duration = get_time_seconds(str(a_html.find('div', class_='info row').find('span', string=re_time).text))
+        except Exception:
+            Log.error(f'Unable to extract duration for {sname}!')
+            vi.duration = 0
 
     Log.info(f'Scanning {sname}: {vi.fduration} \'{vi.title}\'')
 
