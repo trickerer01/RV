@@ -216,7 +216,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if Config.duration and vi.duration and not (Config.duration.first <= vi.duration <= Config.duration.second):
         Log.info(f'Info: video {sname} duration \'{vi.duration:d}\' is out of bounds ({str(Config.duration)}), skipping...')
         return DownloadResult.FAIL_SKIPPED
-    if scn.find_vinfo_pred(lambda _: _.id == vi.id and VideoInfo.State.SCANNED <= _.state <= VideoInfo.State.DONE):
+    if scn.find_vinfo_pred(lambda _: _.id == vi.id and id(_) != id(vi) and VideoInfo.State.ACTIVE <= _.state <= VideoInfo.State.DONE):
         Log.info(f'{sname} was already processed, skipping...')
         return DownloadResult.FAIL_ALREADY_EXISTS
     my_tags = filtered_tags(sorted(tags_raw)) or my_tags
@@ -281,7 +281,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
 
 
 async def process_video(vi: VideoInfo) -> DownloadResult:
-    vi.set_state(VideoInfo.State.ACTIVE)
+    vi.set_state(VideoInfo.State.DOWNLOAD_PENDING)
     res = await download_video(vi)
     if res not in (DownloadResult.SUCCESS, DownloadResult.FAIL_SKIPPED, DownloadResult.FAIL_ALREADY_EXISTS):
         vi.set_state(VideoInfo.State.FAILED)

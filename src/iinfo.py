@@ -25,13 +25,14 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
     class State(IntEnum):
         NEW = 0
         QUEUED = 1
-        SCANNING = 2
-        SCANNED = 3
-        ACTIVE = 4
-        DOWNLOADING = 5
-        WRITING = 6
-        DONE = 7
-        FAILED = 8
+        ACTIVE = 2
+        SCANNING = 3
+        SCANNED = 4
+        DOWNLOAD_PENDING = 5
+        DOWNLOADING = 6
+        WRITING = 7
+        DONE = 8
+        FAILED = 9
 
     class Flags(IntEnum):
         NONE = 0x0

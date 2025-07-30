@@ -76,6 +76,7 @@ class VideoDownloadWorker:
             self._scn.register_task_finish_callback(self._at_task_finish)
 
     async def _at_task_start(self, vi: VideoInfo) -> None:
+        vi.set_state(VideoInfo.State.ACTIVE)
         self._downloads_active.append(vi)
         Log.trace(f'[queue] {vi.sname} added to active')
 
