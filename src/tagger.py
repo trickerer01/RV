@@ -302,7 +302,7 @@ def extract_id_or_group(ex_tags: MutableSequence[str]) -> list[int]:
         orgr = ex_tags[i]
         if is_valid_id_or_group(orgr):
             del ex_tags[i]
-            return [int(tag.replace('id=', '')) for tag in orgr[1:-1].split('~')]
+            return list(set(int(tag.replace('id=', '')) for tag in orgr[1:-1].split('~')))
     return []
 
 
