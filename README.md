@@ -178,7 +178,6 @@ There are several ways you can select videos to download and some of them, despi
 - `python ids.py <args...> -start ... -end ... (TAG1~TAG2)`
 - `etc.`
   - you may end up having to check every video
-  - there is no way to filter by uploader's username using `extra tags` (see below)
 
 **Solution 1**: use native search functionality instead (search result pages):
 - `python pages.py <args...> -start 1 -pages 99 -search_art ARTIST`
