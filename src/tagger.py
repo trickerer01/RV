@@ -383,7 +383,8 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: list[str], extra_tags
             for conf, cn, td in zip(
                 (Config.check_title_neg, Config.check_description_neg),
                 ('TITL', 'DESC'),
-                (vi.title, vi.description)
+                (vi.title, vi.description),
+                strict=True
             ):
                 if conf and td:
                     for tmatch in match_text(extag, td, 'and'):
@@ -410,7 +411,8 @@ def is_filtered_out_by_extra_tags(vi: VideoInfo, tags_raw: list[str], extra_tags
                     (Config.check_title_pos, Config.check_title_neg, Config.check_description_pos, Config.check_description_neg),
                     ('TITL', 'TITL', 'DESC', 'DESC'),
                     ('POS', 'NEG', 'POS', 'NEG'),
-                    (vi.title, vi.title, vi.description, vi.description)
+                    (vi.title, vi.title, vi.description, vi.description),
+                    strict=True
                 ):
                     if conf and td and ((np == 'NEG') == negative) and not mtag:
                         mtag = match_text(my_extag, td)

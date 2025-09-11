@@ -14,7 +14,7 @@ from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from defs import (
     NamingFlags, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, PREFIX, QUALITIES,
-    SITE_AJAX_REQUEST_FAVOURITES_PAGE, SITE_AJAX_REQUEST_MODEL_PAGE,
+    SITE_AJAX_REQUEST_FAVOURITES_PAGE, SITE_AJAX_REQUEST_MODEL_PAGE, MIN_PYTHON_VERSION, MIN_PYTHON_VERSION_STR,
 )
 from download import download, at_interrupt
 from fetch_html import create_session, fetch_html
@@ -180,7 +180,7 @@ async def run_main(args: Sequence[str]) -> None:
 
 
 def main_sync(args: Sequence[str]) -> None:
-    assert sys.version_info >= (3, 9), 'Minimum python version required is 3.9!'
+    assert sys.version_info >= MIN_PYTHON_VERSION, f'Minimum python version required is {MIN_PYTHON_VERSION_STR}!'
 
     try:
         run_async(run_main(args))

@@ -203,7 +203,8 @@ def export_video_info(info_list: Iterable[VideoInfo]) -> None:
         (Config.save_tags, Config.save_descriptions, Config.save_comments),
         (tags_dict, desc_dict, comm_dict),
         ('tags', 'descriptions', 'comments'),
-        (lambda tags: f' {tags.strip()}\n', lambda description: f'{description}\n', lambda comments: f'{comments}\n')
+        (lambda tags: f' {tags.strip()}\n', lambda description: f'{description}\n', lambda comments: f'{comments}\n'),
+        strict=True
     ):
         if not conf:
             continue
