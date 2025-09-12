@@ -6,8 +6,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from os import path, listdir, rename, makedirs, getpid
 from collections.abc import MutableSequence
+from os import DirEntry, path, rename, makedirs, getpid, scandir
 
 from psutil import Error as PSError, process_iter
 
@@ -28,8 +28,8 @@ media_matches_cache: dict[str, tuple[str, Quality]] = dict()
 
 
 def report_duplicates() -> None:
-    found_vs = dict()
-    fvks = list()
+    found_vs = dict[str, list[str]]()
+    fvks = list[str]()
     for k in found_filenames_dict:
         if not found_filenames_dict[k]:
             continue
@@ -40,7 +40,7 @@ def report_duplicates() -> None:
             if fm:
                 fid = fm.group(1)
                 if fid not in found_vs:
-                    found_vs[fid] = [''] * 0
+                    found_vs[fid] = list()
                 elif fid not in fvks:
                     fvks.append(fid)
                 found_vs[fid].append(k + fname)
@@ -78,15 +78,16 @@ def scan_dest_folder() -> None:
 
         def scan_folder(base_folder: str, level: int) -> None:
             if path.isdir(base_folder):
-                for cname in listdir(base_folder):
-                    fullpath = f'{base_folder}{cname}'
-                    if path.isdir(fullpath):
+                dentry: DirEntry
+                for dentry in scandir(base_folder):
+                    fullpath = f'{base_folder}{dentry.name}'
+                    if dentry.is_dir():
                         fullpath = normalize_path(fullpath)
                         if level < scan_depth:
                             found_filenames_dict[fullpath] = list()
                             scan_folder(fullpath, level + 1)
-                    elif path.isfile(fullpath):
-                        found_filenames_dict[base_folder].append(cname)
+                    elif dentry.is_file():
+                        found_filenames_dict[base_folder].append(dentry.name)
 
         found_filenames_dict[dest_base] = list()
         scan_folder(dest_base, 0)

@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from __future__ import annotations
 from collections.abc import Iterable
 from enum import IntEnum
-from os import path, listdir, remove, makedirs
+from os import DirEntry, path, remove, makedirs, scandir
 from re import Match
 
 from config import Config
@@ -144,9 +144,10 @@ def try_merge_info_files(info_dict: dict[int, str], subfolder: str, list_type: s
     if not path.isdir(dir_fullpath):
         return parsed_files
     # Log.debug(f'\nMerging {Config.dest_base}{subfolder} \'{list_type}\' info lists...')
+    f: DirEntry
     info_lists: list[Match[str]] = sorted(filter(
-        lambda x: not not x, [re_infolist_filename.fullmatch(f) for f in listdir(dir_fullpath)
-                              if path.isfile(f'{dir_fullpath}{f}') and f.startswith(f'{PREFIX}!{list_type}_')]
+        lambda x: not not x, [re_infolist_filename.fullmatch(f.name) for f in scandir(dir_fullpath)
+                              if f.is_file() and f.name.startswith(f'{PREFIX}!{list_type}_')]
     ), key=lambda m: m.string)
     if not info_lists:
         return parsed_files
