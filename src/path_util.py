@@ -56,13 +56,13 @@ def report_duplicates() -> None:
 def scan_dest_folder() -> None:
     """
     Scans base destination folder plus {Config.folder_scan_depth} levels of subfolders and
-    stores found files in dict (key=folder_name)\n\n
-    |folder1:\n\n
-    |__subfolder1:\n\n
-    |____file2\n\n
-    |____file3\n\n
-    |__file1\n\n
-    => files{'folder1': ['file1'], 'subfolder1': ['file2','file3']}\n\n
+    stores found files in dict (key=folder_name)\n
+    |folder1:
+    |__subfolder1:
+    |____file2
+    |____file3
+    |__file1
+    => files{'folder1': ['file1'], 'subfolder1': ['file2','file3']}\n
     This function may only be called once!
     """
     assert len(found_filenames_dict.keys()) == 0
@@ -159,8 +159,8 @@ def file_already_exists_arr(idi: int, quality: Quality) -> list[str]:
 
 def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
     """
-    This function filters out existing items with desired quality\n\n
-    (which may sometimes be inaccessible).\n\n
+    This function filters out existing items with desired quality
+    (which may sometimes be inaccessible).\n
     This function may only be called once!
     """
     scan_dest_folder()

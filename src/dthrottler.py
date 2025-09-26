@@ -6,7 +6,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from __future__ import annotations
 from asyncio import CancelledError, Task, sleep, get_running_loop
 from collections import deque
 from os import path, stat

@@ -39,7 +39,7 @@ async def download(sequence: list[VideoInfo], by_id: bool, filtered_count: int) 
     eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(sequence))
     interrupt_msg = f'\nPress \'{SCAN_CANCEL_KEYSTROKE}\' twice to stop' if by_id else ''
     Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}.'
-             f' Working...{interrupt_msg if by_id else ""}\n'
+             f' Working...{interrupt_msg}\n'
              f'\nThis will take at least {eta_min:d} seconds{f" ({format_time(eta_min)})" if eta_min >= 60 else ""}!\n')
     with (VideoScanWorker(sequence, scan_video) as scn, VideoDownloadWorker(sequence, process_video, filtered_count) as dwn):
         for cv in as_completed([scn.run(), dwn.run()] if by_id else [dwn.run()]):

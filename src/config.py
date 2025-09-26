@@ -6,7 +6,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from __future__ import annotations
 from argparse import Namespace
 
 from aiohttp import ClientTimeout

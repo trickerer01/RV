@@ -6,7 +6,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from __future__ import annotations
 from argparse import ArgumentParser, ZERO_OR_MORE
 
 from defs import (

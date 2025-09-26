@@ -6,7 +6,6 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from __future__ import annotations
 from collections.abc import Collection, Iterable, MutableSequence
 from json import load as load_json
 from os import path
