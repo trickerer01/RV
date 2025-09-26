@@ -33,6 +33,7 @@ TAG_NUMS: dict[str, str] = dict()
 ART_NUMS: dict[str, str] = dict()
 CAT_NUMS: dict[str, str] = dict()
 PLA_NUMS: dict[str, str] = dict()
+PLA_NUMS_REV: dict[str, str] = dict()
 TAG_ALIASES: dict[str, str] = dict()
 TAG_CONFLICTS: dict[str, tuple[list[str], list[str]]] = dict()
 
@@ -51,13 +52,11 @@ def valid_playlist_name(plist: str) -> tuple[int, str]:
 def valid_playlist_id(plist: str) -> tuple[int, str]:
     try:
         assert plist.isnumeric()
-        if not PLA_NUMS:
-            load_playlist_nums()
-        for k, v in PLA_NUMS.items():
-            if v == plist:
-                plist_name, plist_numb = k, int(plist)
-                return (plist_numb, plist_name)
-        assert False
+        if not PLA_NUMS_REV:
+            load_playlist_nums_rev()
+        plist_v = PLA_NUMS_REV[plist]
+        plist_name, plist_numb = plist_v, int(plist)
+        return (plist_numb, plist_name)
     except Exception:
         raise ValueError
 
@@ -493,14 +492,21 @@ def filtered_tags(tags_list: Collection[str]) -> str:
     return trim_undersores(TAGS_CONCAT_CHAR.join(sorted(tags_list_final)))
 
 
-def load_actpac_json(src_file: str, dest_dict: dict[str, str] | dict[str, tuple[list[str], list[str]]], name: str, *, extract=True) -> None:
+def load_actpac_json(src_file: str, dest_dict: dict[str, str] | dict[str, tuple[list[str], list[str]]], name: str, *,
+                     extract=True, reverse=False) -> None:
     try:
         Log.trace(f'Loading {name}...')
         with open(src_file, 'r', encoding=UTF8) as json_file:
             if extract:
-                dest_dict.update({k: (v[:v.find(',')] if ',' in v else v) for k, v in load_json(json_file).items()})
+                if reverse:
+                    dest_dict.update({(v[:v.find(',')] if ',' in v else v): k for k, v in load_json(json_file).items()})
+                else:
+                    dest_dict.update({k: (v[:v.find(',')] if ',' in v else v) for k, v in load_json(json_file).items()})
             else:
-                dest_dict.update(load_json(json_file))
+                if reverse:
+                    dest_dict.update({v: k for k, v in load_json(json_file).items()})
+                else:
+                    dest_dict.update(load_json(json_file))
     except Exception:
         Log.error(f'Failed to load {name} from {normalize_path(path.abspath(src_file), False)}')
         dest_dict.update({'': ''})
@@ -520,6 +526,10 @@ def load_category_nums() -> None:
 
 def load_playlist_nums() -> None:
     load_actpac_json(FILE_LOC_PLAS, PLA_NUMS, 'playlist nums')
+
+
+def load_playlist_nums_rev() -> None:
+    load_actpac_json(FILE_LOC_PLAS, PLA_NUMS_REV, 'playlist nums rev', reverse=True)
 
 
 def load_tag_aliases() -> None:
