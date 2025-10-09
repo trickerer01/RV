@@ -410,8 +410,9 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                         vi.set_state(VideoInfo.State.DONE)
                 break
 
-            hkwargs: dict[str, dict[str, str]] = {'headers': {'Range': f'bytes={file_size:d}-'}} if file_size > 0 else {}
+            hkwargs: dict[str, dict[str, str]] = {'headers': {'Range': f'bytes={file_size:d}-'} if file_size > 0 else {}}
             ckwargs = dict(allow_redirects=not Config.proxy or not Config.download_without_proxy)
+            # hkwargs['headers'].update({'Referer': SITE_AJAX_REQUEST_VIDEO % vi.id})
             r = await wrap_request('GET', vi.link, **ckwargs, **hkwargs)
             while r.status in (301, 302):
                 if urlparse(r.headers['Location']).hostname != urlparse(vi.link).hostname:
