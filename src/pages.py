@@ -67,11 +67,16 @@ async def main(args: Sequence[str]) -> None:
                 (SITE_AJAX_REQUEST_FAVOURITES_PAGE % (Config.favourites, pi)) if Config.favourites else
                 (SITE_AJAX_REQUEST_UPLOADER_PAGE % (Config.uploader, pi)) if Config.uploader else
                 (SITE_AJAX_REQUEST_MODEL_PAGE % (Config.model, pi)) if Config.model else
-                (SITE_AJAX_REQUEST_SEARCH_PAGE % (Config.search_tags, Config.search_arts, Config.search_cats, Config.search, pi))
+                (SITE_AJAX_REQUEST_SEARCH_PAGE % (Config.search_tags, Config.search_arts, Config.search_cats, Config.search,
+                                                  Config.blacklist, pi))
             )
             a_html = await fetch_html(page_addr)
             if not a_html:
                 Log.error(f'Error: cannot get html for page {pi:d}')
+                continue
+
+            if not len(a_html):
+                Log.error(f'Error: got empty HTML for page {pi}! Retrying...')
                 continue
 
             pi += 1

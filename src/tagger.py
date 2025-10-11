@@ -6,7 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from collections.abc import Collection, Iterable, MutableSequence
+from collections.abc import Callable, Collection, Iterable, MutableSequence
 from json import load as load_json
 from os import path
 
@@ -26,7 +26,7 @@ from util import normalize_path, assert_nonempty
 
 __all__ = (
     'filtered_tags', 'get_matching_tag', 'extract_id_or_group', 'valid_extra_tag', 'is_filtered_out_by_extra_tags', 'solve_tag_conflicts',
-    'valid_playlist_name', 'valid_playlist_id', 'valid_tags', 'valid_artists', 'valid_categories',
+    'valid_playlist_name', 'valid_playlist_id', 'valid_tags', 'valid_artists', 'valid_categories', 'valid_blacklist',
 )
 
 TAG_NUMS: dict[str, str] = dict()
@@ -80,7 +80,7 @@ def valid_extra_tag(tag: str, log=True) -> str:
         raise ValueError
 
 
-def valid_tags(tags_str: str) -> str:
+def valid_tags(tags_str: str, *, report=True) -> str:
     all_valid = True
     tag_ids = set()
     if len(tags_str) > 0:
@@ -88,16 +88,18 @@ def valid_tags(tags_str: str) -> str:
             try:
                 tag_ids.update(get_tag_num(tag_ex, True) for tag_ex in assert_nonempty(expand_tags(tag)))
             except Exception:
-                Log.error(f'Error: invalid tag: \'{tag}\'!')
+                if report:
+                    Log.error(f'Error: invalid tag: \'{tag}\'!')
                 all_valid = False
                 continue
     if not all_valid:
-        Log.fatal('Fatal: Invalid tags found!')
+        if report:
+            Log.fatal('Fatal: Invalid tags found!')
         raise ValueError
     return ','.join(sorted(tag_ids))
 
 
-def valid_artists(artists_str: str) -> str:
+def valid_artists(artists_str: str, *, report=True) -> str:
     all_valid = True
     artist_ids = set()
     if len(artists_str) > 0:
@@ -105,16 +107,18 @@ def valid_artists(artists_str: str) -> str:
             try:
                 artist_ids.update(get_artist_num(artist_ex, True) for artist_ex in assert_nonempty(expand_artists(artist)))
             except Exception:
-                Log.error(f'Error: invalid artist: \'{artist}\'!')
+                if report:
+                    Log.error(f'Error: invalid artist: \'{artist}\'!')
                 all_valid = False
                 continue
     if not all_valid:
-        Log.fatal('Fatal: Invalid artists found!')
+        if report:
+            Log.fatal('Fatal: Invalid artists found!')
         raise ValueError
     return ','.join(sorted(artist_ids))
 
 
-def valid_categories(categories_str: str) -> str:
+def valid_categories(categories_str: str, *, report=True) -> str:
     all_valid = True
     category_ids = set()
     if len(categories_str) > 0:
@@ -122,13 +126,60 @@ def valid_categories(categories_str: str) -> str:
             try:
                 category_ids.update(get_category_num(category_ex, True) for category_ex in assert_nonempty(expand_categories(category)))
             except Exception:
-                Log.error(f'Error: invalid category: \'{category}\'!')
+                if report:
+                    Log.error(f'Error: invalid category: \'{category}\'!')
                 all_valid = False
                 continue
     if not all_valid:
-        Log.fatal('Fatal: Invalid categories found!')
+        if report:
+            Log.fatal('Fatal: Invalid categories found!')
         raise ValueError
     return ','.join(sorted(category_ids))
+
+
+def valid_blacklist(blacklist_str: str) -> str:
+    bl_act_type_artist = 'model'
+    bl_act_type_category = 'cat'
+    bl_act_type_tag = 'tag'
+    containers: dict[str, set[str]] = {bl_act_type_artist: set(), bl_act_type_category: set(), bl_act_type_tag: set()}
+    errors = list[str]()
+
+    if len(blacklist_str) > 0:
+        checkers: dict[str, Callable[..., str]] = {
+            bl_act_type_artist: valid_artists,
+            bl_act_type_category: valid_categories,
+            bl_act_type_tag: valid_tags,
+        }
+
+        try:
+            for act_raw in blacklist_str.split(','):
+                try:
+                    if ':' in act_raw:
+                        act_type, act_value = act_raw.split(':')
+                        act_type_full = {'a': bl_act_type_artist, 'c': bl_act_type_category, 't': bl_act_type_tag}.get(act_type)
+                        containers[act_type_full].update(checkers[act_type_full](act_value, report=False).split(','))
+                    else:
+                        containers_temp = {bl_act_type_artist: set(), bl_act_type_category: set(), bl_act_type_tag: set()}
+                        for act_type_full in containers_temp:
+                            try:
+                                values_to_push = checkers[act_type_full](act_raw, report=False)
+                                containers_temp[act_type_full].update(values_to_push.split(','))
+                            except Exception:
+                                continue
+                        if all(not containers_temp[k] for k in containers_temp):
+                            raise ValueError
+                        for act_type_full in containers_temp:
+                            containers[act_type_full].update(containers_temp[act_type_full])
+                except Exception:
+                    errors.append(f'Invalid blacklist partition \'{act_raw}\'')
+        except ValueError:
+            errors.append(f'Invalid blacklist string \'{blacklist_str}\'')
+
+        if errors:
+            Log.fatal('\n'.join(errors))
+            raise ValueError
+
+    return ','.join(','.join(f'{k}:{v}' for v in sorted(containers[k])) for k in containers if containers[k])
 
 
 def is_utag(tag: str) -> bool:

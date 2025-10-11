@@ -22,11 +22,11 @@ from defs import (
     MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC, HELP_ARG_ID_START, HELP_ARG_ID_COUNT, HELP_ARG_ID_END,
     HELP_ARG_PAGE_START, HELP_ARG_PAGE_COUNT, HELP_ARG_PAGE_END, HELP_ARG_REPORT_DUPLICATES, HELP_ARG_DUMP_SCREENSHOTS,
     MAX_DEST_SCAN_UPLEVELS_DEFAULT, HELP_ARG_RETRIES, CONNECT_RETRIES_BASE, HELP_ARG_PROXYNODOWN, HELP_ARG_NOCOLORS, HELP_ARG_DURATION,
-    HELP_ARG_SOLVE_TAG_CONFLICTS, HELP_ARG_PREDICT_ID_GAPS, HELP_ARG_FAVORITES,
+    HELP_ARG_SOLVE_TAG_CONFLICTS, HELP_ARG_PREDICT_ID_GAPS, HELP_ARG_FAVORITES, HELP_ARG_BLACKLIST,
 )
 from logger import Log
 from scenario import DownloadScenario
-from tagger import valid_extra_tag, valid_tags, valid_artists, valid_categories, valid_playlist_name, valid_playlist_id
+from tagger import valid_extra_tag, valid_tags, valid_artists, valid_categories, valid_playlist_name, valid_playlist_id, valid_blacklist
 from validators import (
     valid_int, positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
     log_level, positive_int, valid_lookahead, valid_duration, valid_session_id,
@@ -223,6 +223,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     par_cmd.add_argument('-search_rule_tag', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_art', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_cat', default=SEARCH_RULE_DEFAULT, help=HELP_ARG_SEARCH_RULE, choices=SEARCH_RULES)
+    par_cmd.add_argument('-blacklist', metavar='#[[(a|c|t):]name[,...]', default='', help=HELP_ARG_BLACKLIST, type=valid_blacklist)
 
     add_common_args(par_cmd)
     return execute_parser(parser, par_cmd, args, True)

@@ -33,6 +33,20 @@ RV is a video downloader with a lot of features, most of which are filters for f
 - How raw string search really works: before trying to match word(s) in the search string server performs alias expansion which may lead to some unexpected results, aliases list is unavailable but some of them are straight counterintuitive - too many post may get matched for seemingly no reason. Words in provided string may match title, tags, categories, author, uploader or description, pretty much anything. Matching is partial so word 'all' will match 'tall', 'calling' and everything else containing this symbol sequence
 
 #### Filters
+##### Native filters
+- In addition to multiple search parameters it is also possible to filter out unwanted results natively. Syntax:
+  - `-blacklist [type1:]name1[,[type2:]name2,...]`, where `<typeN>` is either `a` (artist), `c` (category) or `t` (tag), and `<nameN>` is (non-)wildcarded value string
+  - `<nameN>` must be a valid value of type `<typeN>` (see below for possible values)
+  - If `type` is omitted then `name` is matched againt all possible `types` and must match at least one of them
+  - Examples:
+  - Filter out tag `2d`
+    - `-blacklist t:2d`
+  - Filter out all tags starting with `fur` and all categories starting with `rob`
+    - `-blacklist t:fur*,c:rob*`
+  - Filter out any tags, categories and artists with name containing `zombie`:
+    - `-blacklist *zombie*`
+
+##### Post-search filters
 - Initial search results / ids list can be then filtered further using `extra tags` (see below)
 
 #### Tags. Categories. Artists. Extra tags

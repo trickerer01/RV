@@ -48,9 +48,11 @@ START_TIME = datetime.now()
 SITE = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20=').decode()
 SITE_AJAX_REQUEST_SEARCH_PAGE = b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vc2VhcmNoLz9tb2RlPWFzeW5jJmZ1bmN0aW9uPWdldF9ibG9jayZibG9ja19pZD1jdXN0b21fbGlzdF92aWRlb3NfdmlkZW9zX2xpc3'
-    'Rfc2VhcmNoJnNvcnRfYnk9cG9zdF9kYXRlJnRhZ19pZHM9JXMmbW9kZWxfaWRzPSVzJmNhdGVnb3J5X2lkcz0lcyZxPSVzJmZyb21fdmlkZW9zPSVk').decode()
-"""Params required: **tags**, **artists**, **categories**, **search**, **page** - **str**, **str**, **str**, **str**, **int**\n
-Ex. SITE_AJAX_REQUEST_SEARCH_PAGE % ('1,2', '3,4,5', '6', 'sfw', 1)"""
+    'Rfc2VhcmNoJnNvcnRfYnk9cG9zdF9kYXRlJnRhZ19pZHM9JXMmbW9kZWxfaWRzPSVzJmNhdGVnb3J5X2lkcz0lcyZxPSVzJnRlbXBfc2tpcF9pdGVtcz0lcyZmcm9tX3ZpZGVv'
+    'cz0lZA==').decode()
+"""Params required: **tags**, **artists**, **categories**, **search**, **blacklist**, **page** -
+**str**, **str**, **str**, **str**, **str**, **int**\n
+Ex. SITE_AJAX_REQUEST_SEARCH_PAGE % ('1,2', '3,4,5', '6', 'sfw', 'tag:1,tag:2,cat:3,model:4', 1)"""
 SITE_AJAX_REQUEST_VIDEO = b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vcG9wdXAtdmlkZW8vJWQv').decode()
 """Params required: **video_id** - **int**\n
 Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)"""
@@ -255,6 +257,13 @@ HELP_ARG_PLAYLIST = 'Playlist to download (filters still apply)'
 HELP_ARG_SEARCH_STR = (
     'Native search using string query (matching all words with alias expansion, check README for more info).'
     ' Spaces must be replced with \'-\'. Ex. \'after-hours\''
+)
+HELP_ARG_BLACKLIST = (
+    'Native search temporary blacklist filter. Separate values by comma, all values must be valid tag, category or artist names.'
+    ' Prefix indicates filter type: [a]rtist, [c]ategory or [t]ag. Unprefixed values match all types (if more than one exists).'
+    ' Supports wildcards.'
+    ' Example: \'-blacklist c:2d,a:wiz220,t:1boy*\' will exclude all results having either category \'2d\', artist \'wiz220\''
+    ' or a tag starting with \'1boy\''
 )
 HELP_ARG_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
 HELP_ARG_DURATION = 'Video duration filter (in seconds). Example: \'5-180\' will only allow videos from 5 seconds to 3 minutes'
