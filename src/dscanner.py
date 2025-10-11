@@ -17,7 +17,7 @@ from typing import Any, Optional
 from config import Config
 from defs import (
     DownloadResult, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN, LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, SCAN_CANCEL_KEYSTROKE, SCAN_CANCEL_KEYCOUNT,
-    QUALITIES,
+    QUALITIES, RESCAN_DELAY_EMPTY,
 )
 from iinfo import VideoInfo, get_min_max_ids
 from input import wait_for_key
@@ -108,7 +108,11 @@ class VideoScanWorker:
         return 0
 
     async def _at_scan_finish(self, vi: VideoInfo, result: DownloadResult) -> int:
+        if result in (DownloadResult.FAIL_EMPTY_HTML,):
+            return RESCAN_DELAY_EMPTY
+
         self._scan_count += 1
+        self._seq.popleft()
         if result in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_RETRIES,
                       DownloadResult.FAIL_DELETED, DownloadResult.FAIL_FILTERED_OUTER, DownloadResult.FAIL_SKIPPED):
             founditems = list(filter(None, [file_already_exists_arr(vi.id, q) for q in QUALITIES]))
@@ -144,7 +148,6 @@ class VideoScanWorker:
                 continue
             result = await self._func(self._seq[0])
             sleep_time = await self._at_scan_finish(self._seq[0], result)
-            self._seq.popleft()
             if sleep_time:
                 self._sleep_waiter = get_running_loop().create_task(self._sleep_task(sleep_time))
                 await self._sleep_waiter

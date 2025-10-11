@@ -167,7 +167,7 @@ async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup | None:
                 content = await r.read()
                 if retries_403_local > 0:
                     Log.trace(f'fetch_html success: took {retries_403_local:d} tries...')
-                return BeautifulSoup(content, 'html.parser', from_encoding=UTF8)
+                return BeautifulSoup(content, 'html.parser', from_encoding=UTF8) if content else BeautifulSoup()
         except Exception as e:
             if r is not None and '404.' in str(r.url):
                 Log.error('ERROR: 404')
