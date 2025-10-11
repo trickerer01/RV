@@ -219,7 +219,7 @@ def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     par_cmd.add_argument('-search', metavar='#string', default='', help=HELP_ARG_SEARCH_STR, type=valid_search_string)
     par_cmd.add_argument('-search_tag', metavar='#tag[,tag...]', default='', help='', type=valid_tags)
     par_cmd.add_argument('-search_art', metavar='#artist[,artist...]', default='', help='', type=valid_artists)
-    par_cmd.add_argument('-search_cat', metavar='#catergory[,category...]', default='', help=HELP_ARG_SEARCH_ACT, type=valid_categories)
+    par_cmd.add_argument('-search_cat', metavar='#category[,category...]', default='', help=HELP_ARG_SEARCH_ACT, type=valid_categories)
     par_cmd.add_argument('-search_rule_tag', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_art', default=SEARCH_RULE_DEFAULT, help='', choices=SEARCH_RULES)
     par_cmd.add_argument('-search_rule_cat', default=SEARCH_RULE_DEFAULT, help=HELP_ARG_SEARCH_RULE, choices=SEARCH_RULES)
