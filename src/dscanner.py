@@ -135,7 +135,7 @@ class VideoScanWorker:
         self._404_counter = self._404_counter + 1 if result == DownloadResult.FAIL_NOT_FOUND else 0
         if result != DownloadResult.FAIL_NOT_FOUND:
             self._last_non404_id = vi.id
-        if len(self._seq) == 1 and not not Config.lookahead:
+        if len(self._seq) == 0 and not not Config.lookahead:
             return await self._extend_with_extra()
         return 0
 
