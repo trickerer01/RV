@@ -7,18 +7,19 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from __future__ import annotations
+
+import os
+import re
 from collections.abc import Iterable
 from enum import IntEnum
-from os import path, remove, makedirs, scandir
-from re import Match
 
 from config import Config
-from defs import Quality, PREFIX, UTF8, DEFAULT_QUALITY, DEFAULT_EXT
+from defs import DEFAULT_EXT, DEFAULT_QUALITY, PREFIX, UTF8, Quality
 from logger import Log
 from rex import re_infolist_filename
-from util import normalize_path, normalize_filename, format_time
+from util import format_time, normalize_filename, normalize_path
 
-__all__ = ('VideoInfo', 'get_min_max_ids', 'export_video_info')
+__all__ = ('VideoInfo', 'export_video_info', 'get_min_max_ids')
 
 
 class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
@@ -137,20 +138,20 @@ def get_min_max_ids(seq: Iterable[VideoInfo]) -> tuple[int, int]:
 
 
 def try_merge_info_files(info_dict: dict[int, str], subfolder: str, list_type: str) -> list[str]:
-    parsed_files: list[str] = list()
+    parsed_files: list[str] = []
     if not Config.merge_lists:
         return parsed_files
     dir_fullpath = normalize_path(f'{Config.dest_base}{subfolder}')
-    if not path.isdir(dir_fullpath):
+    if not os.path.isdir(dir_fullpath):
         return parsed_files
     # Log.debug(f'\nMerging {Config.dest_base}{subfolder} \'{list_type}\' info lists...')
-    info_lists: list[Match[str]] = sorted(filter(
-        lambda x: not not x, [re_infolist_filename.fullmatch(f.name) for f in scandir(dir_fullpath)
-                              if f.is_file() and f.name.startswith(f'{PREFIX}!{list_type}_')]
+    info_lists: list[re.Match[str]] = sorted(filter(
+        lambda x: bool(x), [re_infolist_filename.fullmatch(f.name) for f in os.scandir(dir_fullpath)
+                            if f.is_file() and f.name.startswith(f'{PREFIX}!{list_type}_')],
     ), key=lambda m: m.string)
     if not info_lists:
         return parsed_files
-    parsed_dict: dict[int, str] = dict()
+    parsed_dict: dict[int, str] = {}
     for fmatch in info_lists:
         fmname = fmatch.string
         # Log.debug(f'Parsing {fmname}...')
@@ -182,29 +183,29 @@ def try_merge_info_files(info_dict: dict[int, str], subfolder: str, list_type: s
         except Exception:
             Log.error(f'Error reading from {fmname}. Skipped')
             continue
-    for k in parsed_dict:
+    for k, v in parsed_dict.items():
         if k not in info_dict:
-            info_dict[k] = parsed_dict[k]
+            info_dict[k] = v
     return parsed_files
 
 
 def export_video_info(info_list: Iterable[VideoInfo]) -> None:
     """Saves tags, descriptions and comments for each subfolder in scenario and base dest folder based on video info"""
-    tags_dict: dict[str, dict[int, str]] = dict()
-    desc_dict: dict[str, dict[int, str]] = dict()
-    comm_dict: dict[str, dict[int, str]] = dict()
+    tags_dict: dict[str, dict[int, str]] = {}
+    desc_dict: dict[str, dict[int, str]] = {}
+    comm_dict: dict[str, dict[int, str]] = {}
     for vi in info_list:
         if vi.link:
-            for d, s in zip((tags_dict, desc_dict, comm_dict), (vi.tags, vi.description, vi.comments)):
+            for d, s in zip((tags_dict, desc_dict, comm_dict), (vi.tags, vi.description, vi.comments), strict=True):
                 if vi.subfolder not in d:
-                    d[vi.subfolder] = dict()
+                    d[vi.subfolder] = {}
                 d[vi.subfolder][vi.id] = s
     for conf, dct, name, proc_cb in zip(
         (Config.save_tags, Config.save_descriptions, Config.save_comments),
         (tags_dict, desc_dict, comm_dict),
         ('tags', 'descriptions', 'comments'),
         (lambda tags: f' {tags.strip()}\n', lambda description: f'{description}\n', lambda comments: f'{comments}\n'),
-        strict=True
+        strict=True,
     ):
         if not conf:
             continue
@@ -212,17 +213,17 @@ def export_video_info(info_list: Iterable[VideoInfo]) -> None:
             merged_files = try_merge_info_files(sdct, subfolder, name)
             if not sdct:
                 continue
-            if Config.skip_empty_lists and not any(sdct[idi] for idi in sdct.keys()):
+            if Config.skip_empty_lists and not any(sdct[idi] for idi in sdct):
                 continue
             keys = sorted(sdct.keys())
             min_id, max_id = keys[0], keys[-1]
             info_folder = f'{Config.dest_base}{subfolder}'
             fullpath = f'{normalize_path(info_folder)}{PREFIX}!{name}_{min_id:d}-{max_id:d}.txt'
-            if not path.isdir(info_folder):
-                makedirs(info_folder)
+            if not os.path.isdir(info_folder):
+                os.makedirs(info_folder)
             with open(fullpath, 'wt', encoding=UTF8) as sfile:
                 sfile.writelines(f'{PREFIX}{idi:d}:{proc_cb(sdct[idi])}' for idi in keys)
-            [remove(merged_file) for merged_file in merged_files if merged_file != fullpath]
+            [os.remove(merged_file) for merged_file in merged_files if merged_file != fullpath]
 
 #
 #

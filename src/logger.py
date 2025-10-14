@@ -8,10 +8,11 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from locale import getpreferredencoding
 
-from colorama import Fore, init as colorama_init
+from colorama import Fore
+from colorama import init as colorama_init
 
 from config import Config
-from defs import LoggingFlags, UTF8
+from defs import UTF8, LoggingFlags
 
 
 class Log:
@@ -27,7 +28,7 @@ class Log:
         LoggingFlags.INFO: Fore.LIGHTCYAN_EX,
         LoggingFlags.WARN: Fore.LIGHTYELLOW_EX,
         LoggingFlags.ERROR: Fore.LIGHTYELLOW_EX,
-        LoggingFlags.FATAL: Fore.LIGHTRED_EX
+        LoggingFlags.FATAL: Fore.LIGHTRED_EX,
     }
 
     @staticmethod

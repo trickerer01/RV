@@ -7,17 +7,23 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from __future__ import annotations
-from asyncio import Task, get_running_loop, CancelledError
+
+from asyncio import CancelledError, Task, get_running_loop
 from asyncio.tasks import sleep
 from collections import deque
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from typing import Any, Optional
+from typing import Any
 
 from config import Config
 from defs import (
-    DownloadResult, LOOKAHEAD_WATCH_RESCAN_DELAY_MIN, LOOKAHEAD_WATCH_RESCAN_DELAY_MAX, SCAN_CANCEL_KEYSTROKE, SCAN_CANCEL_KEYCOUNT,
-    QUALITIES, RESCAN_DELAY_EMPTY,
+    LOOKAHEAD_WATCH_RESCAN_DELAY_MAX,
+    LOOKAHEAD_WATCH_RESCAN_DELAY_MIN,
+    QUALITIES,
+    RESCAN_DELAY_EMPTY,
+    SCAN_CANCEL_KEYCOUNT,
+    SCAN_CANCEL_KEYSTROKE,
+    DownloadResult,
 )
 from iinfo import VideoInfo, get_min_max_ids
 from input import wait_for_key
@@ -58,22 +64,22 @@ class VideoScanWorker:
         self._scan_count = 0
         self._404_counter = 0
         self._last_non404_id = self._original_sequence[0].id - 1
-        self._extra_ids: list[int] = list()
+        self._extra_ids: list[int] = []
         self._scanned_items = deque[VideoInfo]()
         self._task_finish_callback: Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]] | None = None
 
-        self._sleep_waiter: Optional[Task] = None
-        self._abort_waiter: Optional[Task] = None
+        self._sleep_waiter: Task | None = None
+        self._abort_waiter: Task | None = None
 
-        self._id_gaps: list[tuple[int, int]] = list()
+        self._id_gaps: list[tuple[int, int]] = []
 
     def _on_abort(self) -> None:
         Log.warn('[queue] scanner thread interrupted, finishing pending tasks...')
         Config.on_scan_abort()
         if self._sleep_waiter:
             self._sleep_waiter.cancel()
-            self._sleep_waiter: Optional[Task] = None
-        self._abort_waiter: Optional[Task] = None
+            self._sleep_waiter: Task | None = None
+        self._abort_waiter: Task | None = None
 
     @staticmethod
     async def _sleep_task(sleep_time: int) -> None:
@@ -84,7 +90,7 @@ class VideoScanWorker:
 
     async def _extend_with_extra(self) -> int:
         lookahead_abs = abs(Config.lookahead)
-        watcher_mode = Config.lookahead < 0 and not not self._extra_ids and self._404_counter >= lookahead_abs
+        watcher_mode = Config.lookahead < 0 and bool(self._extra_ids) and self._404_counter >= lookahead_abs
         last_id = self._last_non404_id + self._404_counter
         extra_cur = lookahead_abs - self._404_counter
         if watcher_mode:
@@ -118,7 +124,7 @@ class VideoScanWorker:
             founditems = list(filter(None, [file_already_exists_arr(vi.id, q) for q in QUALITIES]))
             if any(ffs for ffs in founditems):
                 newline = '\n'
-                Log.info(f'{vi.sname} scan returned {str(result)} but it was already downloaded:'
+                Log.info(f'{vi.sname} scan returned {result!s} but it was already downloaded:'
                          f'\n - {f"{newline} - ".join(f"{newline} - ".join(ffs) for ffs in founditems)}')
         if result == DownloadResult.SUCCESS:
             self._scanned_items.append(vi)
@@ -135,7 +141,7 @@ class VideoScanWorker:
         self._404_counter = self._404_counter + 1 if result == DownloadResult.FAIL_NOT_FOUND else 0
         if result != DownloadResult.FAIL_NOT_FOUND:
             self._last_non404_id = vi.id
-        if len(self._seq) == 0 and not not Config.lookahead:
+        if len(self._seq) == 0 and Config.lookahead:
             return await self._extend_with_extra()
         return 0
 
@@ -157,7 +163,7 @@ class VideoScanWorker:
             self._abort_waiter = None
         Log.debug('[queue] scanner thread stop: scan complete')
         if self._id_gaps:
-            gap_strings = list()
+            gap_strings = []
             mod2_count = mod3_count = mod4_count = 0
             for gstart, gstop in self._id_gaps[1:]:
                 is_mod2, is_mod3, is_mod4 = tuple((gstop + 1 - gstart) % _ == 0 for _ in (2, 3, 4))

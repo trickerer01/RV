@@ -8,7 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from asyncio import CancelledError, sleep
 from collections.abc import Callable
-from contextlib import nullcontext, contextmanager
+from contextlib import contextmanager, nullcontext
 from platform import system
 
 __all__ = ('wait_for_key',)
@@ -22,10 +22,10 @@ if system() == 'Windows':
     next_input = getwch
 else:
     # TODO: test on Linux
+    import functools
     import sys
-    from functools import partial
     from select import select
-    from termios import tcgetattr, tcsetattr, TCSADRAIN
+    from termios import TCSADRAIN, tcgetattr, tcsetattr
     from tty import setraw
 
     @contextmanager
@@ -41,7 +41,7 @@ else:
     def input_ready() -> bool:
         return select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
 
-    next_input = partial(sys.stdin.read, 1)
+    next_input = functools.partial(sys.stdin.read, 1)
 
 
 async def wait_for_key(key: str, count: int, callback: Callable[[], None]) -> None:

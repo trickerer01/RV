@@ -7,13 +7,14 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import sys
-from asyncio import run as run_async, sleep
+from asyncio import run as run_async
+from asyncio import sleep
 from collections.abc import Sequence
 
 from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from defs import MIN_PYTHON_VERSION, MIN_PYTHON_VERSION_STR
-from download import download, at_interrupt
+from download import at_interrupt, download
 from fetch_html import create_session
 from iinfo import VideoInfo
 from logger import Log
@@ -37,7 +38,7 @@ async def main(args: Sequence[str]) -> None:
         Config.id_sequence = extract_id_or_group(Config.extra_tags)
         if not Config.id_sequence:
             Log.fatal('\nNo ID \'or\' group provided!' if not Config.extra_tags else
-                      f'\nNo valid ID \'or\' group found in \'{str(Config.extra_tags)}\'!')
+                      f'\nNo valid ID \'or\' group found in \'{Config.extra_tags!s}\'!')
             raise ValueError
     else:
         Config.id_sequence = list(range(Config.start_id, Config.end_id + 1))

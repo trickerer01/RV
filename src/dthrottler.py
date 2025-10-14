@@ -6,14 +6,14 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from asyncio import CancelledError, Task, sleep, get_running_loop
+import os
+from asyncio import CancelledError, Task, get_running_loop, sleep
 from collections import deque
-from os import path, stat
 
 from aiohttp import ClientResponse
 
 from config import Config
-from defs import Mem, DOWNLOAD_STATUS_CHECK_TIMER
+from defs import DOWNLOAD_STATUS_CHECK_TIMER, Mem
 from downloader import VideoDownloadWorker
 from iinfo import VideoInfo
 from logger import Log
@@ -60,7 +60,7 @@ class ThrottleChecker:
         # Hyperbolic averaging with additional 2% off to prevent cycling interruptions in case of perfect connection stability
         all_speeds = [*self._interrupted_speeds, self._calc_speed(self._slow_download_amount_threshold)]
         avg_speed = 0.98 * sum(all_speeds) / len(all_speeds)
-        Log.trace(f'[throttler] recalculation, speeds + threshold: {str(all_speeds)}. New speed threshold: {avg_speed:.6f} KB/s')
+        Log.trace(f'[throttler] recalculation, speeds + threshold: {all_speeds!s}. New speed threshold: {avg_speed:.6f} KB/s')
         self._slow_download_amount_threshold = self._calc_threshold(avg_speed)
 
     async def _check_video_download_status(self) -> None:
@@ -76,7 +76,7 @@ class ThrottleChecker:
                 if self._response is None:
                     Log.debug(f'[throttler] {self._vi.sfsname} self._response is None...')
                     continue
-                file_size = stat(dest).st_size if path.isfile(dest) else 0
+                file_size = os.stat(dest).st_size if os.path.isfile(dest) else 0
                 last_speed = (file_size - last_size) / Mem.KB / DOWNLOAD_STATUS_CHECK_TIMER
                 self._speeds.append(f'{last_speed:.2f} KB/s')
                 if file_size < last_size + self._slow_download_amount_threshold:

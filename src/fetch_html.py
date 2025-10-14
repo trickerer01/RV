@@ -7,20 +7,22 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from __future__ import annotations
-from asyncio import Lock as AsyncLock, AbstractEventLoop, sleep, get_running_loop
-from random import uniform as frand
-from urllib.parse import urlparse
 
-from aiohttp import ClientSession, ClientResponse, TCPConnector, ClientResponseError
+import random
+import urllib.parse
+from asyncio import AbstractEventLoop, get_running_loop, sleep
+from asyncio import Lock as AsyncLock
+
+from aiohttp import ClientResponse, ClientResponseError, ClientSession, TCPConnector
 from aiohttp_socks import ProxyConnector
 from bs4 import BeautifulSoup
 from fake_useragent import FakeUserAgent
 
 from config import Config
-from defs import Mem, UTF8, CONNECT_REQUEST_DELAY, MAX_VIDEOS_QUEUE_SIZE, CONNECT_RETRY_DELAY, MAX_SCAN_QUEUE_SIZE
+from defs import CONNECT_REQUEST_DELAY, CONNECT_RETRY_DELAY, MAX_SCAN_QUEUE_SIZE, MAX_VIDEOS_QUEUE_SIZE, UTF8, Mem
 from logger import Log
 
-__all__ = ('create_session', 'wrap_request', 'fetch_html', 'ensure_conn_closed')
+__all__ = ('create_session', 'ensure_conn_closed', 'fetch_html', 'wrap_request')
 
 USER_AGENT_DEFAULT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.7 Firefox/102.0 PaleMoon/33.3.1'
 ua_generator = FakeUserAgent(browsers=('Firefox',), platforms=('desktop',), fallback=USER_AGENT_DEFAULT)
@@ -34,11 +36,11 @@ class UAManager:
     """
     # noinspection PyProtectedMember
     user_agents = list(set(_['useragent'] for _ in ua_generator._filter_useragents()))
-    seed_base = int(frand(0, len(user_agents) + 1))
+    seed_base = int(random.uniform(0, len(user_agents) + 1))
 
     @staticmethod
     def _addr_to_int(addr: str, seed: int) -> int:
-        return int(urlparse(addr).netloc.replace('.', '').replace(':', '')) + seed + UAManager.seed_base
+        return int(urllib.parse.urlparse(addr).netloc.replace('.', '').replace(':', '')) + seed + UAManager.seed_base
 
     @staticmethod
     def _generate(addr: str, seed: int) -> str:
@@ -80,10 +82,10 @@ class ClientSessionWrapper:
         await self.psession.__aexit__(exc_type, exc_val, exc_tb)
 
     @staticmethod
-    def ignore_unclosed_session_exc_handler(self: AbstractEventLoop, context: dict) -> None:
+    def ignore_unclosed_session_exc_handler(selfloop: AbstractEventLoop, context: dict) -> None:
         message = context.get('message')
         if message not in ('Event loop is closed',) and sessionw is not None and sessionw.default_exc_handler is not None:
-            sessionw.default_exc_handler(self, context)
+            sessionw.default_exc_handler(selfloop, context)
         else:
             Log.trace(f'{message} exception ignored...')
 
@@ -109,13 +111,13 @@ class RequestQueue:
     """
     Request delayed queue wrapper
     """
-    _queue: list[str] = list()
+    _queue: list[str] = []
     _ready = True
     _lock = AsyncLock()
 
     @staticmethod
     async def _reset() -> None:
-        await sleep(frand(CONNECT_REQUEST_DELAY, CONNECT_REQUEST_DELAY + 0.75))
+        await sleep(random.uniform(CONNECT_REQUEST_DELAY, CONNECT_REQUEST_DELAY + 0.75))
         RequestQueue._ready = True
 
     @staticmethod
@@ -182,7 +184,7 @@ async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup | None:
             if Config.aborted:
                 break
             if retries <= tries:
-                await sleep(frand(*CONNECT_RETRY_DELAY))
+                await sleep(random.uniform(*CONNECT_RETRY_DELAY))
             continue
 
     if retries > tries:

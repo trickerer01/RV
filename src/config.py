@@ -11,8 +11,17 @@ from argparse import Namespace
 from aiohttp import ClientTimeout
 
 from defs import (
-    Quality, Duration, CONNECT_TIMEOUT_BASE, LOGGING_FLAGS, DOWNLOAD_POLICY_DEFAULT, NAMING_FLAGS_DEFAULT, DOWNLOAD_MODE_DEFAULT,
-    DEFAULT_QUALITY, MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, MAX_DEST_SCAN_UPLEVELS_DEFAULT, CONNECT_RETRIES_BASE,
+    CONNECT_RETRIES_BASE,
+    CONNECT_TIMEOUT_BASE,
+    DEFAULT_QUALITY,
+    DOWNLOAD_MODE_DEFAULT,
+    DOWNLOAD_POLICY_DEFAULT,
+    LOGGING_FLAGS,
+    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT,
+    MAX_DEST_SCAN_UPLEVELS_DEFAULT,
+    NAMING_FLAGS_DEFAULT,
+    Duration,
+    Quality,
 )
 
 if False is True:
@@ -202,7 +211,7 @@ class BaseConfig:
             *(('-nomove',) if self.no_rename_move else ()),
             *(('-session_id', self.session_id) if self.session_id else ()),
             *self.extra_tags,
-            *(('-script', self.scenario.fmt_str) if self.scenario else ())
+            *(('-script', self.scenario.fmt_str) if self.scenario else ()),
         ]
         return arglist
 

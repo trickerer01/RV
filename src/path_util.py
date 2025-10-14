@@ -6,41 +6,45 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+import os
 from collections.abc import MutableSequence
-from os import DirEntry, path, rename, makedirs, getpid, scandir
 
-from psutil import Error as PSError, process_iter
+import psutil
 
 from config import Config
-from defs import Quality, PREFIX, DEFAULT_EXT
+from defs import DEFAULT_EXT, PREFIX, Quality
 from iinfo import VideoInfo
 from logger import Log
 from rex import re_media_filename
 from util import normalize_path
 
 __all__ = (
-    'file_already_exists', 'file_already_exists_arr', 'try_rename', 'prefilter_existing_items', 'is_file_being_used',
+    'file_already_exists',
+    'file_already_exists_arr',
+    'is_file_being_used',
+    'prefilter_existing_items',
     'register_new_file',
+    'try_rename',
 )
 
-found_filenames_dict: dict[str, list[str]] = dict()
-media_matches_cache: dict[str, tuple[str, Quality]] = dict()
+found_filenames_dict: dict[str, list[str]] = {}
+media_matches_cache: dict[str, tuple[str, Quality]] = {}
 
 
 def report_duplicates() -> None:
     found_vs = dict[str, list[str]]()
     fvks = list[str]()
-    for k in found_filenames_dict:
-        if not found_filenames_dict[k]:
+    for k, filenames in found_filenames_dict.items():
+        if not filenames:
             continue
-        for fname in found_filenames_dict[k]:
+        for fname in filenames:
             if not fname.startswith(PREFIX):
                 continue
             fm = re_media_filename.fullmatch(fname)
             if fm:
                 fid = fm.group(1)
                 if fid not in found_vs:
-                    found_vs[fid] = list()
+                    found_vs[fid] = []
                 elif fid not in fvks:
                     fvks.append(fid)
                 found_vs[fid].append(k + fname)
@@ -66,33 +70,33 @@ def scan_dest_folder() -> None:
     This function may only be called once!
     """
     assert len(found_filenames_dict.keys()) == 0
-    if path.isdir(Config.dest_base) or Config.folder_scan_levelup:
+    if os.path.isdir(Config.dest_base) or Config.folder_scan_levelup:
         Log.info('Scanning dest folder...')
         dest_base = Config.dest_base
         scan_depth = Config.folder_scan_depth + Config.folder_scan_levelup
         for _ in range(Config.folder_scan_levelup):
-            longpath, dirname = path.split(path.abspath(dest_base))
+            longpath, dirname = os.path.split(os.path.abspath(dest_base))
             dest_base = normalize_path(longpath)
             if dirname == '':
                 break
 
         def scan_folder(base_folder: str, level: int) -> None:
-            if path.isdir(base_folder):
-                dentry: DirEntry
-                for dentry in scandir(base_folder):
+            if os.path.isdir(base_folder):
+                dentry: os.DirEntry
+                for dentry in os.scandir(base_folder):
                     fullpath = f'{base_folder}{dentry.name}'
                     if dentry.is_dir():
                         fullpath = normalize_path(fullpath)
                         if level < scan_depth:
-                            found_filenames_dict[fullpath] = list()
+                            found_filenames_dict[fullpath] = []
                             scan_folder(fullpath, level + 1)
                     elif dentry.is_file():
                         found_filenames_dict[base_folder].append(dentry.name)
 
-        found_filenames_dict[dest_base] = list()
+        found_filenames_dict[dest_base] = []
         scan_folder(dest_base, 0)
         if Config.dest_base not in found_filenames_dict:
-            found_filenames_dict[Config.dest_base] = list()
+            found_filenames_dict[Config.dest_base] = []
             scan_folder(Config.dest_base, Config.folder_scan_levelup)
         base_files_count = len(found_filenames_dict[dest_base])
         total_files_count = sum(len(li) for li in found_filenames_dict.values())
@@ -115,7 +119,7 @@ def get_media_file_match(fname: str) -> tuple[str, Quality]:
 def register_new_file(vi: VideoInfo) -> None:
     base_folder = vi.my_folder
     if found_filenames_dict.get(base_folder) is None:
-        found_filenames_dict[base_folder] = list()
+        found_filenames_dict[base_folder] = []
     elif file_exists_in_folder(base_folder, vi.id, vi.quality, False):
         return
     found_filenames_dict[base_folder].append(vi.filename)
@@ -123,7 +127,7 @@ def register_new_file(vi: VideoInfo) -> None:
 
 def file_exists_in_folder(base_folder: str, idi: int, quality: Quality, check_folder: bool) -> str:
     orig_file_names = found_filenames_dict.get(base_folder)
-    if (not check_folder or path.isdir(base_folder)) and orig_file_names is not None:
+    if (not check_folder or os.path.isdir(base_folder)) and orig_file_names is not None:
         for fname in orig_file_names:
             f_id, f_quality = get_media_file_match(fname)
             if f_id and str(idi) == f_id and (not quality or not f_quality or quality <= f_quality):
@@ -141,8 +145,8 @@ def file_already_exists(idi: int, quality: Quality, check_folder=True) -> str:
 
 def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> list[str]:
     orig_file_names = found_filenames_dict.get(base_folder)
-    folder_files = list()
-    if path.isdir(base_folder) and orig_file_names is not None:
+    folder_files = []
+    if os.path.isdir(base_folder) and orig_file_names is not None:
         for fname in orig_file_names:
             f_id, f_quality = get_media_file_match(fname)
             if f_id and str(idi) == f_id and (not quality or not f_quality or quality == f_quality):
@@ -151,7 +155,7 @@ def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> l
 
 
 def file_already_exists_arr(idi: int, quality: Quality) -> list[str]:
-    found_files = list()
+    found_files = []
     for fullpath in found_filenames_dict:
         found_files.extend(file_exists_in_folder_arr(fullpath, idi, quality or Config.quality))
     return found_files
@@ -171,7 +175,7 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
     for i in reversed(range(len(vi_list))):
         fullpath = file_already_exists(vi_list[i].id, Quality(), False)
         if len(fullpath) > 0:
-            Log.info(f'Info: {vi_list[i].sname} found in \'{path.split(fullpath)[0]}/\'. Skipped.')
+            Log.info(f'Info: {vi_list[i].sname} found in \'{os.path.split(fullpath)[0]}/\'. Skipped.')
             del vi_list[i]
 
 
@@ -182,21 +186,21 @@ def is_file_being_used(filepath: str) -> str:
 
     Can only check processes owned by current user unless launched with admin/superuser privileges
     """
-    mypid = getpid()
-    for p in process_iter():
+    mypid = os.getpid()
+    for p in psutil.process_iter():
         try:
             with p.oneshot():
                 if p.pid == mypid:
                     continue
-                if not (p.name().startswith('python') or path.basename(p.exe()).startswith('python')):
+                if not (p.name().startswith('python') or os.path.basename(p.exe()).startswith('python')):
                     continue
                 user_name = p.username()
                 opened_files = p.open_files()
                 for fpath in opened_files:
-                    if path.samefile(filepath, fpath.path):
+                    if os.path.samefile(filepath, fpath.path):
                         return f'{p.exe()} <{user_name}> (pid: {p.pid:d})'
         except Exception as e:
-            if isinstance(e, PSError):
+            if isinstance(e, psutil.Error):
                 pass
             else:
                 import traceback
@@ -208,10 +212,10 @@ def try_rename(oldpath: str, newpath: str) -> bool:
     try:
         if oldpath == newpath:
             return True
-        newpath_folder = path.split(newpath.strip('/'))[0]
-        if not path.isdir(newpath_folder):
-            makedirs(newpath_folder)
-        rename(oldpath, newpath)
+        newpath_folder = os.path.split(newpath.strip('/'))[0]
+        if not os.path.isdir(newpath_folder):
+            os.makedirs(newpath_folder)
+        os.rename(oldpath, newpath)
         return True
     except Exception:
         return False

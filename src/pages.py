@@ -7,22 +7,31 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import sys
-from asyncio import run as run_async, sleep
+from asyncio import run as run_async
+from asyncio import sleep
 from collections.abc import Sequence
 
 from cmdargs import HelpPrintExitException, prepare_arglist
 from config import Config
 from defs import (
-    NamingFlags, SITE_AJAX_REQUEST_SEARCH_PAGE, SITE_AJAX_REQUEST_UPLOADER_PAGE, SITE_AJAX_REQUEST_PLAYLIST_PAGE, PREFIX, QUALITIES,
-    SITE_AJAX_REQUEST_FAVOURITES_PAGE, SITE_AJAX_REQUEST_MODEL_PAGE, MIN_PYTHON_VERSION, MIN_PYTHON_VERSION_STR,
+    MIN_PYTHON_VERSION,
+    MIN_PYTHON_VERSION_STR,
+    PREFIX,
+    QUALITIES,
+    SITE_AJAX_REQUEST_FAVOURITES_PAGE,
+    SITE_AJAX_REQUEST_MODEL_PAGE,
+    SITE_AJAX_REQUEST_PLAYLIST_PAGE,
+    SITE_AJAX_REQUEST_SEARCH_PAGE,
+    SITE_AJAX_REQUEST_UPLOADER_PAGE,
+    NamingFlags,
 )
-from download import download, at_interrupt
+from download import at_interrupt, download
 from fetch_html import create_session, fetch_html
 from iinfo import VideoInfo
 from logger import Log
 from path_util import prefilter_existing_items
 from rex import re_page_entry, re_paginator, re_preview_entry
-from util import at_startup, has_naming_flag, get_time_seconds
+from util import at_startup, get_time_seconds, has_naming_flag
 from validators import find_and_resolve_config_conflicts
 from version import APP_NAME
 
@@ -52,7 +61,7 @@ async def main(args: Sequence[str]) -> None:
             return -1
         return 0
 
-    v_entries = list()
+    v_entries = []
     maxpage = Config.end if Config.start == Config.end else 0
 
     pi = Config.start

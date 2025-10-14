@@ -6,47 +6,116 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from argparse import ArgumentParser, Namespace, ZERO_OR_MORE
+import os
+from argparse import ZERO_OR_MORE, ArgumentParser, Namespace
 from collections.abc import Sequence
-from os import path
 
 from defs import (
-    UTF8, ACTION_STORE_TRUE, HELP_ARG_PATH, HELP_ARG_SEARCH_STR, HELP_ARG_PROXY, HELP_ARG_BEGIN_STOP_ID,
-    HELP_ARG_GET_MAXID, HELP_ARG_EXTRA_TAGS, HELP_ARG_UTPOLICY, UNTAGGED_POLICIES, DOWNLOAD_POLICY_DEFAULT, DOWNLOAD_MODES,
-    DOWNLOAD_MODE_DEFAULT, NAMING_FLAGS_DEFAULT, LOGGING_FLAGS_DEFAULT, HELP_ARG_DMMODE, HELP_ARG_DWN_SCENARIO, HELP_ARG_MINRATING,
-    HELP_ARG_MINSCORE, HELP_ARG_CMDFILE, HELP_ARG_NAMING, HELP_ARG_LOGGING, HELP_ARG_IDSEQUENCE, HELP_ARG_CONTINUE, HELP_ARG_UNFINISH,
-    HELP_ARG_DUMP_INFO, HELP_ARG_TIMEOUT, HELP_ARG_UPLOADER, HELP_ARG_VERSION, HELP_ARG_SESSION_ID, SEARCH_RULES, SEARCH_RULE_DEFAULT,
-    QUALITIES, DEFAULT_QUALITY, HELP_ARG_QUALITY, HELP_ARG_PLAYLIST, HELP_ARG_SEARCH_ACT, HELP_ARG_SEARCH_RULE, HELP_ARG_MODEL,
-    HELP_ARG_THROTTLE, HELP_ARG_THROTTLE_AUTO, HELP_ARG_STORE_CONTINUE_CMDFILE, HELP_ARG_SKIP_EMPTY_LISTS, HELP_ARG_LOOKAHEAD,
-    HELP_ARG_MERGE_LISTS, HELP_ARG_ALL_PAGES, HELP_ARG_FSLEVELUP, HELP_ARG_NOMOVE, HELP_ARG_FSDEPTH, HELP_ARG_CHECK_UPLOADER,
-    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT, HELP_ARG_CHECK_TITLEDESC, HELP_ARG_ID_START, HELP_ARG_ID_COUNT, HELP_ARG_ID_END,
-    HELP_ARG_PAGE_START, HELP_ARG_PAGE_COUNT, HELP_ARG_PAGE_END, HELP_ARG_REPORT_DUPLICATES, HELP_ARG_DUMP_SCREENSHOTS,
-    MAX_DEST_SCAN_UPLEVELS_DEFAULT, HELP_ARG_RETRIES, CONNECT_RETRIES_BASE, HELP_ARG_PROXYNODOWN, HELP_ARG_NOCOLORS, HELP_ARG_DURATION,
-    HELP_ARG_SOLVE_TAG_CONFLICTS, HELP_ARG_PREDICT_ID_GAPS, HELP_ARG_FAVORITES, HELP_ARG_BLACKLIST,
+    ACTION_STORE_TRUE,
+    CONNECT_RETRIES_BASE,
+    DEFAULT_QUALITY,
+    DOWNLOAD_MODE_DEFAULT,
+    DOWNLOAD_MODES,
+    DOWNLOAD_POLICY_DEFAULT,
+    HELP_ARG_ALL_PAGES,
+    HELP_ARG_BEGIN_STOP_ID,
+    HELP_ARG_BLACKLIST,
+    HELP_ARG_CHECK_TITLEDESC,
+    HELP_ARG_CHECK_UPLOADER,
+    HELP_ARG_CMDFILE,
+    HELP_ARG_CONTINUE,
+    HELP_ARG_DMMODE,
+    HELP_ARG_DUMP_INFO,
+    HELP_ARG_DUMP_SCREENSHOTS,
+    HELP_ARG_DURATION,
+    HELP_ARG_DWN_SCENARIO,
+    HELP_ARG_EXTRA_TAGS,
+    HELP_ARG_FAVORITES,
+    HELP_ARG_FSDEPTH,
+    HELP_ARG_FSLEVELUP,
+    HELP_ARG_GET_MAXID,
+    HELP_ARG_ID_COUNT,
+    HELP_ARG_ID_END,
+    HELP_ARG_ID_START,
+    HELP_ARG_IDSEQUENCE,
+    HELP_ARG_LOGGING,
+    HELP_ARG_LOOKAHEAD,
+    HELP_ARG_MERGE_LISTS,
+    HELP_ARG_MINRATING,
+    HELP_ARG_MINSCORE,
+    HELP_ARG_MODEL,
+    HELP_ARG_NAMING,
+    HELP_ARG_NOCOLORS,
+    HELP_ARG_NOMOVE,
+    HELP_ARG_PAGE_COUNT,
+    HELP_ARG_PAGE_END,
+    HELP_ARG_PAGE_START,
+    HELP_ARG_PATH,
+    HELP_ARG_PLAYLIST,
+    HELP_ARG_PREDICT_ID_GAPS,
+    HELP_ARG_PROXY,
+    HELP_ARG_PROXYNODOWN,
+    HELP_ARG_QUALITY,
+    HELP_ARG_REPORT_DUPLICATES,
+    HELP_ARG_RETRIES,
+    HELP_ARG_SEARCH_ACT,
+    HELP_ARG_SEARCH_RULE,
+    HELP_ARG_SEARCH_STR,
+    HELP_ARG_SESSION_ID,
+    HELP_ARG_SKIP_EMPTY_LISTS,
+    HELP_ARG_SOLVE_TAG_CONFLICTS,
+    HELP_ARG_STORE_CONTINUE_CMDFILE,
+    HELP_ARG_THROTTLE,
+    HELP_ARG_THROTTLE_AUTO,
+    HELP_ARG_TIMEOUT,
+    HELP_ARG_UNFINISH,
+    HELP_ARG_UPLOADER,
+    HELP_ARG_UTPOLICY,
+    HELP_ARG_VERSION,
+    LOGGING_FLAGS_DEFAULT,
+    MAX_DEST_SCAN_SUB_DEPTH_DEFAULT,
+    MAX_DEST_SCAN_UPLEVELS_DEFAULT,
+    NAMING_FLAGS_DEFAULT,
+    QUALITIES,
+    SEARCH_RULE_DEFAULT,
+    SEARCH_RULES,
+    UNTAGGED_POLICIES,
+    UTF8,
 )
 from logger import Log
 from scenario import DownloadScenario
-from tagger import valid_extra_tag, valid_tags, valid_artists, valid_categories, valid_playlist_name, valid_playlist_id, valid_blacklist
+from tagger import valid_artists, valid_blacklist, valid_categories, valid_extra_tag, valid_playlist_id, valid_playlist_name, valid_tags
 from validators import (
-    valid_int, positive_nonzero_int, valid_rating, valid_path, valid_filepath_abs, valid_search_string, valid_proxy, naming_flags,
-    log_level, positive_int, valid_lookahead, valid_duration, valid_session_id,
+    log_level,
+    naming_flags,
+    positive_int,
+    positive_nonzero_int,
+    valid_duration,
+    valid_filepath_abs,
+    valid_int,
+    valid_lookahead,
+    valid_path,
+    valid_proxy,
+    valid_rating,
+    valid_search_string,
+    valid_session_id,
 )
 from version import APP_NAME, APP_VERSION
 
-__all__ = ('prepare_arglist', 'HelpPrintExitException')
+__all__ = ('HelpPrintExitException', 'prepare_arglist')
 
 UTP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
 """'nofilters'"""
 DM_DEFAULT = DOWNLOAD_MODE_DEFAULT
 """'full'"""
 NAMING_DEFAULT = NAMING_FLAGS_DEFAULT
-"""0x1F"""
+'''0x1F'''
 LOGGING_DEFAULT = LOGGING_FLAGS_DEFAULT
-"""0x004"""
+'''0x004'''
 FSDEPTH_DEFAULT = MAX_DEST_SCAN_SUB_DEPTH_DEFAULT
-"""1"""
+'''1'''
 FSUP_DEFAULT = MAX_DEST_SCAN_UPLEVELS_DEFAULT
-"""0"""
+'''0'''
 
 PARSER_TYPE_PARAM = 'zzzparser_type'
 PARSER_TITLE_FILE = 'file'
@@ -62,7 +131,7 @@ class HelpPrintExitException(Exception):
 def read_cmdfile(cmdfile_path: str) -> list[str]:
     """Read cmd args from a text file"""
     with open(cmdfile_path, 'rt', encoding=UTF8) as cmdfile:
-        args = list()
+        args = []
         for line in cmdfile.readlines():
             line = line.strip(' \n\ufeff')
             if line:
@@ -79,7 +148,7 @@ def is_parsed_cmdfile(parsed_result: Namespace) -> bool:
 
 
 def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: ArgumentParser) -> Namespace:
-    errors_to_print = list()
+    errors_to_print = []
     parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
     if not is_parsed_cmdfile(parsed):
         for tag in parsed.extra_tags + unks:
@@ -126,12 +195,12 @@ def create_parsers() -> tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
     par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
     [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
     [p.add_argument('--version', action='version', help=HELP_ARG_VERSION, version=f'{APP_NAME} {APP_VERSION}') for p in (par_file, par_cmd)]
-    [p.set_defaults(**{PARSER_TYPE_PARAM: t}) for p, t in zip((par_file, par_cmd), (PARSER_TITLE_FILE, PARSER_TITLE_CMD))]
+    [p.set_defaults(**{PARSER_TYPE_PARAM: t}) for p, t in zip((par_file, par_cmd), (PARSER_TITLE_FILE, PARSER_TITLE_CMD), strict=True)]
     return parser, par_file, par_cmd
 
 
 def add_common_args(parser_or_group: ArgumentParser) -> None:
-    parser_or_group.add_argument('-path', default=valid_path(path.abspath(path.curdir)), help=HELP_ARG_PATH, type=valid_path)
+    parser_or_group.add_argument('-path', default=valid_path(os.path.abspath(os.path.curdir)), help=HELP_ARG_PATH, type=valid_path)
     parser_or_group.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_ARG_QUALITY, choices=QUALITIES)
     parser_or_group.add_argument('-duration', metavar='#min-max', default=None, help=HELP_ARG_DURATION, type=valid_duration)
     parser_or_group.add_argument('-minrating', '--minimum-rating', metavar='#rating', default=0, help=HELP_ARG_MINRATING, type=valid_rating)

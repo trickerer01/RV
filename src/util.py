@@ -6,20 +6,20 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+import datetime
 import sys
+import time
 from collections.abc import Iterable
-from datetime import datetime
-from time import localtime
 
 from config import Config
-from defs import START_TIME, SLASH, DOWNLOAD_MODE_FULL, DEFAULT_EXT
+from defs import DEFAULT_EXT, DOWNLOAD_MODE_FULL, SLASH, START_TIME
 from logger import Log
 from rex import re_ext
 from version import APP_NAME, APP_VERSION
 
 
 def assert_nonempty(container: Iterable, message='') -> Iterable:
-    assert not not container, message
+    assert container, message
     return container
 
 
@@ -37,7 +37,7 @@ def format_time(seconds: int) -> str:
 
 def get_elapsed_time_i() -> int:
     """Returns time since launch in **seconds**"""
-    return (datetime.now() - START_TIME).seconds
+    return (datetime.datetime.now() - START_TIME).seconds
 
 
 def get_elapsed_time_s() -> str:
@@ -47,7 +47,7 @@ def get_elapsed_time_s() -> str:
 
 def get_local_time_i() -> int:
     """Returns **local** time since epoch in **seconds**"""
-    return int(datetime.now().timestamp()) + localtime().tm_gmtoff
+    return int(datetime.datetime.now().timestamp()) + time.localtime().tm_gmtoff
 
 
 def get_local_time_s(*, offset=0) -> str:
@@ -88,7 +88,7 @@ def extract_ext(href: str) -> str:
 
 
 def has_naming_flag(flag: int) -> bool:
-    return not not (Config.naming_flags & flag)
+    return bool(Config.naming_flags & flag)
 
 
 def calc_sleep_time(base_time: float) -> float:

@@ -6,51 +6,51 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-from re import Pattern, compile as re_compile
+import re
 
-from defs import QUALITIES, EXTENSIONS_V, PREFIX
+from defs import EXTENSIONS_V, PREFIX, QUALITIES
 
 # common
-re_media_filename = re_compile(fr'^(?:{PREFIX})?(\d+).*?(?:_({"|".join(QUALITIES)}))?\.(?:{"|".join(EXTENSIONS_V)})$')
-re_infolist_filename = re_compile(fr'{PREFIX}!(?:tag|description|comment)s_\d+-\d+\.txt')
-re_replace_symbols = re_compile(r'[^0-9a-zA-Z.,_+%!\-()\[\] ]+')
-re_ext = re_compile(r'(\.[^&]{3,5})&')
-re_time = re_compile(r'\d+(?::\d+){1,2}')
+re_media_filename = re.compile(fr'^(?:{PREFIX})?(\d+).*?(?:_({"|".join(QUALITIES)}))?\.(?:{"|".join(EXTENSIONS_V)})$')
+re_infolist_filename = re.compile(fr'{PREFIX}!(?:tag|description|comment)s_\d+-\d+\.txt')
+re_replace_symbols = re.compile(r'[^0-9a-zA-Z.,_+%!\-()\[\] ]+')
+re_ext = re.compile(r'(\.[^&]{3,5})&')
+re_time = re.compile(r'\d+(?::\d+){1,2}')
 # re_private_video = re_compile(r'^This is a private video\..*?$')
 # pages
-re_page_entry = re_compile(r'video/(\d+)/')
-re_preview_entry = re_compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
-re_paginator = re_compile(r'from(?:_(?:fav_)?(?:albums|videos)|1)?:(\d+)')
+re_page_entry = re.compile(r'video/(\d+)/')
+re_preview_entry = re.compile(r'/(\d+)_preview[^.]*?\.([^/]+)/')
+re_paginator = re.compile(r'from(?:_(?:fav_)?(?:albums|videos)|1)?:(\d+)')
 # validators
-re_non_search_symbols = re_compile(r'[^\da-zA-Z._+\-\[\]]')
-re_session_id = re_compile(r'[a-z0-9]{26}')
+re_non_search_symbols = re.compile(r'[^\da-zA-Z._+\-\[\]]')
+re_session_id = re.compile(r'[a-z0-9]{26}')
 # tagger
-re_wtag = re_compile(r'^(?:(?:[^?*|]*[?*|])|(?:[^`]*[`][()\[\]{}?*.,\-+])).*?$')
-re_idval = re_compile(r'^id=\d+?$')
-re_uscore_mult = re_compile(r'_{2,}')
-re_not_a_letter = re_compile(r'[^a-z]+')
-re_bracketed_tag = re_compile(r'^([^(]+)\(([^)]+)\).*?$')
-re_numbered_or_counted_tag = re_compile(r'^(?!rule_?\d+)1?([^\d]+?)(?:_?\d+|s)?$')
-re_or_group = re_compile(r'^\([^~]+(?:~[^~]+)+\)$')
-re_neg_and_group = re_compile(r'^-\([^,]+(?:,[^,]+)+\)$')
+re_wtag = re.compile(r'^(?:(?:[^?*|]*[?*|])|(?:[^`]*[`][()\[\]{}?*.,\-+])).*?$')
+re_idval = re.compile(r'^id=\d+?$')
+re_uscore_mult = re.compile(r'_{2,}')
+re_not_a_letter = re.compile(r'[^a-z]+')
+re_bracketed_tag = re.compile(r'^([^(]+)\(([^)]+)\).*?$')
+re_numbered_or_counted_tag = re.compile(r'^(?!rule_?\d+)1?([^\d]+?)(?:_?\d+|s)?$')
+re_or_group = re.compile(r'^\([^~]+(?:~[^~]+)+\)$')
+re_neg_and_group = re.compile(r'^-\([^,]+(?:,[^,]+)+\)$')
 
-re_tags_to_process = re_compile(
+re_tags_to_process = re.compile(
     r'^(?:.+?_warc.+?|(?:[a-z]+?_)?elf|drae.{3}|tent[a-z]{3}es|(?:bell[a-z]|sto[a-z]{4})_bul[a-z]{2,3}|inf[a-z]{5}n|egg(?:_[a-z]{3,9}|s)?|'
     r'[a-z]{4}hral_i.+?|(?:\d{1,2}\+?)?(?:boys?|girls?|fu[a-z]{2}(?:[a-z]{4}|s)?|in[d-v]{2}cts?|monsters?)|succ[a-z]{4}|'
     r'bbw|dog|eel|f(?:acesitting|ur)|orc|hmv|pmv|tar|c(?:\.c\.|um)|d\.va|na\'vi|kai\'sa|monster_girl|gender.+?|'
     r'[^(]+\([^)]+\).*?|[a-z_\-]+\d+?|\d{2,4}[a-z_\-]+?|[a-z_]{2,15}sfm|[^_]+_pov|(?:fu|s)[a-z]{6}(?:/|_(?:on|with)_)[a-z]{4}(?:oy)?|'
-    r'[a-z][a-z_]{2,10}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$'
+    r'[a-z][a-z_]{2,10}|[a-g]ea?st[a-z]{6}|[lapymg]{3})$',
 )
-re_tags_exclude_major1 = re_compile(
+re_tags_exclude_major1 = re.compile(
     r'^(?:[234][dk]|h(?:d|ero_outfit)|level_up|p(?:ainting|rotagonist)|tagme|'
     r'war(?:rior|lock)|paladin|hunt(?:er|ress)|rogue|priest(?:ess)?|d(?:e(?:ath_?knight|mon_?hunt(?:er|ress))|ruid(?:ess)?)|'  # wow
     r'shaman|m(?:age|onk)|alliance|horde|'  # wow
-    r'[a-z]pose|[\da-z_\-]{16,}).*?$'
+    r'[a-z]pose|[\da-z_\-]{16,}).*?$',
 )
-re_tags_exclude_major2 = re_compile(
-    r'^(?:a(?:r(?:mor|twork)|udio)|cosplay|m(?:ap|eme|odel)|object|rwby|software|va)$'
+re_tags_exclude_major2 = re.compile(
+    r'^(?:a(?:r(?:mor|twork)|udio)|cosplay|m(?:ap|eme|odel)|object|rwby|software|va)$',
 )
-re_tags_to_not_exclude = re_compile(
+re_tags_to_not_exclude = re.compile(
     r'^(?:'
     r'a(?:i_content|lien(?:_.+?|s)?|m(?:azonium|b(?:er|rosine)|putee)|n(?:al(?:_beads)?|driod|gel|imopron|thro)|'  # a
     r'r(?:achnid|iel)|utofacial|yasz)|'  # a
@@ -92,13 +92,13 @@ re_tags_to_not_exclude = re_compile(
     r'x(?:_(?:com(?:_\d)?|ray)|enomorph)|'  # x
     r'z(?:o(?:mbies?|otopia))|'  # z
     r'\d{1,5}\+?_?(?:animal|(?:fem)?boy|futa|girl|monster)s?.*?'  # 0-9
-    r')$'
+    r')$',
 )
 
 
 # in-place
-def prepare_regex_fullmatch(raw_string: str) -> Pattern[str]:
-    return re_compile(rf'^{raw_string}$')
+def prepare_regex_fullmatch(raw_string: str) -> re.Pattern[str]:
+    return re.compile(rf'^{raw_string}$')
 
 #
 #
