@@ -1,0 +1,5 @@
+#!/bin/sh
+python src/genrev.py
+git add src/version.py
+git add pyproject.toml
+ruff check --fix
