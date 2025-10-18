@@ -18,6 +18,8 @@ from defs import (
     FILE_LOC_TAG_ALIASES,
     FILE_LOC_TAG_CONFLICTS,
     FILE_LOC_TAGS,
+    HTTPS_PREFIX,
+    SITE,
     TAGS_CONCAT_CHAR,
     UTF8,
 )
@@ -43,6 +45,7 @@ from util import assert_nonempty, normalize_path
 
 __all__ = (
     'extract_id_or_group',
+    'extract_ids_from_links',
     'filtered_tags',
     'get_matching_tag',
     'is_filtered_out_by_extra_tags',
@@ -90,15 +93,16 @@ def valid_playlist_id(plist: str) -> tuple[int, str]:
 
 def valid_extra_tag(tag: str, log=True) -> str:
     try:
-        all_valid = True
-        if tag.startswith('('):
+        if is_valid_link(tag):
+            return normalize_link(tag)
+        elif tag.startswith('('):
             assert is_valid_or_group(tag)
-            all_valid &= is_valid_id_or_group(tag) or all_extra_tags_valid(tag[1:-1].split('~'))
+            all_valid = is_valid_id_or_group(tag) or all_extra_tags_valid(tag[1:-1].split('~'))
         elif tag.startswith('-('):
             assert is_valid_neg_and_group(tag)
-            all_valid &= all_extra_tags_valid(tag[2:-1].split(','))
+            all_valid = all_extra_tags_valid(tag[2:-1].split(','))
         else:
-            assert is_valid_extra_tag(tag[1:] if tag.startswith('-') else tag)
+            all_valid = is_valid_extra_tag(tag[1:] if tag.startswith('-') else tag)
         assert all_valid
         return tag.lower().replace(' ', '_')
     except Exception:
@@ -228,6 +232,14 @@ def all_extra_tags_valid(tags: list[str]) -> bool:
 
 def is_valid_extra_tag(extag: str) -> bool:
     return is_utag(extag) or is_wtag(extag) or is_valid_tag(extag) or is_valid_artist(extag) or is_valid_category(extag)
+
+
+def is_valid_link(extag: str) -> bool:
+    return any((extag.startswith(SITE), f'{HTTPS_PREFIX}{extag}'.startswith(SITE)))
+
+
+def normalize_link(link: str) -> str:
+    return link if link.startswith(SITE) else f'{HTTPS_PREFIX}{link}'
 
 
 def get_tag_num(tag: str, assert_=False) -> str | None:
@@ -380,6 +392,23 @@ def extract_id_or_group(ex_tags: MutableSequence[str]) -> list[int]:
             del ex_tags[i]
             return list(set(int(tag.replace('id=', '')) for tag in orgr[1:-1].split('~')))
     return []
+
+
+def extract_ids_from_links(ex_tags: MutableSequence[str]) -> list[int]:
+    """May alter the input container!"""
+    ids = []
+    video_id_str = 'video/'
+    for i in reversed(range(len(ex_tags))):
+        link = ex_tags[i]
+        if is_valid_link(link):
+            del ex_tags[i]
+            id_idx = (link.find(video_id_str) + len(video_id_str)) if video_id_str in link else -1
+            end_idx = link.find('/', id_idx + 1)
+            if 0 <= id_idx < end_idx:
+                link_id = link[id_idx:link.find('/', id_idx + 1)]
+                if link_id.isnumeric():
+                    ids.append(int(link_id))
+    return ids
 
 
 def convert_extra_tag_for_text_matching(ex_tag: str) -> str:

@@ -43,6 +43,7 @@ UTF8 = 'utf-8'
 TAGS_CONCAT_CHAR = ','
 DEFAULT_EXT = 'mp4'
 EXTENSIONS_V = (DEFAULT_EXT, 'webm')
+HTTPS_PREFIX = 'https://'
 START_TIME = datetime.datetime.now()
 
 SITE = base64.b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20=').decode()
@@ -228,13 +229,16 @@ HELP_ARG_PREDICT_ID_GAPS = (
     ' WARNING: unsafe - may skip valid posts (not trying to request post info), use at your own risk'
 )
 HELP_ARG_IDSEQUENCE = (
-    'Use video id sequence instead of range. This disables start / count / end id parametes and expects an id sequence among'
-    ' extra tags. Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
+    'Use video id sequence instead of id range. This disables start / count / end id parametes and expects an id sequence among extra tags.'
+    ' Sequence structure: (id=<id1>~id=<id2>~id=<id3>~...~id=<idN>)'
+)
+HELP_ARG_LINKSEQUENCE = (
+    'Use links instead of id range. This disables start / count / end id parametes and expects at least one link among extra tags'
 )
 HELP_ARG_PATH = 'Download destination. Default is current folder'
 HELP_ARG_FSDEPTH = (
-    f'Number of subfolder levels to walk from base destination folder scanning for existing downloads. '
-    f'Default is \'{MAX_DEST_SCAN_SUB_DEPTH_DEFAULT:d}\''
+    f'Number of subfolder levels to walk from base destination folder scanning for existing downloads.'
+    f' Default is \'{MAX_DEST_SCAN_SUB_DEPTH_DEFAULT:d}\''
 )
 HELP_ARG_FSLEVELUP = (
     'Folder levels to go up before scanning for existing files, increases scan depth. Destination folder is always checked'

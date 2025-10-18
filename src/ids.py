@@ -19,7 +19,7 @@ from fetch_html import create_session
 from iinfo import VideoInfo
 from logger import Log
 from path_util import prefilter_existing_items
-from tagger import extract_id_or_group
+from tagger import extract_id_or_group, extract_ids_from_links
 from util import at_startup
 from validators import find_and_resolve_config_conflicts
 
@@ -40,6 +40,14 @@ async def main(args: Sequence[str]) -> None:
             Log.fatal('\nNo ID \'or\' group provided!' if not Config.extra_tags else
                       f'\nNo valid ID \'or\' group found in \'{Config.extra_tags!s}\'!')
             raise ValueError
+        Log.info(f'Parsed ids sequence of length {len(Config.id_sequence):d}')
+    elif Config.use_link_sequence:
+        Config.id_sequence = extract_ids_from_links(Config.extra_tags)
+        if not Config.id_sequence:
+            Log.fatal('\nNo links provided!' if not Config.extra_tags else
+                      f'\nNo valid links found in \'{Config.extra_tags!s}\'!')
+            raise ValueError
+        Log.info(f'Parsed {len(Config.id_sequence):d} links')
     else:
         Config.id_sequence = list(range(Config.start_id, Config.end_id + 1))
 

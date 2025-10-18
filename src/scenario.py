@@ -7,6 +7,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 from argparse import ZERO_OR_MORE, ArgumentParser
+from collections.abc import Sequence
 
 from defs import (
     ACTION_STORE_TRUE,
@@ -81,12 +82,15 @@ class DownloadScenario:
             try:
                 subfolder, args = query_raw.split(': ')
                 parsed, unks = parser.parse_known_args(args.split())
-                for tag in parsed.extra_tags + unks:
-                    try:
-                        assert valid_extra_tag(tag, False)
-                    except (AssertionError, ValueError):
-                        errors_to_print.append(f'Invalid extra tag: \'{tag}\'')
-                parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
+                taglist: Sequence[str]
+                for i, taglist in enumerate((parsed.extra_tags, unks)):
+                    for tag in taglist:
+                        try:
+                            valid_tag = valid_extra_tag(tag, False)
+                            if i > 0:
+                                parsed.extra_tags.append(valid_tag)
+                        except (AssertionError, ValueError):
+                            errors_to_print.append(f'Invalid extra tag: \'{tag}\'')
                 if parsed.use_id_sequence is True:
                     id_sequence = extract_id_or_group(parsed.extra_tags)
                     if not id_sequence:

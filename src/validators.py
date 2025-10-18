@@ -37,7 +37,7 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
     if Config.model and (Config.search or Config.search_tags or Config.search_arts or Config.search_cats):
         Log.fatal('\nError: cannot use search within artist\'s videos! Please use one or the other, or filter using extra tags')
         raise ValueError
-    if Config.use_id_sequence in (False, None) and Config.start_id > Config.end_id:
+    if all(_ in (False, None) for _ in (Config.use_id_sequence, Config.use_link_sequence)) and Config.start_id > Config.end_id:
         Log.fatal(f'\nError: invalid video id bounds: start ({Config.start_id:d}) > end ({Config.end_id:d})')
         raise ValueError
     if Config.lookahead:
@@ -46,6 +46,13 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
             raise ValueError
         if Config.store_continue_cmdfile:
             Log.fatal('\nError: lookahead argument prevents saving continue cmdfile, unexpected behavior possible!')
+            raise ValueError
+    if Config.use_link_sequence:
+        if Config.use_id_sequence:
+            Log.fatal('\nError: link sequence argument cannot be used together with id sequence!')
+            raise ValueError
+        if Config.lookahead:
+            Log.fatal('\nError: link sequence argument cannot be used together with lookahead!')
             raise ValueError
 
     if Config.get_maxid:

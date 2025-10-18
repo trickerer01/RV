@@ -84,6 +84,7 @@ class BaseConfig:
         # module-specific params (pages only or ids only)
         self.scan_all_pages: bool | None = None
         self.use_id_sequence: bool | None = None
+        self.use_link_sequence: bool | None = None
         self.lookahead: int | None = None
         self.predict_id_gaps: bool | None = None
         self.search: str | None = None
@@ -156,6 +157,7 @@ class BaseConfig:
         # module-specific params (pages only or ids only)
         self.scan_all_pages = getattr(params, 'scan_all_pages', self.scan_all_pages)
         self.use_id_sequence = getattr(params, 'use_id_sequence', self.use_id_sequence)
+        self.use_link_sequence = getattr(params, 'use_link_sequence', self.use_link_sequence)
         self.lookahead = getattr(params, 'lookahead', self.lookahead)
         self.predict_id_gaps = getattr(params, 'predict_id_gaps', self.predict_id_gaps)
         self.search = getattr(params, 'search', self.search)

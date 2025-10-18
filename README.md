@@ -89,13 +89,19 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - Subquery can also have its own `-duration` filter - only videos having duration within `-duration` bounds will be downloaded to that subfolder
   - You can also set `--untagged-policy always` for **one** subquery
 
-3. Downloading a set of video ids
-  - Syntax: `--use-id-sequence` / `-seq`, `ids.py` module only (or download scenario subquery)
-  - Id sequence is used to download set of ids instead of id range
-  - The sequence itself is an `extra tag` in a form of `OR` group of ids:
-    - `(id=<id1>~id=<id2>~...~id=<idN>)`
-  - Id sequence is used **instead** of id range, you can't use both
-    - `python ids.py <args>... -seq (id=1337~id=9999~id=1001)`
+3. Downloading a set of videos
+  - There are two ways to download a set of ids instead of id range:
+  - Using id sequence:
+    - Syntax: `--use-id-sequence` / `-seq`, `ids.py` module only (or download scenario subquery)
+    - The sequence itself is an `extra tag` in a form of `OR` group of ids:
+      - `(id=<id1>~id=<id2>~...~id=<idN>)`
+    - Id sequence is used **instead** of id range, you can't use both
+      - `python ids.py <args>... -seq (id=1337~id=9999~id=1001)`
+  - By passing video links directly:
+    - Syntax: `--use-link-sequence` / `-links`, `ids.py` module only
+    - Links are extracted from `extra tags` turned into ids
+    - Id sequence is used **instead** of id range/sequence, you can't use both
+      - `python ids.py <args>... -links https://... https://...`
 
 4. File naming
   - File names are generated based on video *title* and *tags*:

@@ -38,6 +38,7 @@ from defs import (
     HELP_ARG_ID_END,
     HELP_ARG_ID_START,
     HELP_ARG_IDSEQUENCE,
+    HELP_ARG_LINKSEQUENCE,
     HELP_ARG_LOGGING,
     HELP_ARG_LOOKAHEAD,
     HELP_ARG_MERGE_LISTS,
@@ -151,15 +152,18 @@ def validate_parsed(parser: ArgumentParser, args: Sequence[str], default_sub: Ar
     errors_to_print = []
     parsed, unks = parser.parse_known_args(args) if args[0] in EXISTING_PARSERS else default_sub.parse_known_args(args)
     if not is_parsed_cmdfile(parsed):
-        for tag in parsed.extra_tags + unks:
-            try:
-                assert valid_extra_tag(tag, False)
-            except (AssertionError, ValueError):
-                errors_to_print.append(f'Invalid extra tag: \'{tag}\'')
+        taglist: Sequence[str]
+        for i, taglist in enumerate((parsed.extra_tags, unks)):
+            for tag in taglist:
+                try:
+                    valid_tag = valid_extra_tag(tag, False)
+                    if i > 0:
+                        parsed.extra_tags.append(valid_tag)
+                except (AssertionError, ValueError):
+                    errors_to_print.append(f'Invalid extra tag: \'{tag}\'')
         if errors_to_print:
             Log.fatal('\n'.join(errors_to_print))
             raise ValueError
-        parsed.extra_tags.extend(tag.lower().replace(' ', '_') for tag in unks)
     return parsed
 
 
@@ -172,7 +176,7 @@ def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Se
                 if parsed.end < parsed.start + parsed.pages - 1:
                     parsed.end = parsed.start + parsed.pages - 1
             else:
-                if parsed.use_id_sequence:
+                if parsed.use_id_sequence or parsed.use_link_sequence:
                     parsed.start = parsed.end = None
                 elif parsed.end < parsed.start + parsed.count - 1:
                     parsed.end = parsed.start + parsed.count - 1
@@ -243,9 +247,9 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
 def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     parser, par_file, par_cmd = create_parsers()
     par_cmd.usage = (
-        '\n       ids.py -start #number -end #number [options...] [extra tags...]'
-        '\n       ids.py -start #number -count #number [options...] [extra tags...]'
-        '\n       ids.py --use-id-sequence [options...] [extra tags...]'
+        '\n       ids.py [cmd] -start #number -end|-count #number [options...] [extra tags...]'
+        '\n       ids.py [cmd] --use-id-sequence|--use-link-sequence [options...] [extra tags...]'
+        '\n       ids.py file -path #path_to_file'
     )
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
@@ -257,6 +261,7 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     par_cmd.add_argument('-lookahead', metavar='#number', default=0, help=HELP_ARG_LOOKAHEAD, type=valid_lookahead)
     par_cmd.add_argument('-gpred', '--predict-id-gaps', action=ACTION_STORE_TRUE, help=HELP_ARG_PREDICT_ID_GAPS)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
+    arggr_start_or_seq.add_argument('-links', '--use-link-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_LINKSEQUENCE)
 
     add_common_args(par_cmd)
     return execute_parser(parser, par_cmd, args, False)
@@ -265,9 +270,9 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
 def prepare_arglist_pages(args: Sequence[str]) -> Namespace:
     parser, par_file, par_cmd = create_parsers()
     par_cmd.usage = (
-        '\n       pages.py -start #number -end #number [options...] [extra tags...]'
-        '\n       pages.py -start #number -pages #number [options...] [extra tags...]'
-        '\n       pages.py -get_maxid [options...] [extra tags...]'
+        '\n       pages.py [cmd] -start #number -end|-pages #number [options...] [extra tags...]'
+        '\n       pages.py [cmd] -get_maxid'
+        '\n       pages.py file -path #path_to_file'
     )
 
     par_file.add_argument('-path', metavar='#filepath', required=True, help=HELP_ARG_CMDFILE, type=valid_filepath_abs)
