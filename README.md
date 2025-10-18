@@ -37,12 +37,13 @@ RV is a video downloader with a lot of features, most of which are filters for f
 - In addition to multiple search parameters it is also possible to filter out unwanted results natively. Syntax:
   - `-blacklist [type1:]name1[,[type2:]name2,...]`, where `<typeN>` is either `a` (artist), `c` (category) or `t` (tag), and `<nameN>` is (non-)wildcarded value string
   - `<nameN>` must be a valid value of type `<typeN>` (see below for possible values)
-  - If `type` is omitted then `name` is matched againt all possible `types` and must match at least one of them
+  - Each `type` can be used multiple times
+  - If `type` is omitted then `name` is matched against all possible `types` and must match at least one of them
   - Examples:
   - Filter out tag `2d`
     - `-blacklist t:2d`
-  - Filter out all tags starting with `fur` and all categories starting with `rob`
-    - `-blacklist t:fur*,c:rob*`
+  - Filter out all tags starting with `fur` or `scal` and all categories starting with `rob`
+    - `-blacklist t:fur*,t:scal*,c:rob*`
   - Filter out any tags, categories and artists with name containing `zombie`:
     - `-blacklist *zombie*`
 
