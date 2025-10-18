@@ -91,7 +91,7 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
             Log.info(f'Info: running download script: outer minimum rating: {Config.min_rating:d}')
             delay_for_message = True
         if Config.quality != DEFAULT_QUALITY:
-            Log.info('Info: running download script, outer quality setting will be ignored')
+            Log.info(f'Info: running download script, outer quality: {Config.quality}')
             delay_for_message = True
     if full_download is False:
         if Config.scenario is not None:
