@@ -263,7 +263,7 @@ class VideoDownloadWorker:
         return self._scn and not self._scn.done()
 
     def get_scanned_count(self) -> int:
-        return self._scn.get_done_count() if self.waiting_for_scanner() else 0
+        return self._scn.get_done_count() if self._scn else 0
 
     def get_scanner_workload_size(self) -> int:
         return self._scn.get_workload_size() if self.waiting_for_scanner() else 0
