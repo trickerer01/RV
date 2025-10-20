@@ -37,6 +37,7 @@ from downloader import VideoDownloadWorker
 from dscanner import VideoScanWorker
 from dthrottler import ThrottleChecker
 from fetch_html import ensure_conn_closed, fetch_html, wrap_request
+from idgaps import IdGapsPredictor
 from iinfo import VideoInfo, export_video_info, get_min_max_ids
 from logger import Log
 from path_util import file_already_exists, is_file_being_used, register_new_file, try_rename
@@ -62,6 +63,7 @@ async def download(sequence: list[VideoInfo], by_id: bool, filtered_count: int) 
 
 async def scan_video(vi: VideoInfo) -> DownloadResult:
     scn = VideoScanWorker.get()
+    gpred = IdGapsPredictor.get()
     scenario = Config.scenario
     sname = vi.sname
     extra_ids: list[int] = scn.get_extra_ids() if scn else []
@@ -69,40 +71,9 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     rating = vi.rating
     score = ''
 
-    predict_gap4 = Config.predict_id_gaps and 3670052 <= vi.id <= 9999999  # 1-3-1
-    predict_gap2 = Config.predict_id_gaps and 3638828 <= vi.id <= 3639245  # 1-1-1
-    predict_gap3 = Config.predict_id_gaps and 3400000 <= vi.id <= 9999999 and not (predict_gap2 or predict_gap4)  # 1-2-1
-    predict_expects = [(predict_gap4, 4), (predict_gap2, 2), (predict_gap3, 3)]
-    predicted_skip = False
-    predicted_prefix = ''
-    if predict_gap4:
-        predicted_prefix = '4'
-        vi_prev1 = scn.find_vinfo_last(vi.id - 1)
-        vi_prev2 = scn.find_vinfo_last(vi.id - 2)
-        vi_prev3 = scn.find_vinfo_last(vi.id - 3)
-        if vi_prev1 and vi_prev2 and vi_prev3:
-            f_404s = [vip.has_flag(VideoInfo.Flags.RETURNED_404) for vip in (vi_prev1, vi_prev2, vi_prev3)]
-            predicted_skip = not (f_404s[0] is f_404s[1] is f_404s[2])
-        elif vi_prev1 and vi_prev2:
-            f_404s = [vip.has_flag(VideoInfo.Flags.RETURNED_404) for vip in (vi_prev1, vi_prev2)]
-            predicted_skip = f_404s[0] is not f_404s[1]
-        else:
-            predicted_skip = vi_prev1 and not vi_prev1.has_flag(VideoInfo.Flags.RETURNED_404)
-    elif predict_gap3:
-        predicted_prefix = '3'
-        vi_prev1 = scn.find_vinfo_last(vi.id - 1)
-        vi_prev2 = scn.find_vinfo_last(vi.id - 2)
-        if vi_prev1 and vi_prev2:
-            f_404s = [vip.has_flag(VideoInfo.Flags.RETURNED_404) for vip in (vi_prev1, vi_prev2)]
-            predicted_skip = f_404s[0] is not f_404s[1]
-        else:
-            predicted_skip = vi_prev1 and not vi_prev1.has_flag(VideoInfo.Flags.RETURNED_404)
-    elif predict_gap2:
-        predicted_prefix = '2'
-        vi_prev1 = scn.find_vinfo_last(vi.id - 1)
-        predicted_skip = vi_prev1 and not vi_prev1.has_flag(VideoInfo.Flags.RETURNED_404)
-    if predicted_skip:
+    if predicted_prefix := gpred.need_skip(vi):
         Log.warn(f'Id gap prediction {predicted_prefix} forces error 404 for {sname}, skipping...')
+        gpred.count_nonexisting()
         return DownloadResult.FAIL_NOT_FOUND
 
     vi.set_state(VideoInfo.State.SCANNING)
@@ -117,20 +88,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
 
     if a_html.find('title', string='404 Not Found'):
         Log.error(f'Got error 404 for {sname}, skipping...')
+        gpred.count_nonexisting()
         return DownloadResult.FAIL_NOT_FOUND
 
-    for predict, gap_size in predict_expects:
-        if predict:
-            # find previous valid id and check the offset
-            id_dec = gap_size
-            vi_prev_x = scn.find_vinfo_last(vi.id - id_dec)
-            while vi_prev_x and vi_prev_x.has_flag(VideoInfo.Flags.RETURNED_404):
-                id_dec += 1
-                vi_prev_x = scn.find_vinfo_last(vi.id - id_dec)
-            if vi_prev_x and (id_dec % gap_size) != 0:
-                Log.error(f'Error: id gap predictor encountered unexpected valid post offset != {gap_size:d}. Disabling prediction!')
-                Config.predict_id_gaps = False
-            break
+    gpred.count_existing(vi)
 
     if not vi.title:
         titleh1 = a_html.find('h1', class_='title_video')

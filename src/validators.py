@@ -14,6 +14,7 @@ from config import Config
 from defs import (
     DEFAULT_QUALITY,
     DOWNLOAD_POLICY_DEFAULT,
+    IDGAP_PREDICTION_OFF,
     LOGGING_FLAGS,
     NAMING_FLAGS,
     SEARCH_RULE_ALL,
@@ -74,9 +75,9 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
         Config.detect_id_gaps = False
         delay_for_message = True
     if Config.detect_id_gaps:
-        if Config.predict_id_gaps:
+        if Config.predict_id_gaps != IDGAP_PREDICTION_OFF:
             Log.info('Info: id gaps detection is enabled, disabling id gaps prediction')
-            Config.predict_id_gaps = False
+            Config.predict_id_gaps = IDGAP_PREDICTION_OFF
             delay_for_message = True
 
     if Config.scan_all_pages and Config.start_id <= 1:

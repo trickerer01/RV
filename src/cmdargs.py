@@ -73,6 +73,8 @@ from defs import (
     HELP_ARG_UPLOADER,
     HELP_ARG_UTPOLICY,
     HELP_ARG_VERSION,
+    IDGAP_PREDICTION_DEFAULT,
+    IDGAP_PREDICTION_MODES,
     LOGGING_FLAGS_DEFAULT,
     MAX_DEST_SCAN_SUB_DEPTH_DEFAULT,
     MAX_DEST_SCAN_UPLEVELS_DEFAULT,
@@ -123,6 +125,9 @@ PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
 EXISTING_PARSERS = {PARSER_TITLE_CMD, PARSER_TITLE_FILE}
 """'file','cmd'"""
+
+IDGP_DEFAULT = IDGAP_PREDICTION_DEFAULT
+"""'0'"""
 
 
 class HelpPrintExitException(Exception):
@@ -259,7 +264,7 @@ def prepare_arglist_ids(args: Sequence[str]) -> Namespace:
     arggr_count_or_end.add_argument('-count', metavar='#number', default=1, help=HELP_ARG_ID_COUNT, type=positive_nonzero_int)
     arggr_count_or_end.add_argument('-end', metavar='#number', default=1, help=HELP_ARG_ID_END, type=positive_nonzero_int)
     par_cmd.add_argument('-lookahead', metavar='#number', default=0, help=HELP_ARG_LOOKAHEAD, type=valid_lookahead)
-    par_cmd.add_argument('-gpred', '--predict-id-gaps', action=ACTION_STORE_TRUE, help=HELP_ARG_PREDICT_ID_GAPS)
+    par_cmd.add_argument('-gpred', '--predict-id-gaps', default=IDGP_DEFAULT, help=HELP_ARG_PREDICT_ID_GAPS, choices=IDGAP_PREDICTION_MODES)
     arggr_start_or_seq.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
     arggr_start_or_seq.add_argument('-links', '--use-link-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_LINKSEQUENCE)
 
