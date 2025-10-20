@@ -19,10 +19,10 @@ from logger import Log
 __all__ = ('IdGapsPredictor',)
 
 ID_SKIPS = (
-    (IntPair((3400000, 3638827)), 3),
-    (IntPair((3638828, 3639245)), 2),
-    (IntPair((3639246, 3670051)), 3),
-    (IntPair((3670052, 9999999)), 4),
+    (IntPair(3400000, 3638827), 3),
+    (IntPair(3638828, 3639245), 2),
+    (IntPair(3639246, 3670051), 3),
+    (IntPair(3670052, 9999999), 4),
 )
 
 

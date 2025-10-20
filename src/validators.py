@@ -254,9 +254,9 @@ def valid_duration(duration: str) -> Duration:
     try:
         parts = duration.split('-', maxsplit=2)
         assert len(parts) == 2
-        pair = (positive_int(parts[0]), positive_nonzero_int(parts[1]))
-        assert pair[0] <= pair[1]
-        return Duration(pair)
+        dur_min, dur_max = positive_int(parts[0]), positive_nonzero_int(parts[1])
+        assert dur_min <= dur_max
+        return Duration(dur_min, dur_max)
     except Exception:
         raise ArgumentError
 

@@ -9,9 +9,8 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 import base64
 import datetime
 import os
-from abc import ABC, abstractmethod
 from enum import IntEnum
-from typing import TypeVar
+from typing import NamedTuple
 
 MIN_PYTHON_VERSION = (3, 10)
 MIN_PYTHON_VERSION_STR = f'{MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}'
@@ -391,47 +390,19 @@ class Mem:
     GB = MB * 1024
 
 
-class Pair(ABC):
-    PT = TypeVar('PT')
-
-    @abstractmethod
-    def __init__(self, vals: tuple[PT, PT]) -> None:
-        self._first, self._second = vals
-        self._fmt = {int: 'd', bool: 'd', float: '.2f'}.get(type(self._first), '')
-
-    @property
-    def first(self) -> PT:
-        return self._first
-
-    @property
-    def second(self) -> PT:
-        return self._second
-
-    def __bool__(self) -> bool:
-        return bool(self._first) or bool(self._second)
-
-    def __eq__(self, other) -> bool:
-        return (self._first, self._second) == ((other.first, other.second) if isinstance(other, Duration) else other)
-
-    def __str__(self) -> str:
-        return f'first: {self._first:{self._fmt}}, second: {self._second:{self._fmt}}'
-
-    __repr__ = __str__
+class IntPair(NamedTuple):
+    first: int
+    second: int
 
 
-class IntPair(Pair):
-    def __init__(self, vals: tuple[int, int]) -> None:
-        super().__init__(vals)
+class StrPair(NamedTuple):
+    first: str
+    second: str
 
 
-class StrPair(Pair):
-    def __init__(self, vals: tuple[str, str]) -> None:
-        super().__init__(vals)
-
-
-class Duration(IntPair):
-    def __str__(self) -> str:
-        return f'{self._first:{self._fmt}}-{self._second:{self._fmt}}'
+class Duration(NamedTuple):
+    first: int
+    second: int
 
 #
 #
