@@ -75,7 +75,7 @@ class IdGapsPredictor:
             self._streak = 0
             self._streaks_count = (self._streaks_count + 1) if streak + 1 == skip_num else 0
             if self._enabled:
-                streak_valid = skip_num in (0, streak + 1)
+                streak_valid = skip_num == 0 or (streak + 1) % skip_num == 0
                 if streak_valid is False:
                     Log.error(f'Error: id gap predictor encountered unexpected valid post offset != {skip_num:d}. Disabling prediction!')
                     self._enabled = False
