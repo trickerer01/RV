@@ -71,11 +71,11 @@ class IdGapsPredictor:
     def count_existing(self, vi: VideoInfo) -> None:
         if self._streak:
             skip_num = self._get_skip_num(vi)
-            streak = self._streak
+            streak_is_complimentary = skip_num > 0 and (self._streak + 1) % skip_num == 0
             self._streak = 0
-            self._streaks_count = (self._streaks_count + 1) if streak + 1 == skip_num else 0
+            self._streaks_count = (self._streaks_count + 1) if streak_is_complimentary else 0
             if self._enabled:
-                streak_valid = skip_num == 0 or (streak + 1) % skip_num == 0
+                streak_valid = skip_num == 0 or streak_is_complimentary
                 if streak_valid is False:
                     Log.error(f'Error: id gap predictor encountered unexpected valid post offset != {skip_num:d}. Disabling prediction!')
                     self._enabled = False
