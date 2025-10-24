@@ -338,8 +338,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             exact_quality = curfile_oquality and curfile_quality == curfile_oquality
             vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT if exact_name else VideoInfo.Flags.ALREADY_EXISTED_SIMILAR)
             if Config.continue_mode and exact_quality:
-                proc_str = is_file_being_used(curfile)
-                if proc_str:
+                if proc_str := is_file_being_used(curfile):
                     Log.error(f'Error: file {vi.sffilename} already exists and is locked by \'{proc_str}\'!! Parallel download? Aborted!')
                     return DownloadResult.FAIL_ALREADY_EXISTS
                 if not exact_name:
@@ -422,8 +421,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             Log.info(f'Saving{starting_str} {vi.sdname} {content_len / Mem.MB:.2f}{total_str} Mb to {vi.sffilename}')
 
             if Config.continue_mode and exact_quality:
-                proc_str = is_file_being_used(vi.my_fullpath)
-                if proc_str:
+                if proc_str := is_file_being_used(vi.my_fullpath):
                     Log.error(f'Error: file {vi.sffilename} already exists and is locked by \'{proc_str}\'!! Parallel download? Aborted!')
                     return DownloadResult.FAIL_ALREADY_EXISTS
 
@@ -453,8 +451,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             vi.set_state(VideoInfo.State.DONE)
             break
         except Exception as e:
-            import sys
-            print(sys.exc_info()[0], sys.exc_info()[1])
+            import traceback
+            Log.error(f'{vi.sname}: {traceback.format_exc()}')
             if (r is None or r.status != 403) and isinstance(e, ClientPayloadError) is False:
                 retries += 1
                 Log.error(f'{vi.sffilename}: error #{retries:d}...')

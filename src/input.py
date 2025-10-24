@@ -14,14 +14,12 @@ from platform import system
 __all__ = ('wait_for_key',)
 
 if system() == 'Windows':
-    # noinspection PyCompatibility
-    from msvcrt import getwch, kbhit
+    import msvcrt
 
     set_terminal_raw = nullcontext
-    input_ready = kbhit
-    next_input = getwch
+    input_ready = msvcrt.kbhit
+    next_input = msvcrt.getwch
 else:
-    # TODO: test on Linux
     import functools
     import sys
     from select import select
@@ -46,7 +44,7 @@ else:
 
 async def wait_for_key(key: str, count: int, callback: Callable[[], None]) -> None:
     try:
-        stroke_sequence = list[str]()
+        stroke_sequence: list[str] = []
         with set_terminal_raw():
             while stroke_sequence != [key] * count:
                 await sleep(1.0)

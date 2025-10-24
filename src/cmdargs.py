@@ -193,7 +193,7 @@ def execute_parser(parser: ArgumentParser, default_sub: ArgumentParser, args: Se
     except Exception:
         from traceback import format_exc
         default_sub.print_help()
-        print(format_exc())
+        Log.fatal(format_exc())
         raise HelpPrintExitException
 
 

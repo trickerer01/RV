@@ -204,7 +204,7 @@ def is_file_being_used(filepath: str) -> str:
                 pass
             else:
                 import traceback
-                print(f'is_file_being_used(): Error: {traceback.format_exc()}')
+                Log.error(f'is_file_being_used(): Error: {traceback.format_exc()}')
     return ''
 
 

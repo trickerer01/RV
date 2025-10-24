@@ -31,6 +31,8 @@ class Log:
         LoggingFlags.FATAL: Fore.LIGHTRED_EX,
     }
 
+    ERR_POLICY = 'backslashreplace'
+
     @staticmethod
     def init() -> None:
         if not Config.nocolors:
@@ -56,7 +58,7 @@ class Log:
             print(text)
         except UnicodeError:
             try:
-                print(text.encode(UTF8, errors='backslashreplace').decode(getpreferredencoding(), errors='backslashreplace'))
+                print(text.encode(UTF8, errors=Log.ERR_POLICY).decode(getpreferredencoding(), errors=Log.ERR_POLICY))
             except Exception:
                 print('<Message was not logged due to UnicodeError>')
 
