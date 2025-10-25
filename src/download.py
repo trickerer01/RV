@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 import os
 import random
+import sys
 import urllib.parse
 from asyncio import Task, as_completed, get_running_loop, sleep
 
@@ -451,8 +452,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             vi.set_state(VideoInfo.State.DONE)
             break
         except Exception as e:
-            import traceback
-            Log.error(f'{vi.sname}: {traceback.format_exc()}')
+            Log.error(f'{vi.sname}: {sys.exc_info()[0]}: {sys.exc_info()[1]}')
             if (r is None or r.status != 403) and isinstance(e, ClientPayloadError) is False:
                 retries += 1
                 Log.error(f'{vi.sffilename}: error #{retries:d}...')
