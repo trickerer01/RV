@@ -12,8 +12,8 @@ import os
 from asyncio import Lock as AsyncLock
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import as_completed, sleep
-from collections.abc import Callable, Coroutine, Iterable
-from typing import Any
+from collections.abc import Callable, Coroutine
+from typing import Any, TypeAlias
 
 from config import Config
 from defs import (
@@ -33,6 +33,8 @@ from util import calc_sleep_time, format_time, get_elapsed_time_i, get_elapsed_t
 
 __all__ = ('VideoDownloadWorker',)
 
+Func_T: TypeAlias = Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]]
+
 
 class VideoDownloadWorker:
     """
@@ -51,45 +53,50 @@ class VideoDownloadWorker:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         VideoDownloadWorker._instance = None
 
-    def __init__(self, sequence: Iterable[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]],
-                 filtered_count: int) -> None:
+    def __init__(self, sequence: list[VideoInfo], func: Func_T, filtered_count: int) -> None:
         assert VideoDownloadWorker._instance is None
         VideoDownloadWorker._instance = self
 
-        self._scn = VideoScanWorker.get()
+        self._scn: VideoScanWorker | None = VideoScanWorker.get()
 
-        self._func = func
-        self._seq = list(sequence)  # form our own container to erase from
+        self._func: Func_T = func
+        self._seq: list[VideoInfo] = []
         self._queue: AsyncQueue[VideoInfo] = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)
-        self._orig_count = len(self._seq)
-        self._downloaded_count = 0
-        self._prefiltered_count = filtered_count
-        self._already_exist_count = 0
-        self._skipped_count = 0
-        self._404_count = 0
-        self._minmax_id = get_min_max_ids(self._seq)
+        self._orig_count: int = len(sequence)
+        self._downloaded_count: int = 0
+        self._prefiltered_count: int = filtered_count
+        self._already_exist_count: int = 0
+        self._skipped_count: int = 0
+        self._404_count: int = 0
+        self._minmax_id: tuple[int, int] = get_min_max_ids(sequence)
 
         self._downloads_active: list[VideoInfo] = []
         self._writes_active: list[VideoInfo] = []
         self._failed_items: list[int] = []
 
-        self._total_queue_size_last = 0
-        self._download_queue_size_last = 0
-        self._write_queue_size_last = 0
-        self._lock = AsyncLock()
+        self._total_queue_size_last: int = 0
+        self._download_queue_size_last: int = 0
+        self._write_queue_size_last: int = 0
+
+        self._sequence_lock: AsyncLock = AsyncLock()
+        self._active_downloads_lock: AsyncLock = AsyncLock()
+        self._active_writes_lock: AsyncLock = AsyncLock()
 
         if self._scn:
-            self._seq.clear()
             self._scn.register_task_finish_callback(self._at_task_finish)
+        else:
+            self._seq.extend(sequence)  # form our own container to erase from
 
     async def _at_task_start(self, vi: VideoInfo) -> None:
+        async with self._active_downloads_lock:
+            self._downloads_active.append(vi)
         vi.set_state(VideoInfo.State.ACTIVE)
-        self._downloads_active.append(vi)
         Log.trace(f'[queue] {vi.sname} added to active')
 
     async def _at_task_finish(self, vi: VideoInfo, result: DownloadResult) -> None:
         if vi in self._downloads_active and not (Config.watcher_mode and vi in self._writes_active):
-            self._downloads_active.remove(vi)
+            async with self._active_downloads_lock:
+                self._downloads_active.remove(vi)
             Log.trace(f'[queue] {vi.sname} removed from active')
         if result == DownloadResult.FAIL_ALREADY_EXISTS:
             self._already_exist_count += 1
@@ -104,7 +111,7 @@ class VideoDownloadWorker:
 
     async def _prod(self) -> None:
         while True:
-            async with self._lock:
+            async with self._sequence_lock:
                 if self.can_fetch_next() is False:
                     break
                 qfull = self._queue.full()
@@ -118,12 +125,14 @@ class VideoDownloadWorker:
 
     async def _cons(self) -> None:
         while True:
-            async with self._lock:
+            async with self._sequence_lock:
                 can_fetch = self.can_fetch_next()
                 qsize = self._queue.qsize()
             if can_fetch is False and qsize == 0:
                 break
-            if qsize > 0 and len(self._downloads_active) < MAX_VIDEOS_QUEUE_SIZE:
+            async with self._active_downloads_lock:
+                dsize = len(self._downloads_active)
+            if qsize > 0 and dsize < MAX_VIDEOS_QUEUE_SIZE:
                 vi = await self._queue.get()
                 await self._at_task_start(vi)
                 result = await self._func(vi)
@@ -237,6 +246,7 @@ class VideoDownloadWorker:
                                *(self._cons() for _ in range(MAX_VIDEOS_QUEUE_SIZE))]):
             await cv
         await self._after_download()
+        await self._queue.join()
 
     def at_interrupt(self) -> None:
         if len(self._downloads_active) > 0:
@@ -250,14 +260,18 @@ class VideoDownloadWorker:
                 Log.debug(f'at_interrupt: trying to remove \'{vi.my_fullpath}\'...')
                 os.remove(vi.my_fullpath)
 
-    def is_writing(self, vi: VideoInfo) -> bool:
-        return vi in self._writes_active
+    async def is_writing(self, vi: VideoInfo) -> bool:
+        async with self._active_writes_lock:
+            return vi in self._writes_active
 
-    def add_to_writes(self, vi: VideoInfo) -> None:
-        self._writes_active.append(vi)
+    async def add_to_writes(self, vi: VideoInfo) -> None:
+        async with self._active_writes_lock:
+            self._writes_active.append(vi)
 
-    def remove_from_writes(self, vi: VideoInfo) -> None:
-        self._writes_active.remove(vi)
+    async def remove_from_writes(self, vi: VideoInfo, safe=False) -> None:
+        async with self._active_writes_lock:
+            if safe is False or vi in self._writes_active:
+                self._writes_active.remove(vi)
 
     def waiting_for_scanner(self) -> bool:
         return self._scn and not self._scn.done()
@@ -281,13 +295,14 @@ class VideoDownloadWorker:
         return self._scn and self._scn.watcher_wait_active()
 
     async def _try_fetch_next(self) -> VideoInfo | None:
-        if self._seq:
-            vi = self._seq[0]
-            del self._seq[0]
-        else:
-            assert self._scn
-            vi = await self._scn.try_fetch_next()
-        return vi
+        async with self._sequence_lock:
+            if self._seq:
+                vi = self._seq[0]
+                del self._seq[0]
+            else:
+                assert self._scn
+                vi = await self._scn.try_fetch_next()
+            return vi
 
 #
 #

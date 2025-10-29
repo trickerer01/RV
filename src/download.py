@@ -426,7 +426,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     Log.error(f'Error: file {vi.sffilename} already exists and is locked by \'{proc_str}\'!! Parallel download? Aborted!')
                     return DownloadResult.FAIL_ALREADY_EXISTS
 
-            dwn.add_to_writes(vi)
+            await dwn.add_to_writes(vi)
             vi.set_state(VideoInfo.State.WRITING)
             status_checker.run()
             async with async_open(vi.my_fullpath, 'ab') as outf:
@@ -438,7 +438,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     await outf.write(chunk)
                     vi.bytes_written += len(chunk)
             status_checker.reset()
-            dwn.remove_from_writes(vi)
+            await dwn.remove_from_writes(vi)
 
             file_size = os.stat(vi.my_fullpath).st_size
             if vi.expected_size and file_size != vi.expected_size:
@@ -459,8 +459,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             if r is not None and r.closed is False:
                 r.close()
             # Network error may be thrown before item is added to active downloads
-            if dwn.is_writing(vi):
-                dwn.remove_from_writes(vi)
+            await dwn.remove_from_writes(vi, True)
             status_checker.reset()
             if retries <= Config.retries:
                 vi.set_state(VideoInfo.State.DOWNLOADING)

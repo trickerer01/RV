@@ -12,6 +12,8 @@ import random
 import urllib.parse
 from asyncio import AbstractEventLoop, get_running_loop, sleep
 from asyncio import Lock as AsyncLock
+from collections import deque
+from contextlib import AsyncExitStack
 
 from aiohttp import ClientResponse, ClientResponseError, ClientSession, TCPConnector
 from aiohttp_socks import ProxyConnector
@@ -60,9 +62,12 @@ class ClientSessionWrapper:
     """
     ClientSessionWrapper
     """
+    PSESSION_INDEX = 0
+    NPSESSION_INDEX = 1
+
     def __init__(self) -> None:
-        self.psession = self.make_session()
-        self.npsession = self.make_session(True)
+        self._exitstack = AsyncExitStack()
+        self._sessions = (self.make_session(), self.make_session(True))
         self.default_exc_handler = get_running_loop().get_exception_handler()
         get_running_loop().set_exception_handler(self.ignore_unclosed_session_exc_handler)
 
@@ -70,16 +75,22 @@ class ClientSessionWrapper:
         global sessionw
         assert sessionw is None
         sessionw = self
-        await self.psession.__aenter__()
-        await self.npsession.__aenter__()
+        [await self._exitstack.enter_async_context(s) for s in self._sessions]
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         global sessionw
         assert sessionw is self
         sessionw = None
-        await self.npsession.__aexit__(exc_type, exc_val, exc_tb)
-        await self.psession.__aexit__(exc_type, exc_val, exc_tb)
+        await self._exitstack.aclose()
+
+    @property
+    def psession(self) -> ClientSession:
+        return self._sessions[ClientSessionWrapper.PSESSION_INDEX]
+
+    @property
+    def npsession(self) -> ClientSession:
+        return self._sessions[ClientSessionWrapper.NPSESSION_INDEX]
 
     @staticmethod
     def ignore_unclosed_session_exc_handler(selfloop: AbstractEventLoop, context: dict) -> None:
@@ -111,7 +122,7 @@ class RequestQueue:
     """
     Request delayed queue wrapper
     """
-    _queue: list[str] = []
+    _queue = deque[str]()
     _ready = True
     _lock = AsyncLock()
 
@@ -123,11 +134,12 @@ class RequestQueue:
     @staticmethod
     async def until_ready(url: str) -> None:
         """Pauses request until base delay passes (since last request)"""
-        RequestQueue._queue.append(url)
+        async with RequestQueue._lock:
+            RequestQueue._queue.append(url)
         while RequestQueue._ready is False or RequestQueue._queue[0] != url:
             await sleep(0.2)
         async with RequestQueue._lock:
-            del RequestQueue._queue[0]
+            RequestQueue._queue.popleft()
             RequestQueue._ready = False
             get_running_loop().create_task(RequestQueue._reset())
 
