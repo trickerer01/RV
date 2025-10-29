@@ -12,6 +12,7 @@ import os
 from asyncio import Lock as AsyncLock
 from asyncio.queues import Queue as AsyncQueue
 from asyncio.tasks import as_completed, sleep
+from collections import deque
 from collections.abc import Callable, Coroutine
 from typing import Any, TypeAlias
 
@@ -60,7 +61,7 @@ class VideoDownloadWorker:
         self._scn: VideoScanWorker | None = VideoScanWorker.get()
 
         self._func: Func_T = func
-        self._seq: list[VideoInfo] = []
+        self._seq: deque[VideoInfo] = deque()
         self._queue: AsyncQueue[VideoInfo] = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)
         self._orig_count: int = len(sequence)
         self._downloaded_count: int = 0
@@ -297,8 +298,7 @@ class VideoDownloadWorker:
     async def _try_fetch_next(self) -> VideoInfo | None:
         async with self._sequence_lock:
             if self._seq:
-                vi = self._seq[0]
-                del self._seq[0]
+                vi = self._seq.popleft()
             else:
                 assert self._scn
                 vi = await self._scn.try_fetch_next()
