@@ -9,10 +9,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 import datetime
 import sys
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 from config import Config
-from defs import DEFAULT_EXT, DOWNLOAD_MODE_FULL, SLASH, START_TIME
+from defs import CONNECT_REQUEST_DELAY, DEFAULT_EXT, DOWNLOAD_MODE_FULL, SLASH, START_TIME
 from logger import Log
 from rex import re_ext
 from version import APP_NAME, APP_VERSION
@@ -25,7 +25,7 @@ def assert_nonempty(container: Iterable, message='') -> Iterable:
 
 def get_time_seconds(timespan: str) -> int:
     """Converts time from **[hh:][mm:]ss** format to **seconds**"""
-    return sum(int(part) * pow(60, idx) for idx, part in enumerate(list(reversed(timespan.split(':')))))
+    return sum(int(part) * pow(60, idx) for idx, part in enumerate(reversed(timespan.split(':'))))
 
 
 def format_time(seconds: int) -> str:
@@ -94,6 +94,10 @@ def has_naming_flag(flag: int) -> bool:
 def calc_sleep_time(base_time: float) -> float:
     """Returns either base_time for full download or shortened time otherwise"""
     return base_time if Config.download_mode == DOWNLOAD_MODE_FULL else max(1.0, base_time / 3.0)
+
+
+def calculate_eta(container: Sequence) -> int:
+    return int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(container))
 
 
 def at_startup() -> None:

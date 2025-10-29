@@ -143,7 +143,7 @@ class DownloadScenario:
         return None
 
     def get_utp_always_subquery(self) -> SubQueryParams | None:
-        return next(filter(lambda sq: sq.utp == UTP_ALWAYS, self.queries), None)
+        return next((sq for sq in self.queries if sq.utp == UTP_ALWAYS), None)
 
 #
 #

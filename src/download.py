@@ -17,7 +17,6 @@ from aiohttp import ClientPayloadError
 
 from config import Config
 from defs import (
-    CONNECT_REQUEST_DELAY,
     CONNECT_RETRY_DELAY,
     DOWNLOAD_MODE_SKIP,
     DOWNLOAD_MODE_TOUCH,
@@ -44,14 +43,14 @@ from logger import Log
 from path_util import file_already_exists, is_file_being_used, register_new_file, try_rename
 from rex import re_media_filename, re_time
 from tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
-from util import extract_ext, format_time, get_elapsed_time_i, get_time_seconds, has_naming_flag, normalize_path
+from util import calculate_eta, extract_ext, format_time, get_elapsed_time_i, get_time_seconds, has_naming_flag, normalize_path
 
 __all__ = ('at_interrupt', 'download')
 
 
 async def download(sequence: list[VideoInfo], by_id: bool, filtered_count: int) -> None:
     minid, maxid = get_min_max_ids(sequence)
-    eta_min = int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(sequence))
+    eta_min = calculate_eta(sequence)
     interrupt_msg = f'\nPress \'{SCAN_CANCEL_KEYSTROKE}\' twice to stop' if by_id else ''
     Log.info(f'\nOk! {len(sequence):d} ids (+{filtered_count:d} filtered out), bound {minid:d} to {maxid:d}.'
              f' Working...{interrupt_msg}\n'

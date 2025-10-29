@@ -134,7 +134,14 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
 
 
 def get_min_max_ids(seq: Iterable[VideoInfo]) -> tuple[int, int]:
-    return min(seq, key=lambda x: x.id).id, max(seq, key=lambda x: x.id).id
+    min_id, max_id = 10**18, 0
+    for ii in seq:
+        id_ = ii.id
+        if id_ < min_id:
+            min_id = id_
+        if id_ > max_id:
+            max_id = id_
+    return min_id, max_id
 
 
 def try_merge_info_files(info_dict: dict[int, str], subfolder: str, list_type: str) -> list[str]:
