@@ -404,6 +404,9 @@ class Duration(NamedTuple):
     first: int
     second: int
 
+    def __bool__(self) -> bool:
+        return any(bool(getattr(self, _)) for _ in self._fields)
+
 #
 #
 #########################################
