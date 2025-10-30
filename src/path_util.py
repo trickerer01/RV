@@ -25,6 +25,7 @@ __all__ = (
     'prefilter_existing_items',
     'register_new_file',
     'try_rename',
+    'unregister_unfinished_file',
 )
 
 found_filenames_dict: dict[str, list[str]] = {}
@@ -32,8 +33,8 @@ media_matches_cache: dict[str, tuple[str, Quality]] = {}
 
 
 def report_duplicates() -> None:
-    found_vs = dict[str, list[str]]()
-    fvks = list[str]()
+    found_vs: dict[str, list[str]] = {}
+    fvks: list[str] = []
     for k, filenames in found_filenames_dict.items():
         if not filenames:
             continue
@@ -118,16 +119,22 @@ def get_media_file_match(fname: str) -> tuple[str, Quality]:
 
 def register_new_file(vi: VideoInfo) -> None:
     base_folder = vi.my_folder
-    if found_filenames_dict.get(base_folder) is None:
-        found_filenames_dict[base_folder] = []
-    elif file_exists_in_folder(base_folder, vi.id, vi.quality, False):
-        return
-    found_filenames_dict[base_folder].append(vi.filename)
+    if not file_exists_in_folder(base_folder, vi.id, vi.quality, False):
+        if found_filenames_dict.get(base_folder) is None:
+            found_filenames_dict[base_folder] = [vi.filename]
+        else:
+            found_filenames_dict[base_folder].append(vi.filename)
+
+
+def unregister_unfinished_file(vi: VideoInfo) -> None:
+    base_folder = vi.my_folder
+    if file_exists_in_folder(base_folder, vi.id, vi.quality, False):
+        found_filenames_dict[base_folder].remove(vi.filename)
 
 
 def file_exists_in_folder(base_folder: str, idi: int, quality: Quality, check_folder: bool) -> str:
     orig_file_names = found_filenames_dict.get(base_folder)
-    if (not check_folder or os.path.isdir(base_folder)) and orig_file_names is not None:
+    if orig_file_names is not None and (not check_folder or os.path.isdir(base_folder)):
         for fname in orig_file_names:
             f_id, f_quality = get_media_file_match(fname)
             if f_id and str(idi) == f_id and (not quality or not f_quality or quality <= f_quality):
@@ -145,8 +152,8 @@ def file_already_exists(idi: int, quality: Quality, check_folder=True) -> str:
 
 def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> list[str]:
     orig_file_names = found_filenames_dict.get(base_folder)
-    folder_files = []
-    if os.path.isdir(base_folder) and orig_file_names is not None:
+    folder_files: list[str] = []
+    if orig_file_names is not None and os.path.isdir(base_folder):
         for fname in orig_file_names:
             f_id, f_quality = get_media_file_match(fname)
             if f_id and str(idi) == f_id and (not quality or not f_quality or quality == f_quality):
@@ -155,7 +162,7 @@ def file_exists_in_folder_arr(base_folder: str, idi: int, quality: Quality) -> l
 
 
 def file_already_exists_arr(idi: int, quality: Quality) -> list[str]:
-    found_files = []
+    found_files: list[str] = []
     for fullpath in found_filenames_dict:
         found_files.extend(file_exists_in_folder_arr(fullpath, idi, quality or Config.quality))
     return found_files

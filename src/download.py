@@ -40,7 +40,7 @@ from fetch_html import ensure_conn_closed, fetch_html, wrap_request
 from idgaps import IdGapsPredictor
 from iinfo import VideoInfo, export_video_info, get_min_max_ids
 from logger import Log
-from path_util import file_already_exists, is_file_being_used, register_new_file, try_rename
+from path_util import file_already_exists, is_file_being_used, register_new_file, try_rename, unregister_unfinished_file
 from rex import re_media_filename, re_time
 from tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
 from util import calculate_eta, extract_ext, format_time, get_elapsed_time_i, get_time_seconds, has_naming_flag, normalize_path
@@ -458,6 +458,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 await sleep(random.uniform(*CONNECT_RETRY_DELAY))
             elif Config.keep_unfinished is False and os.path.isfile(vi.my_fullpath) and vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED):
                 Log.error(f'Failed to download {vi.sffilename}. Removing unfinished file...')
+                unregister_unfinished_file(vi)
                 os.remove(vi.my_fullpath)
         finally:
             ensure_conn_closed(r)
