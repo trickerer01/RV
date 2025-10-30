@@ -380,6 +380,10 @@ class DownloadResult(IntEnum):
     FAIL_FILTERED_OUTER = 6
     FAIL_EMPTY_HTML = 7
 
+    RESULT_MASK_ALL = ((1 << SUCCESS) | (1 << FAIL_NOT_FOUND) | (1 << FAIL_RETRIES) | (1 << FAIL_ALREADY_EXISTS) |
+                       (1 << FAIL_SKIPPED) | (1 << FAIL_DELETED) | (1 << FAIL_FILTERED_OUTER) | (1 << FAIL_EMPTY_HTML))
+    RESULT_MASK_CRITICAL = (RESULT_MASK_ALL & ~((1 << SUCCESS) | (1 << FAIL_SKIPPED) | (1 << FAIL_ALREADY_EXISTS)))
+
     def __str__(self) -> str:
         return f'{self.name} (0x{self.value:02X})'
 

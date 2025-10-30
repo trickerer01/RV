@@ -12,8 +12,7 @@ from asyncio import CancelledError, Task, get_running_loop
 from asyncio.tasks import sleep
 from collections import deque
 from collections.abc import Callable, Coroutine
-from contextlib import suppress
-from typing import Any
+from typing import Any, TypeAlias
 
 from config import Config
 from defs import (
@@ -32,6 +31,9 @@ from path_util import file_already_exists_arr
 from util import get_local_time_s
 
 __all__ = ('VideoScanWorker',)
+
+Func_T: TypeAlias = Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]]
+Callback_T: TypeAlias = Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]]
 
 
 class VideoScanWorker:
@@ -52,21 +54,21 @@ class VideoScanWorker:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         VideoScanWorker._instance = None
 
-    def __init__(self, sequence: list[VideoInfo], func: Callable[[VideoInfo], Coroutine[Any, Any, DownloadResult]]) -> None:
+    def __init__(self, sequence: list[VideoInfo], func: Func_T) -> None:
         assert VideoScanWorker._instance is None
         VideoScanWorker._instance = self
 
-        self._original_sequence = sequence
-        self._func = func
-        self._seq = deque(sequence)
+        self._original_sequence: list[VideoInfo] = sequence
+        self._func: Func_T = func
+        self._seq: deque[VideoInfo] = deque(sequence)
 
-        self._orig_count = len(self._original_sequence)
-        self._scan_count = 0
-        self._404_counter = 0
-        self._last_non404_id = self._original_sequence[0].id - 1
+        self._orig_count: int = len(self._original_sequence)
+        self._scan_count: int = 0
+        self._404_counter: int = 0
+        self._last_non404_id: int = self._original_sequence[0].id - 1
         self._extra_ids: list[int] = []
-        self._scanned_items = deque[VideoInfo]()
-        self._task_finish_callback: Callable[[VideoInfo, DownloadResult], Coroutine[Any, Any, None]] | None = None
+        self._scanned_items: deque[VideoInfo] = deque()
+        self._task_finish_callback: Callback_T | None = None
 
         self._sleep_waiter: Task | None = None
         self._abort_waiter: Task | None = None
@@ -121,7 +123,7 @@ class VideoScanWorker:
         self._seq.popleft()
         if result in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_RETRIES,
                       DownloadResult.FAIL_DELETED, DownloadResult.FAIL_FILTERED_OUTER, DownloadResult.FAIL_SKIPPED):
-            founditems = list(filter(None, [file_already_exists_arr(vi.id, q) for q in QUALITIES]))
+            founditems = [file_already_exists_arr(vi.id, q) for q in QUALITIES]
             if any(ffs for ffs in founditems):
                 newline = '\n'
                 Log.info(f'{vi.sname} scan returned {result!s} but it was already downloaded:'
@@ -163,26 +165,26 @@ class VideoScanWorker:
             self._abort_waiter = None
         Log.debug('[queue] scanner thread stop: scan complete')
         if self._id_gaps:
-            gap_strings = []
+            gap_strings: list[str] = []
             mod2_count = mod3_count = mod4_count = 0
             for gstart, gstop in self._id_gaps[1:]:
-                is_mod2, is_mod3, is_mod4 = tuple((gstop + 1 - gstart) % _ == 0 for _ in (2, 3, 4))
-                mod4_count += 1 if is_mod4 else 0
-                mod3_count += 1 if is_mod3 else 0
-                mod2_count += 1 if is_mod2 else 0
-                gstring = f'({gstart:d} - {gstop:d}){" %4" if is_mod4 else ""}{" %3" if is_mod3 else ""}{" %2" if is_mod2 else ""}'
+                is_mod2, is_mod3, is_mod4 = tuple((1 + gstop - gstart) % _ == 0 for _ in (2, 3, 4))
+                mod2_count, mod3_count, mod4_count = tuple(map(sum, zip(
+                    (mod2_count, mod3_count, mod4_count), (is_mod2, is_mod3, is_mod4), strict=True)))
+                gstring = (f'({gstart:d} - {gstop:d})'
+                           f'{"".join(f" %{modval:d}" for b, modval in zip((is_mod2, is_mod3, is_mod4), (2, 3, 4), strict=True) if b)}')
                 gap_strings.append(gstring)
             n = '\n - '
             Log.debug(f'[gaps scanner] detected {len(self._id_gaps):d} id gaps:{n}{n.join(gap_strings)}')
-            if mod2_count > 0 and mod2_count + 1 == len(self._id_gaps):
-                Log.debug('[gaps scanner] all gaps are (%2)!')
-            if mod3_count > 0 and mod3_count + 1 == len(self._id_gaps):
-                Log.debug('[gaps scanner] all gaps are (%3)!')
-            if mod4_count > 0 and mod4_count + 1 == len(self._id_gaps):
-                Log.debug('[gaps scanner] all gaps are (%4)!')
+            for modcount, modval in zip((mod2_count, mod3_count, mod4_count), (2, 3, 4), strict=True):
+                if 0 < modcount == len(self._id_gaps) - 1:
+                    Log.debug(f'[gaps scanner] all gaps are (%{modval:d})!')
 
     def done(self) -> bool:
         return self.get_workload_size() == 0
+
+    def has_found_any(self) -> bool:
+        return self._last_non404_id >= self._original_sequence[0].id
 
     def watcher_wait_active(self) -> bool:
         return self._sleep_waiter is not None
@@ -214,12 +216,10 @@ class VideoScanWorker:
         return self._scanned_items.popleft() if self._scanned_items else None
 
     def find_vinfo_pred(self, pred: Callable[[VideoInfo], bool]) -> VideoInfo | None:
-        with suppress(StopIteration):
-            return next(filter(pred, self._original_sequence))
+        return next((vi for vi in self._original_sequence if pred(vi)), None)
 
     def find_vinfo_last(self, id_: int) -> VideoInfo | None:
-        with suppress(StopIteration):
-            return next(reversed(list(filter(lambda vi: vi.id == id_, self._original_sequence))))
+        return next((vi for vi in reversed(self._original_sequence) if vi.id == id_), None)
 
 #
 #

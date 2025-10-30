@@ -55,7 +55,7 @@ async def main(args: Sequence[str]) -> None:
         await sleep(3.0)
 
     orig_sequence_len = len(Config.id_sequence)
-    removed_ids = set()
+    removed_ids = set[int]()
     ridx: int
     for ridx in reversed(range(len(Config.id_sequence))):
         if 236 <= Config.id_sequence[ridx] <= 3045049:

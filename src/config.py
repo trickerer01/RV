@@ -180,7 +180,7 @@ class BaseConfig:
     def make_continue_arguments(self) -> list[None | str | int]:
         arglist = [
             '-path', self.dest_base, '-continue', '--store-continue-cmdfile',
-            '-log', next(filter(lambda x: int(LOGGING_FLAGS[x], 16) == self.logging_flags, LOGGING_FLAGS.keys())),
+            '-log', next(x for x in LOGGING_FLAGS if int(LOGGING_FLAGS[x], 16) == self.logging_flags),
             *(('-quality', self.quality) if self.quality != DEFAULT_QUALITY and not self.scenario else ()),
             *(('-duration', str(self.duration)) if self.duration and not self.scenario else ()),
             *(('--predict-id-gaps', str(self.predict_id_gaps)) if self.predict_id_gaps != IDGAP_PREDICTION_DEFAULT else ()),

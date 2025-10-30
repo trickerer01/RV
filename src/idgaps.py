@@ -69,7 +69,7 @@ class IdGapsPredictor:
         self._streak += 1
 
     def count_existing(self, vi: VideoInfo) -> None:
-        if self._streak:
+        if self._streak and VideoScanWorker.get().has_found_any():
             skip_num = self._get_skip_num(vi)
             streak_is_complimentary = skip_num > 0 and (self._streak + 1) % skip_num == 0
             self._streak = 0

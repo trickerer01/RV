@@ -118,12 +118,12 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         my_authors = [str(a.string).lower() for a in a_html.find('div', string='Artist').parent.find_all('span')]
     except Exception:
         Log.warn(f'Warning: cannot extract authors for {sname}.')
-        my_authors = []
+        my_authors: list[str] = []
     try:
         my_categories = [str(c.string).lower() for c in a_html.find('div', string='Categories').parent.find_all('span')]
     except Exception:
         Log.warn(f'Warning: cannot extract categories for {sname}.')
-        my_categories = []
+        my_categories: list[str] = []
     try:
         vi.uploader = str(a_html.find('div', string='Uploaded by').parent.find('a').get_text(strip=True)).lower()
     except Exception:
@@ -157,9 +157,9 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             vi.comments = ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else ''
     if Config.check_uploader and vi.uploader and vi.uploader not in tags_raw:
         tags_raw.append(vi.uploader)
-    va_list = list(filter(lambda x: 'audio' in x or '(va)' in x or x.endswith('va'), my_authors))
+    va_list = [va for va in my_authors if any(_ in va for _ in ('audio', '(va)')) or va.endswith('va')]
     aucat_count = max(len(my_authors) - len(va_list), len(my_categories))
-    if aucat_count >= 6 and 'compilation' not in tags_raw and 'pmv' not in tags_raw:
+    if aucat_count >= 6 and not any(_ in tags_raw for _ in ('compilation', 'pmv')):
         Log.warn(f'{sname} has {len(my_authors):d} arts ({len(va_list):d} VA) and {len(my_categories):d} cats! Assuming compilation')
         tags_raw.append('compilation')
     if Config.solve_tag_conflicts:
@@ -177,12 +177,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             except Exception:
                 pass
     if scenario:
-        matching_sq = scenario.get_matching_subquery(vi, tags_raw, score, rating)
-        utpalways_sq = scenario.get_utp_always_subquery() if tdiv is None else None
-        if matching_sq:
+        if matching_sq := scenario.get_matching_subquery(vi, tags_raw, score, rating):
             vi.subfolder = matching_sq.subfolder
             vi.quality = matching_sq.quality
-        elif utpalways_sq:
+        elif utpalways_sq := scenario.get_utp_always_subquery() if tdiv is None else None:
             vi.subfolder = utpalways_sq.subfolder
             vi.quality = utpalways_sq.quality
         else:
@@ -204,8 +202,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         ddiv = a_html.find('div', string='Download')
         if ddiv is not None and ddiv.parent is not None:
             break
-        message_span = a_html.find('span', class_='message')
-        if message_span:
+        if message_span := a_html.find('span', class_='message'):
             Log.warn(f'Cannot find download section for {sname}, reason: \'{message_span.text}\', skipping...')
             return DownloadResult.FAIL_DELETED
         elif tries >= 5:
@@ -215,12 +212,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         Log.debug(f'No download section for {sname}, retry #{tries:d}...')
         a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + tries + vi.id % 10:d}')
     links = ddiv.parent.find_all('a', class_='tag_item')
-    qualities = []
-    for lin in links:
-        try:
-            qualities.append(lin.text.replace('MP4 ', ''))
-        except Exception:
-            pass
+    qualities = tuple(lin.text.replace('MP4 ', '') for lin in links if lin.text)
     if vi.quality not in qualities:
         q_idx = 0
         Log.warn(f'Warning: cannot find quality \'{vi.quality}\' for {sname}, selecting \'{qualities[q_idx]}\'')
@@ -261,7 +253,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
 async def process_video(vi: VideoInfo) -> DownloadResult:
     vi.set_state(VideoInfo.State.DOWNLOAD_PENDING)
     res = await download_video(vi)
-    if res not in (DownloadResult.SUCCESS, DownloadResult.FAIL_SKIPPED, DownloadResult.FAIL_ALREADY_EXISTS):
+    if (1 << res) & DownloadResult.RESULT_MASK_CRITICAL:
         vi.set_state(VideoInfo.State.FAILED)
     return res
 
@@ -278,7 +270,8 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
         try:
             os.makedirs(my_folder)
         except Exception:
-            raise OSError(f'ERROR: Unable to create subfolder \'{my_folder}\'!')
+            Log.fatal(f'ERROR: Unable to create subfolder \'{my_folder}\'!')
+            raise
 
     try:
         async with await wrap_request('GET', my_link) as r:
@@ -307,7 +300,7 @@ async def download_sceenshot(vi: VideoInfo, scr_num: int) -> DownloadResult:
 async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
     ret = DownloadResult.SUCCESS
     t: Task[DownloadResult]
-    for t in [get_running_loop().create_task(download_sceenshot(vi, scr_idx + 1)) for scr_idx in range(SCREENSHOTS_COUNT)]:
+    for t in (get_running_loop().create_task(download_sceenshot(vi, scr_idx + 1)) for scr_idx in range(SCREENSHOTS_COUNT)):
         res = await t
         if res not in (DownloadResult.SUCCESS, ret):
             ret = res
@@ -319,7 +312,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
     retries = 0
     exact_quality = False
     ret = DownloadResult.SUCCESS
-    skip = Config.dm == DOWNLOAD_MODE_SKIP
+    skip = Config.download_mode == DOWNLOAD_MODE_SKIP
     status_checker = ThrottleChecker(vi)
 
     if skip is True:
@@ -365,7 +358,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             try:
                 os.makedirs(vi.my_folder)
             except Exception:
-                raise OSError(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
+                Log.fatal(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
+                raise
 
     while (not skip) and retries <= Config.retries:
         r = None
@@ -375,7 +369,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT)
             file_size = os.stat(vi.my_fullpath).st_size if file_exists else 0
 
-            if Config.dm == DOWNLOAD_MODE_TOUCH:
+            if Config.download_mode == DOWNLOAD_MODE_TOUCH:
                 if file_exists:
                     Log.info(f'{vi.sfsname} ({vi.quality}) already exists, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
                     vi.set_state(VideoInfo.State.DONE)
@@ -396,8 +390,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     ckwargs.update(noproxy=True, allow_redirects=True)
                 ensure_conn_closed(r)
                 r = await wrap_request('GET', r.headers['Location'], **ckwargs, **hkwargs)
-            content_len = r.content_length or 0
-            content_range_s = r.headers.get('Content-Range', '/').split('/', 1)
+            content_len: int = r.content_length or 0
+            content_range_s = str(r.headers.get('Content-Range', '/')).split('/', 1)
             content_range = int(content_range_s[1]) if len(content_range_s) > 1 and content_range_s[1].isnumeric() else 1
             if (content_len == 0 or r.status == 416) and file_size >= content_range:
                 Log.warn(f'{vi.sfsname} ({vi.quality}) is already completed, size: {file_size:d} ({file_size / Mem.MB:.2f} Mb)')
@@ -431,8 +425,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             async with async_open(vi.my_fullpath, 'ab') as outf:
                 register_new_file(vi)
                 vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
-                if vi.dstart_time == 0:
-                    vi.dstart_time = get_elapsed_time_i()
+                vi.dstart_time = vi.dstart_time or get_elapsed_time_i()
                 async for chunk in r.content.iter_chunked(512 * Mem.KB):
                     await outf.write(chunk)
                     vi.bytes_written += len(chunk)

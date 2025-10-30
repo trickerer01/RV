@@ -27,20 +27,20 @@ class ThrottleChecker:
         self._interrupted_speeds = deque[float](maxlen=3)
         self._speeds = deque[str](maxlen=5)
         self._response: ClientResponse | None = None
-        self._cheker: Task | None = None
+        self._checker: Task | None = None
 
     def prepare(self, response: ClientResponse, init_size: int) -> None:
         self._init_size = init_size
         self._response = response
 
     def run(self) -> None:
-        assert self._cheker is None
-        self._cheker = get_running_loop().create_task(self._check_video_download_status())
+        assert self._checker is None
+        self._checker = get_running_loop().create_task(self._check_video_download_status())
 
     def reset(self) -> None:
-        if self._cheker is not None:
-            self._cheker.cancel()
-            self._cheker = None
+        if self._checker is not None:
+            self._checker.cancel()
+            self._checker = None
         self._response = None
         self._speeds.clear()
 

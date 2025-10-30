@@ -81,10 +81,8 @@ class VideoInfo:  # up to ~3 Kb (when all info is filled, asizeof)
         return self.id == other.id if isinstance(other, type(self)) else self.id == other if isinstance(other, int) else False
 
     def __str__(self) -> str:
-        return (
-            f'[{self.state_str}] {self.fduration} \'{PREFIX}{self.id:d}_{self.title}.{DEFAULT_EXT}\' ({self.quality})'
-            f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.link}\''
-        )
+        return (f'[{self.state_str}] {self.fduration} \'{PREFIX}{self.id:d}_{self.title}.{DEFAULT_EXT}\' ({self.quality})'
+                f'\nDest: \'{self.my_fullpath}\'\nLink: \'{self.link}\'')
 
     @property
     def id(self) -> int:
@@ -152,10 +150,9 @@ def try_merge_info_files(info_dict: dict[int, str], subfolder: str, list_type: s
     if not os.path.isdir(dir_fullpath):
         return parsed_files
     # Log.debug(f'\nMerging {Config.dest_base}{subfolder} \'{list_type}\' info lists...')
-    info_lists: list[re.Match[str]] = sorted(filter(
-        lambda x: bool(x), [re_infolist_filename.fullmatch(f.name) for f in os.scandir(dir_fullpath)
-                            if f.is_file() and f.name.startswith(f'{PREFIX}!{list_type}_')],
-    ), key=lambda m: m.string)
+    info_lists: list[re.Match[str]] = sorted((m for m in (re_infolist_filename.fullmatch(f.name) for f in os.scandir(dir_fullpath)
+                                             if f.is_file() and f.name.startswith(f'{PREFIX}!{list_type}_')) if bool(m)),
+                                             key=lambda m: m.string)
     if not info_lists:
         return parsed_files
     parsed_dict: dict[int, str] = {}

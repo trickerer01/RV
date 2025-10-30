@@ -61,7 +61,7 @@ async def main(args: Sequence[str]) -> None:
             return -1
         return 0
 
-    v_entries = []
+    v_entries: list[VideoInfo] = []
     maxpage = Config.end if Config.start == Config.end else 0
 
     pi = Config.start
@@ -104,7 +104,7 @@ async def main(args: Sequence[str]) -> None:
 
             if Config.get_maxid:
                 mirefs = a_html.find_all('a', class_=video_ref_class)
-                max_id = max(int(re_page_entry.search(str(_.get('href'))).group(1)) for _ in mirefs)
+                max_id = max(int(re_page_entry.search(_.get('href')).group(1)) for _ in mirefs)
                 Log.fatal(f'{APP_NAME}: {max_id:d}')
                 return
 
@@ -116,7 +116,7 @@ async def main(args: Sequence[str]) -> None:
                 orig_count = len(arefs)
                 for aref in arefs:
                     try:  # some post previews may be invalid
-                        cur_id = int(re_page_entry.search(str(aref.get('href'))).group(1))
+                        cur_id = int(re_page_entry.search(aref.get('href')).group(1))
                     except Exception:
                         continue
                     bound_res = check_id_bounds(cur_id)
@@ -166,7 +166,7 @@ async def main(args: Sequence[str]) -> None:
                     ))
 
             if pi - 1 > Config.start and lower_count == orig_count > 0 and not Config.scan_all_pages:
-                if maxpage == 0 or pi - 1 < maxpage:
+                if not (0 < maxpage <= pi - 1):
                     Log.info(f'Page {pi - 1:d} has all post ids below lower bound. Pages scan stopped!')
                 break
 
