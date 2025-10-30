@@ -187,6 +187,8 @@ def valid_search_string(search_str: str) -> str:
 def valid_proxy(prox: str) -> str:
     from ctypes import c_uint16, sizeof
     try:
+        if not prox:
+            return prox
         try:
             pt, pv = tuple(prox.split('://', 1))
         except ValueError:
