@@ -57,6 +57,7 @@ from defs import (
     HELP_ARG_PREDICT_ID_GAPS,
     HELP_ARG_PROXY,
     HELP_ARG_PROXYNODOWN,
+    HELP_ARG_PROXYNOHTML,
     HELP_ARG_QUALITY,
     HELP_ARG_REPORT_DUPLICATES,
     HELP_ARG_RETRIES,
@@ -224,6 +225,7 @@ def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-fslevelup', metavar='#number', default=FSUP_DEFAULT, help=HELP_ARG_FSLEVELUP, type=positive_nonzero_int)
     parser_or_group.add_argument('-proxy', metavar='#type://[u:p@]a.d.d.r:port', default=None, help=HELP_ARG_PROXY, type=valid_proxy)
     parser_or_group.add_argument('-proxynodown', '--download-without-proxy', action=ACTION_STORE_TRUE, help=HELP_ARG_PROXYNODOWN)
+    parser_or_group.add_argument('-proxynohtml', '--html-without-proxy', action=ACTION_STORE_TRUE, help=HELP_ARG_PROXYNOHTML)
     parser_or_group.add_argument('-timeout', metavar='#seconds', default=valid_timeout(''), help=HELP_ARG_TIMEOUT, type=valid_timeout)
     parser_or_group.add_argument('-retries', metavar='#number', default=CONNECT_RETRIES_BASE, help=HELP_ARG_RETRIES, type=positive_int)
     parser_or_group.add_argument('-throttle', metavar='#rate', default=0, help=HELP_ARG_THROTTLE, type=positive_nonzero_int)

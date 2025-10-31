@@ -286,6 +286,7 @@ HELP_ARG_DURATION = (
 )
 HELP_ARG_PROXY = 'Proxy to use, supports basic auth. Example: http://user:pass@127.0.0.1:222'
 HELP_ARG_PROXYNODOWN = 'Don\'t use proxy to connect to file servers if they differ from the main host'
+HELP_ARG_PROXYNOHTML = 'Don\'t use proxy to connect to the main host'
 HELP_ARG_UTPOLICY = (
     f'Untagged videos download policy. By default these videos are ignored if you use extra \'tags\' / \'-tags\'. Use'
     f' \'{DOWNLOAD_POLICY_ALWAYS}\' to override'

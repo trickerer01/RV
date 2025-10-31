@@ -77,7 +77,8 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         return DownloadResult.FAIL_NOT_FOUND
 
     vi.set_state(VideoInfo.State.SCANNING)
-    a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + vi.id % 10:d}')
+    hkwargs = {'noproxy': not Config.proxy or Config.html_without_proxy}
+    a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + vi.id % 10:d}', **hkwargs)
     if a_html is None:
         Log.error(f'Error: unable to retreive html for {sname}! Aborted!')
         return DownloadResult.FAIL_SKIPPED if Config.aborted else DownloadResult.FAIL_RETRIES
@@ -210,7 +211,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             return DownloadResult.FAIL_RETRIES
         tries += 1
         Log.debug(f'No download section for {sname}, retry #{tries:d}...')
-        a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + tries + vi.id % 10:d}')
+        a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + tries + vi.id % 10:d}', **hkwargs)
     links = ddiv.parent.find_all('a', class_='tag_item')
     qualities = tuple(lin.text.replace('MP4 ', '') for lin in links if lin.text)
     if vi.quality not in qualities:
@@ -382,7 +383,8 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 break
 
             hkwargs: dict[str, dict[str, str]] = {'headers': {'Range': f'bytes={file_size:d}-'} if file_size > 0 else {}}
-            ckwargs = {'allow_redirects': not Config.proxy or not Config.download_without_proxy}
+            ckwargs = {'allow_redirects': bool(not Config.proxy or not Config.download_without_proxy)}
+            ckwargs.update(noproxy=bool(Config.html_without_proxy and not ckwargs['allow_redirects']))
             # hkwargs['headers'].update({'Referer': SITE_AJAX_REQUEST_VIDEO % vi.id})
             r = await wrap_request('GET', vi.link, **ckwargs, **hkwargs)
             while r.status in (301, 302):

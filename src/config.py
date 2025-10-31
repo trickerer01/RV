@@ -57,6 +57,7 @@ class BaseConfig:
         self.dest_base: str | None = None
         self.proxy: str | None = None
         self.download_without_proxy: bool | None = None
+        self.html_without_proxy: bool | None = None
         self.session_id: str | None = None
         self.min_rating: int | None = None
         self.min_score: int | None = None
@@ -143,6 +144,7 @@ class BaseConfig:
             *(('-fslevel', self.folder_scan_levelup) if self.folder_scan_levelup != MAX_DEST_SCAN_UPLEVELS_DEFAULT else ()),
             *(('-proxy', self.proxy) if self.proxy else ()),
             *(('--download-without-proxy',) if self.download_without_proxy else ()),
+            *(('--html-without-proxy',) if self.html_without_proxy else ()),
             *(('-throttle', self.throttle) if self.throttle else ()),
             *(('-athrottle',) if self.throttle_auto else ()),
             *(('-timeout', int(self.timeout.connect)) if self.timeout and self.timeout.connect else ()),
