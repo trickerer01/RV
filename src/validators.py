@@ -18,6 +18,7 @@ from defs import (
     CONNECT_TIMEOUT_SOCKET_READ,
     DEFAULT_QUALITY,
     DOWNLOAD_POLICY_DEFAULT,
+    DURATION_MAX,
     IDGAP_PREDICTION_OFF,
     LOGGING_FLAGS,
     NAMING_FLAGS,
@@ -259,10 +260,11 @@ def valid_session_id(sessionid: str) -> str:
 
 def valid_duration(duration: str) -> Duration:
     try:
+        duration = duration or f'0-{DURATION_MAX:d}'
         parts = duration.split('-', maxsplit=2)
         assert len(parts) == 2
-        dur_min, dur_max = positive_int(parts[0]), positive_nonzero_int(parts[1])
-        assert dur_min <= dur_max
+        dur_min = valid_int(parts[0], lb=0, ub=DURATION_MAX)
+        dur_max = valid_int(parts[1], lb=dur_min, ub=DURATION_MAX)
         return Duration(dur_min, dur_max)
     except Exception:
         raise ArgumentError

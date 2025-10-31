@@ -189,7 +189,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     elif tdiv is None and len(Config.extra_tags) > 0 and Config.utp != DOWNLOAD_POLICY_ALWAYS:
         Log.warn(f'Warning: could not extract tags from {sname}, skipping due to untagged videos download policy...')
         return DownloadResult.FAIL_SKIPPED
-    if Config.duration and vi.duration and not (Config.duration.first <= vi.duration <= Config.duration.second):
+    if Config.duration and vi.duration and not (Config.duration.min <= vi.duration <= Config.duration.max):
         Log.info(f'Info: video {sname} duration \'{vi.duration:d}\' is out of bounds ({Config.duration!s}), skipping...')
         return DownloadResult.FAIL_SKIPPED
     if scn.find_vinfo_pred(lambda _: _.id == vi.id and VideoInfo.State.DOWNLOAD_PENDING <= _.state <= VideoInfo.State.DONE):

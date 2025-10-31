@@ -135,7 +135,7 @@ class DownloadScenario:
                                 sq_skip = True
                         except Exception:
                             pass
-                if sq.duration and vi.duration and not (sq.duration.first <= vi.duration <= sq.duration.second):
+                if sq.duration and vi.duration and not (sq.duration.min <= vi.duration <= sq.duration.max):
                     Log.info(f'[{sq.subfolder}] video {vi.sname} duration \'{vi.duration:d}\' is out of bounds ({sq.duration!s})!')
                     sq_skip = True
                 if sq_skip is False:

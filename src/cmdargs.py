@@ -216,7 +216,7 @@ def create_parsers() -> tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
 def add_common_args(parser_or_group: ArgumentParser) -> None:
     parser_or_group.add_argument('-path', default=valid_path(os.path.abspath(os.path.curdir)), help=HELP_ARG_PATH, type=valid_path)
     parser_or_group.add_argument('-quality', default=DEFAULT_QUALITY, help=HELP_ARG_QUALITY, choices=QUALITIES)
-    parser_or_group.add_argument('-duration', metavar='#min-max', default=None, help=HELP_ARG_DURATION, type=valid_duration)
+    parser_or_group.add_argument('-duration', metavar='#min-max', default=valid_duration(''), help=HELP_ARG_DURATION, type=valid_duration)
     parser_or_group.add_argument('-minrating', '--minimum-rating', metavar='#rating', default=0, help=HELP_ARG_MINRATING, type=valid_rating)
     parser_or_group.add_argument('-minscore', '--minimum-score', metavar='#score', default=None, help=HELP_ARG_MINSCORE, type=valid_int)
     parser_or_group.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, help=HELP_ARG_UTPOLICY, choices=UNTAGGED_POLICIES)

@@ -75,7 +75,7 @@ async def main(args: Sequence[str]) -> None:
                 (SITE_AJAX_REQUEST_UPLOADER_PAGE % (Config.uploader, pi)) if Config.uploader else
                 (SITE_AJAX_REQUEST_MODEL_PAGE % (Config.model, pi)) if Config.model else
                 (SITE_AJAX_REQUEST_SEARCH_PAGE % (Config.search_tags, Config.search_arts, Config.search_cats, Config.search,
-                                                  Config.blacklist, pi))
+                                                  Config.blacklist, Config.duration.min, Config.duration.max, pi))
             )
             a_html = await fetch_html(page_addr)
             if not a_html:

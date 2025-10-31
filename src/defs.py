@@ -34,6 +34,7 @@ LOOKAHEAD_WATCH_RESCAN_DELAY_MIN = 300
 LOOKAHEAD_WATCH_RESCAN_DELAY_MAX = 1800
 RESCAN_DELAY_EMPTY = 1
 
+DURATION_MAX = 36000  # 10 hours (in seconds)
 SCREENSHOTS_COUNT = 10
 FULLPATH_MAX_BASE_LEN = 240
 
@@ -49,11 +50,11 @@ START_TIME = datetime.datetime.now()
 SITE = base64.b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20=').decode()
 SITE_AJAX_REQUEST_SEARCH_PAGE = base64.b64decode(
     'aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vc2VhcmNoLz9tb2RlPWFzeW5jJmZ1bmN0aW9uPWdldF9ibG9jayZibG9ja19pZD1jdXN0b21fbGlzdF92aWRlb3NfdmlkZW9zX2xpc3'
-    'Rfc2VhcmNoJnNvcnRfYnk9cG9zdF9kYXRlJnRhZ19pZHM9JXMmbW9kZWxfaWRzPSVzJmNhdGVnb3J5X2lkcz0lcyZxPSVzJnRlbXBfc2tpcF9pdGVtcz0lcyZmcm9tX3ZpZGVv'
-    'cz0lZA==').decode()
-'''Params required: **tags**, **artists**, **categories**, **search**, **blacklist**, **page** -
-**str**, **str**, **str**, **str**, **str**, **int**\n
-Ex. SITE_AJAX_REQUEST_SEARCH_PAGE % ('1,2', '3,4,5', '6', 'sfw', 'tag:1,tag:2,cat:3,model:4', 1)'''
+    'Rfc2VhcmNoJnNvcnRfYnk9cG9zdF9kYXRlJnRhZ19pZHM9JXMmbW9kZWxfaWRzPSVzJmNhdGVnb3J5X2lkcz0lcyZxPSVzJnRlbXBfc2tpcF9pdGVtcz0lcyZkdXJhdGlvbl9m'
+    'cm9tPSVkJmR1cmF0aW9uX3RvPSVkJmZyb21fdmlkZW9zPSVk').decode()
+'''Params required: **tags**, **artists**, **categories**, **search**, **blacklist**, **duration_min**, **duration_max**, **page** -
+**str**, **str**, **str**, **str**, **str**, **int**, **int**, **int**\n
+Ex. SITE_AJAX_REQUEST_SEARCH_PAGE % ('1,2', '3,4,5', '6', 'sfw', 'tag:1,tag:2,cat:3,model:4', 60, 1200, 1)'''
 SITE_AJAX_REQUEST_VIDEO = base64.b64decode('aHR0cHM6Ly9ydWxlMzR2aWRlby5jb20vcG9wdXAtdmlkZW8vJWQv').decode()
 '''Params required: **video_id** - **int**\n
 Ex. SITE_AJAX_REQUEST_VIDEO % (1071113)'''
@@ -279,7 +280,10 @@ HELP_ARG_BLACKLIST = (
     ' or a tag starting with \'1boy\''
 )
 HELP_ARG_QUALITY = f'Video quality. Default is \'{DEFAULT_QUALITY}\'. If not found, best quality found is used (up to 4K)'
-HELP_ARG_DURATION = 'Video duration filter (in seconds). Example: \'5-180\' will only allow videos from 5 seconds to 3 minutes'
+HELP_ARG_DURATION = (
+    f'Video duration filter (in seconds). Limits (min-max): 0-{DURATION_MAX:d}.'
+    f' Example: \'5-180\' will only allow videos from 5 seconds to 3 minutes'
+)
 HELP_ARG_PROXY = 'Proxy to use, supports basic auth. Example: http://user:pass@127.0.0.1:222'
 HELP_ARG_PROXYNODOWN = 'Don\'t use proxy to connect to file servers if they differ from the main host'
 HELP_ARG_UTPOLICY = (
@@ -406,8 +410,8 @@ class StrPair(NamedTuple):
 
 
 class Duration(NamedTuple):
-    first: int
-    second: int
+    min: int
+    max: int
 
     def __bool__(self) -> bool:
         return any(bool(getattr(self, _)) for _ in self._fields)
