@@ -6,6 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+import functools
 import os
 from asyncio import run as run_async
 from io import StringIO
@@ -14,7 +15,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from cmdargs import prepare_arglist
-from config import BaseConfig
+from config import Config
 from defs import DOWNLOAD_MODE_TOUCH, QUALITIES, QUALITY_480P, SEARCH_RULE_DEFAULT, SITE, Duration
 from ids import main as ids_main
 from ids import main_sync as ids_main_sync
@@ -47,64 +48,74 @@ from version import APP_NAME, APP_VERSION
 RUN_CONN_TESTS = 0
 
 
-def set_up_test(log=False) -> None:
-    found_filenames_dict.clear()
-    Log._disabled = not log
+def test_prepare(log=False):
+    def invoke1(test_func):
+        @functools.wraps(test_func)
+        def invoke_test(*args, **kwargs) -> None:
+            def set_up_test() -> None:
+                found_filenames_dict.clear()
+                Log._disabled = not log
+                Config._reset()
+            set_up_test()
+            test_func(*args, **kwargs)
+        return invoke_test
+    return invoke1
 
 
 class FileCheckTests(TestCase):
+    @test_prepare(log=False)
     def test_filecheck01_tags(self) -> None:
-        set_up_test()
         load_tag_nums()
         self.assertIsNone(TAG_NUMS.get(''))
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_filecheck02_arts(self) -> None:
-        set_up_test()
         load_artist_nums()
         self.assertIsNone(ART_NUMS.get(''))
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_filecheck03_cats(self) -> None:
-        set_up_test()
         load_category_nums()
         self.assertIsNone(CAT_NUMS.get(''))
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_filecheck04_plas(self) -> None:
-        set_up_test()
         load_playlist_nums()
         self.assertIsNone(PLA_NUMS.get(''))
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_filecheck05_tag_aliases(self) -> None:
-        set_up_test()
         load_tag_aliases()
         self.assertIsNone(TAG_ALIASES.get(''))
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_filecheck06_tag_conflicts(self) -> None:
-        set_up_test()
         load_tag_conflicts()
         self.assertIsNone(TAG_CONFLICTS.get(''))
         print(f'{self._testMethodName} passed')
 
 
 class CmdTests(TestCase):
+    @test_prepare()
     def test_output_version_pages(self):
-        set_up_test()
         with patch('sys.stdout', new_callable=StringIO) as stdout:
             run_async(pages_main(['--version']))
             self.assertEqual(f'{APP_NAME} {APP_VERSION}', stdout.getvalue().strip('\n'))
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_output_version_ids(self):
-        set_up_test()
         with patch('sys.stdout', new_callable=StringIO) as stdout:
             run_async(ids_main(['--version']))
             self.assertEqual(f'{APP_NAME} {APP_VERSION}', stdout.getvalue().strip('\n'))
         print(f'{self._testMethodName} passed')
 
+    # @test_prepare()
     # @mock_stderr
     # def test_cmd_base(self, stderr: StringIO):
     #     set_up_test()
@@ -113,140 +124,143 @@ class CmdTests(TestCase):
     #     self.assertRaises(HelpPrintExitException, prepare_arglist, ['cmd', '-start', '1', '-pages'], True)
     #     self.assertNotEqual('', stderr.getvalue().strip('\n'))
 
-    def test_cmd_pages(self):
-        set_up_test()
-        parsed1 = prepare_arglist(['cmd', '-get_maxid'], True)
-        c1 = BaseConfig()
-        c1.read(parsed1, True)
-        self.assertTrue(c1.get_maxid)
-        parsed2 = prepare_arglist(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~vr)', '--skip-empty-lists', '-script',
-                                   'a: 2d; b: 3d; c: a2 -2d; d: * -utp always', '-naming', 'prefix|quality', '-log', 'warn'], True)
-        c2 = BaseConfig()
-        c2.read(parsed2, True)
-        self.assertEqual(17, c2.naming_flags)
-        self.assertEqual(8, c2.logging_flags)
-        self.assertEqual(1, len(c2.extra_tags))
-        self.assertEqual(4, len(c2.scenario))
-        self.assertEqual(1234, c2.uploader)
-        self.assertEqual('', c2.search)
-        self.assertEqual(SEARCH_RULE_DEFAULT, c2.search_rule_art)
-        self.assertIsNone(c2.use_id_sequence)
-        self.assertTrue(c2.skip_empty_lists)
-        parsed3 = prepare_arglist(['-playlist_name', 'commodified', '-start', '3', '-pages', '2', '-quality', '480p', '-dnoempty',
-                                   '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
-        c3 = BaseConfig()
-        c3.read(parsed3, True)
-        self.assertEqual('commodified', c3.playlist_name)
-        self.assertEqual(3, c3.start)
-        self.assertEqual(4, c3.end)
-        self.assertEqual(QUALITIES[3], c3.quality)
-        self.assertEqual(QUALITY_480P, c3.quality)
-        self.assertEqual('480p', c3.quality)
-        self.assertEqual(12, c3.min_score)
-        self.assertTrue(c3.continue_mode)
-        self.assertTrue(c3.keep_unfinished)
-        self.assertTrue(c3.save_tags)
-        self.assertTrue(c3.save_descriptions)
-        self.assertTrue(c3.save_comments)
-        self.assertTrue(c3.save_screenshots)
-        self.assertTrue(c3.skip_empty_lists)
-        parsed4 = prepare_arglist(['-model', 'gret', '-start', '3', '-pages', '2', '-quality', '480p', '-duration', '15-360',
-                                   '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
-        c4 = BaseConfig()
-        c4.read(parsed4, True)
-        self.assertEqual('gret', c4.model)
-        self.assertEqual(3, c4.start)
-        self.assertEqual(4, c4.end)
-        self.assertEqual(QUALITIES[3], c4.quality)
-        self.assertEqual('480p', c4.quality)
-        self.assertEqual(Duration(15, 360), c4.duration)
-        self.assertEqual((15, 360), c4.duration)
-        self.assertEqual(12, c4.min_score)
-        self.assertTrue(c4.continue_mode)
-        self.assertTrue(c4.keep_unfinished)
-        self.assertTrue(c4.save_tags)
-        self.assertTrue(c4.save_descriptions)
-        self.assertTrue(c4.save_comments)
-        self.assertTrue(c4.save_screenshots)
-        parsed5 = prepare_arglist(['-search_tag', '6*,5????', '-search_rule_tag', 'any',
-                                   '-search_art', '*nan', '-search_rule_art', 'any',
-                                   '-search_cat', 'ali??_*', '-search_rule_cat', 'any',
-                                   '-blacklist', 'a:6*9,c:*z,t:6g*,t:8*',
-                                   '-start', '3', '-pages', '2', '-quality', '720p'], True)
-        c5 = BaseConfig()
-        c5.read(parsed5, True)
-        self.assertEqual('164,3966,5157,5261,5570,5934', c5.search_tags)
-        self.assertEqual('22565,27156,34669,8822', c5.search_arts)
-        self.assertEqual('1433,1970,345,57,73', c5.search_cats)
-        self.assertEqual('model:25905,model:34361,cat:1277,cat:315,cat:3315,cat:557,tag:38580,tag:3966', c5.blacklist)
-        self.assertEqual('any', c5.search_rule_tag)
-        self.assertEqual('any', c5.search_rule_art)
-        self.assertEqual('any', c5.search_rule_cat)
-        self.assertEqual(3, c5.start)
-        self.assertEqual(4, c5.end)
-        self.assertEqual(QUALITIES[2], c5.quality)
-        self.assertEqual('720p', c5.quality)
+    @test_prepare()
+    def test_cmd_pages01(self):
+        prepare_arglist(['cmd', '-get_maxid'], True)
+        self.assertTrue(Config.get_maxid)
+        self.assertEqual(0, Config.playlist_id)
+        self.assertEqual('', Config.playlist_name)
+
+    @test_prepare()
+    def test_cmd_pages02(self):
+        prepare_arglist(['-start', '2', '-pages', '1', '-uploader', '1234', '(2d~vr)', '--skip-empty-lists', '-script',
+                         'a: 2d; b: 3d; c: a2 -2d; d: * -utp always', '-naming', 'prefix|quality', '-log', 'warn'], True)
+        self.assertEqual(17, Config.naming_flags)
+        self.assertEqual(8, Config.logging_flags)
+        self.assertEqual(1, len(Config.extra_tags))
+        self.assertEqual(4, len(Config.scenario))
+        self.assertEqual(1234, Config.uploader)
+        self.assertEqual('', Config.search)
+        self.assertEqual(SEARCH_RULE_DEFAULT, Config.search_rule_art)
+        self.assertIsNone(Config.use_id_sequence)
+        self.assertTrue(Config.skip_empty_lists)
+
+    @test_prepare()
+    def test_cmd_pages03(self):
+        prepare_arglist(['-playlist_name', 'commodified', '-start', '3', '-pages', '2', '-quality', '480p', '-dnoempty',
+                         '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
+        self.assertEqual('commodified', Config.playlist_name)
+        self.assertEqual(3, Config.start)
+        self.assertEqual(4, Config.end)
+        self.assertEqual(QUALITIES[3], Config.quality)
+        self.assertEqual(QUALITY_480P, Config.quality)
+        self.assertEqual('480p', Config.quality)
+        self.assertEqual(12, Config.min_score)
+        self.assertTrue(Config.continue_mode)
+        self.assertTrue(Config.keep_unfinished)
+        self.assertTrue(Config.save_tags)
+        self.assertTrue(Config.save_descriptions)
+        self.assertTrue(Config.save_comments)
+        self.assertTrue(Config.save_screenshots)
+        self.assertTrue(Config.skip_empty_lists)
+
+    @test_prepare()
+    def test_cmd_pages04(self):
+        prepare_arglist(['-model', 'gret', '-start', '3', '-pages', '2', '-quality', '480p', '-duration', '15-360',
+                         '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'], True)
+        self.assertEqual('gret', Config.model)
+        self.assertEqual(3, Config.start)
+        self.assertEqual(4, Config.end)
+        self.assertEqual(QUALITIES[3], Config.quality)
+        self.assertEqual('480p', Config.quality)
+        self.assertEqual(Duration(15, 360), Config.duration)
+        self.assertEqual((15, 360), Config.duration)
+        self.assertEqual(12, Config.min_score)
+        self.assertTrue(Config.continue_mode)
+        self.assertTrue(Config.keep_unfinished)
+        self.assertTrue(Config.save_tags)
+        self.assertTrue(Config.save_descriptions)
+        self.assertTrue(Config.save_comments)
+        self.assertTrue(Config.save_screenshots)
+
+    @test_prepare()
+    def test_cmd_pages05(self):
+        prepare_arglist(['-search_tag', '6*,5????', '-search_rule_tag', 'any',
+                         '-search_art', '*nan', '-search_rule_art', 'any',
+                         '-search_cat', 'ali??_*', '-search_rule_cat', 'any',
+                         '-blacklist', 'a:6*9,c:*z,t:6g*,t:8*',
+                         '-start', '3', '-pages', '2', '-quality', '720p'], True)
+        self.assertEqual('164,3966,5157,5261,5570,5934', Config.search_tags)
+        self.assertEqual('22565,27156,34669,8822', Config.search_arts)
+        self.assertEqual('1433,1970,345,57,73', Config.search_cats)
+        self.assertEqual('model:25905,model:34361,cat:1277,cat:315,cat:3315,cat:557,tag:38580,tag:3966', Config.blacklist)
+        self.assertEqual('any', Config.search_rule_tag)
+        self.assertEqual('any', Config.search_rule_art)
+        self.assertEqual('any', Config.search_rule_cat)
+        self.assertEqual(3, Config.start)
+        self.assertEqual(4, Config.end)
+        self.assertEqual(QUALITIES[2], Config.quality)
+        self.assertEqual('720p', Config.quality)
         print(f'{self._testMethodName} passed')
 
-    def test_cmd_ids(self):
-        set_up_test()
-        parsed1 = prepare_arglist(['cmd', '-seq', '(id=23~id=982)'], False)
-        c1 = BaseConfig()
-        c1.read(parsed1, False)
-        self.assertEqual(1, len(c1.extra_tags))
-        c1.id_sequence = extract_id_or_group(c1.extra_tags)
-        self.assertTrue(c1.use_id_sequence)
-        self.assertEqual(0, len(c1.extra_tags))
-        self.assertEqual(2, len(c1.id_sequence))
-        parsed2 = prepare_arglist(['-start', '1000', '-end', '999', '(a2~4k)', '(2d~vr)', '-dmode', 'touch', '--store-continue-cmdfile',
-                                   '-lookahead', '100', '-proxynodown', '-proxy', 'socks4://u1:p2@9.123.15.67:3128',
-                                   '-script', 'a: 2d; b: 3d -duration 10-200; c: a2 -2d -duration 0-9; d: * -utp always',
-                                   '-naming', '0x8', '-log', 'trace'], False)
-        c2 = BaseConfig()
-        c2.read(parsed2, False)
-        self.assertEqual(8, c2.naming_flags)
-        self.assertEqual(1, c2.logging_flags)
-        self.assertEqual(2, len(c2.extra_tags))
-        self.assertEqual(4, len(c2.scenario))
-        self.assertEqual(100, c2.lookahead)
-        self.assertEqual(DOWNLOAD_MODE_TOUCH, c2.download_mode)
-        self.assertTrue(c2.store_continue_cmdfile)
-        self.assertTrue(c2.download_without_proxy)
-        self.assertEqual(c2.proxy, 'socks4://u1:p2@9.123.15.67:3128')
-        self.assertEqual(Duration(10, 200), c2.scenario.queries[1].duration)
-        self.assertEqual(Duration(0, 9), c2.scenario.queries[2].duration)
-        parsed3 = prepare_arglist(['-links', f'{SITE}video/1230567/wtf', '-u:araraw'], False)
-        c3 = BaseConfig()
-        c3.read(parsed3, False)
-        self.assertTrue(c3.use_link_sequence)
-        self.assertEqual(2, len(c3.extra_tags))
-        c3.id_sequence = extract_ids_from_links(c3.extra_tags)
-        self.assertEqual(1, len(c3.extra_tags))
-        self.assertListEqual(['-u:araraw'], c3.extra_tags)
-        self.assertEqual(1, len(c3.id_sequence))
+    @test_prepare()
+    def test_cmd_ids01(self):
+        prepare_arglist(['cmd', '-seq', '(id=23~id=982)'], False)
+        self.assertEqual(1, len(Config.extra_tags))
+        Config.id_sequence = extract_id_or_group(Config.extra_tags)
+        self.assertTrue(Config.use_id_sequence)
+        self.assertEqual(0, len(Config.extra_tags))
+        self.assertEqual(2, len(Config.id_sequence))
+
+    @test_prepare()
+    def test_cmd_ids02(self):
+        prepare_arglist(['-start', '1000', '-end', '999', '(a2~4k)', '(2d~vr)', '-dmode', 'touch', '--store-continue-cmdfile',
+                         '-lookahead', '100', '-proxynodown', '-proxy', 'socks4://u1:p2@9.123.15.67:3128',
+                         '-script', 'a: 2d; b: 3d -duration 10-200; c: a2 -2d -duration 0-9; d: * -utp always',
+                         '-naming', '0x8', '-log', 'trace'], False)
+        self.assertEqual(8, Config.naming_flags)
+        self.assertEqual(1, Config.logging_flags)
+        self.assertEqual(2, len(Config.extra_tags))
+        self.assertEqual(4, len(Config.scenario))
+        self.assertEqual(100, Config.lookahead)
+        self.assertEqual(DOWNLOAD_MODE_TOUCH, Config.download_mode)
+        self.assertTrue(Config.store_continue_cmdfile)
+        self.assertTrue(Config.download_without_proxy)
+        self.assertEqual(Config.proxy, 'socks4://u1:p2@9.123.15.67:3128')
+        self.assertEqual(Duration(10, 200), Config.scenario.queries[1].duration)
+        self.assertEqual(Duration(0, 9), Config.scenario.queries[2].duration)
+
+    @test_prepare()
+    def test_cmd_ids03(self):
+        prepare_arglist(['-links', f'{SITE}video/1230567/wtf', '-u:araraw'], False)
+        self.assertTrue(Config.use_link_sequence)
+        self.assertEqual(2, len(Config.extra_tags))
+        Config.id_sequence = extract_ids_from_links(Config.extra_tags)
+        self.assertEqual(1, len(Config.extra_tags))
+        self.assertListEqual(['-u:araraw'], Config.extra_tags)
+        self.assertEqual(1, len(Config.id_sequence))
         print(f'{self._testMethodName} passed')
 
-    def test_cmd_wtags(self):
-        set_up_test()
-        parsed1 = prepare_arglist(['-start', '1', '-pages', '5',
-                                   '-*[1`-5]`+`(finger{1`,3}|girl`)s`?`.`*',
-                                   '-*`[1`-5`]`+`(finger`{1`,3`}`|`girl`)s`?`.`*``'], True)
-        c1 = BaseConfig()
-        c1.read(parsed1, True)
-        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(c1.extra_tags[0])).pattern)
-        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(c1.extra_tags[1])).pattern)
-        parsed2 = prepare_arglist(['-start', '1', '-pages', '5', 'trigger`(s|ed|ing`)*'], True)
-        c2 = BaseConfig()
-        c2.read(parsed2, True)
-        self.assertIsNotNone(match_text(c2.extra_tags[0], 'a triggered bluff'))
+    @test_prepare()
+    def test_cmd_wtags01(self):
+        prepare_arglist(['-start', '1', '-pages', '5',
+                         '-*[1`-5]`+`(finger{1`,3}|girl`)s`?`.`*',
+                         '-*`[1`-5`]`+`(finger`{1`,3`}`|`girl`)s`?`.`*``'], True)
+        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(Config.extra_tags[0])).pattern)
+        self.assertEqual(r'^\-.*[1-5]+(?:finger{1,3}|girl)s?.*$', prepare_regex_fullmatch(normalize_wtag(Config.extra_tags[1])).pattern)
+
+    @test_prepare()
+    def test_cmd_wtags02(self):
+        prepare_arglist(['-start', '1', '-pages', '5', 'trigger`(s|ed|ing`)*'], True)
+        self.assertIsNotNone(match_text(Config.extra_tags[0], 'a triggered bluff'))
         print(f'{self._testMethodName} passed')
 
 
 class DownloadTests(TestCase):
+    @test_prepare()
     def test_ids_touch(self):
         if not RUN_CONN_TESTS:
             return
-        set_up_test()
         tdir = TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_')
         tempdir = normalize_path(tdir.name)
         tempfile_id = '3146165'
@@ -260,10 +274,10 @@ class DownloadTests(TestCase):
         tdir.cleanup()
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_pages_touch(self):
         if not RUN_CONN_TESTS:
             return
-        set_up_test()
         tdir = TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_')
         tempdir = normalize_path(tdir.name)
         tempfile_id = '3119234'
@@ -278,10 +292,10 @@ class DownloadTests(TestCase):
         tdir.cleanup()
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_ids_full(self):
         if not RUN_CONN_TESTS:
             return
-        set_up_test()
         tdir = TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_')
         tempdir = normalize_path(tdir.name)
         tempfile_id = '3055235'
@@ -295,10 +309,10 @@ class DownloadTests(TestCase):
         tdir.cleanup()
         print(f'{self._testMethodName} passed')
 
+    @test_prepare()
     def test_pages_full(self):
         if not RUN_CONN_TESTS:
             return
-        set_up_test()
         tdir = TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_')
         tempdir = normalize_path(tdir.name)
         tempfile_id = '3144801'

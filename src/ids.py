@@ -28,11 +28,9 @@ __all__ = ('main_sync',)
 
 async def main(args: Sequence[str]) -> None:
     try:
-        arglist = prepare_arglist(args, False)
+        prepare_arglist(args, False)
     except HelpPrintExitException:
         return
-
-    Config.read(arglist, False)
 
     if Config.use_id_sequence:
         Config.id_sequence = extract_id_or_group(Config.extra_tags)
@@ -49,7 +47,7 @@ async def main(args: Sequence[str]) -> None:
             raise ValueError
         Log.info(f'Parsed {len(Config.id_sequence):d} links')
     else:
-        Config.id_sequence = list(range(Config.start_id, Config.end_id + 1))
+        Config.id_sequence = list(range(Config.start, Config.end + 1))
 
     if find_and_resolve_config_conflicts() is True:
         await sleep(3.0)

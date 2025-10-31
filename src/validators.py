@@ -10,8 +10,12 @@ import os
 from argparse import ArgumentError
 from ipaddress import IPv4Address
 
+from aiohttp import ClientTimeout
+
 from config import Config
 from defs import (
+    CONNECT_TIMEOUT_BASE,
+    CONNECT_TIMEOUT_SOCKET_READ,
     DEFAULT_QUALITY,
     DOWNLOAD_POLICY_DEFAULT,
     IDGAP_PREDICTION_OFF,
@@ -38,9 +42,10 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
     if Config.model and (Config.search or Config.search_tags or Config.search_arts or Config.search_cats):
         Log.fatal('\nError: cannot use search within artist\'s videos! Please use one or the other, or filter using extra tags')
         raise ValueError
-    if all(_ in (False, None) for _ in (Config.use_id_sequence, Config.use_link_sequence)) and Config.start_id > Config.end_id:
-        Log.fatal(f'\nError: invalid video id bounds: start ({Config.start_id:d}) > end ({Config.end_id:d})')
-        raise ValueError
+    if all(_ in (False, None) for _ in (Config.use_id_sequence, Config.use_link_sequence)):
+        if Config.start_id > Config.end_id or Config.start > Config.end:
+            Log.fatal(f'\nError: invalid id bounds: start ({Config.start:d}|{Config.start_id}) > end ({Config.end:d}|{Config.end_id})')
+            raise ValueError
     if Config.lookahead:
         if Config.use_id_sequence:
             Log.fatal('\nError: lookahead argument cannot be used together with id sequence!')
@@ -61,11 +66,11 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
         Config.start = Config.end = Config.start_id = Config.end_id = 1
         return False
 
-    if ',' in Config.search_tags and Config.search_rule_tag == SEARCH_RULE_ALL:
+    if Config.search_tags and ',' in Config.search_tags and Config.search_rule_tag == SEARCH_RULE_ALL:
         Config.search_tags = f'{SEARCH_RULE_ALL},{Config.search_tags}'
-    if ',' in Config.search_arts and Config.search_rule_art == SEARCH_RULE_ALL:
+    if Config.search_arts and ',' in Config.search_arts and Config.search_rule_art == SEARCH_RULE_ALL:
         Config.search_arts = f'{SEARCH_RULE_ALL},{Config.search_arts}'
-    if ',' in Config.search_cats and Config.search_rule_cat == SEARCH_RULE_ALL:
+    if Config.search_cats and ',' in Config.search_cats and Config.search_rule_cat == SEARCH_RULE_ALL:
         Config.search_cats = f'{SEARCH_RULE_ALL},{Config.search_cats}'
 
     delay_for_message = False
@@ -259,6 +264,14 @@ def valid_duration(duration: str) -> Duration:
         dur_min, dur_max = positive_int(parts[0]), positive_nonzero_int(parts[1])
         assert dur_min <= dur_max
         return Duration(dur_min, dur_max)
+    except Exception:
+        raise ArgumentError
+
+
+def valid_timeout(timeout: str) -> ClientTimeout:
+    try:
+        timeout_int = positive_nonzero_int(timeout) if timeout else CONNECT_TIMEOUT_BASE
+        return ClientTimeout(total=None, connect=timeout_int, sock_connect=timeout_int, sock_read=float(CONNECT_TIMEOUT_SOCKET_READ))
     except Exception:
         raise ArgumentError
 

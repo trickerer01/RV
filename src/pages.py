@@ -40,11 +40,9 @@ __all__ = ('main_sync',)
 
 async def main(args: Sequence[str]) -> None:
     try:
-        arglist = prepare_arglist(args, True)
+        prepare_arglist(args, True)
     except HelpPrintExitException:
         return
-
-    Config.read(arglist, True)
 
     full_download = Config.quality != QUALITIES[-1]
     video_ref_class = 'th' if Config.playlist_name else 'th js-open-popup'
@@ -119,12 +117,11 @@ async def main(args: Sequence[str]) -> None:
                         cur_id = int(re_page_entry.search(aref.get('href')).group(1))
                     except Exception:
                         continue
-                    bound_res = check_id_bounds(cur_id)
-                    if bound_res != 0:
+                    if bound_res := check_id_bounds(cur_id):
                         if bound_res < 0:
                             lower_count += 1
                         continue
-                    elif cur_id in v_entries:
+                    elif v_entries and cur_id in range(next(reversed(v_entries)).id, next(iter(v_entries)).id):
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
                     my_title = str(aref.find('div', class_='thumb_title').text)
@@ -149,8 +146,7 @@ async def main(args: Sequence[str]) -> None:
                     urltitle = str(utitl_all[i]['href'][:-1][utitl_all[i]['href'][:-1].rfind('/') + 1:])
                     v_id = re_preview_entry.search(link)
                     cur_id, cur_ext = int(v_id.group(1)), str(v_id.group(2))
-                    bound_res = check_id_bounds(cur_id)
-                    if bound_res != 0:
+                    if bound_res := check_id_bounds(cur_id):
                         if bound_res < 0:
                             lower_count += 1
                         continue
@@ -165,7 +161,7 @@ async def main(args: Sequence[str]) -> None:
                         f'{f"_{urltitle if use_utitle else title}" if use_title else ""}_preview.{cur_ext}',
                     ))
 
-            if pi - 1 > Config.start and lower_count == orig_count > 0 and not Config.scan_all_pages:
+            if pi - 1 > Config.start and 0 < lower_count == orig_count and not Config.scan_all_pages:
                 if not (0 < maxpage <= pi - 1):
                     Log.info(f'Page {pi - 1:d} has all post ids below lower bound. Pages scan stopped!')
                 break
