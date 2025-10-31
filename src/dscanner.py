@@ -127,7 +127,7 @@ class VideoScanWorker:
             if any(ffs for ffs in founditems):
                 newline = '\n'
                 Log.info(f'{vi.sname} scan returned {result!s} but it was already downloaded:'
-                         f'\n - {f"{newline} - ".join(f"{newline} - ".join(ffs) for ffs in founditems)}')
+                         f'\n - {f"{newline} - ".join(f"{newline} - ".join(_ for _ in ffs if _) for ffs in founditems)}')
         if result == DownloadResult.SUCCESS:
             self._scanned_items.append(vi)
         else:
