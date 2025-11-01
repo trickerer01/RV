@@ -123,11 +123,11 @@ class VideoScanWorker:
         self._seq.popleft()
         if result in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_RETRIES,
                       DownloadResult.FAIL_DELETED, DownloadResult.FAIL_FILTERED_OUTER, DownloadResult.FAIL_SKIPPED):
-            founditems = [file_already_exists_arr(vi.id, q) for q in QUALITIES]
+            founditems = list(filter(None, (file_already_exists_arr(vi.id, q) for q in QUALITIES)))
             if any(ffs for ffs in founditems):
                 newline = '\n'
                 Log.info(f'{vi.sname} scan returned {result!s} but it was already downloaded:'
-                         f'\n - {f"{newline} - ".join(f"{newline} - ".join(_ for _ in ffs if _) for ffs in founditems)}')
+                         f'\n - {f"{newline} - ".join(f"{newline} - ".join(ffs) for ffs in founditems)}')
         if result == DownloadResult.SUCCESS:
             self._scanned_items.append(vi)
         else:
