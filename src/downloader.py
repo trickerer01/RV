@@ -8,6 +8,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 
 from __future__ import annotations
 
+import itertools
 import os
 from asyncio import Lock as AsyncLock
 from asyncio.queues import Queue as AsyncQueue
@@ -210,7 +211,8 @@ class VideoDownloadWorker:
             if elapsed_seconds >= write_delay and elapsed_seconds - last_check_seconds >= write_delay:
                 last_check_seconds = elapsed_seconds
                 v_ids: list[int] = sorted(
-                    vi.id for vi in self._seq + list(getattr(self._queue, '_queue')) + self._downloads_active + self.get_scanner_workload())
+                    vi.id for vi in itertools.chain(
+                        self._seq, getattr(self._queue, '_queue'), self._downloads_active, self.get_scanner_workload()))
                 arglist = ['-seq', f'({"~".join(f"id={idi:d}" for idi in v_ids)})'] if len(v_ids) > 1 else ['-start', str(v_ids[0])]
                 arglist.extend(arglist_base)
                 try:
