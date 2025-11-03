@@ -11,9 +11,7 @@ from collections.abc import Sequence
 
 from defs import (
     ACTION_STORE_TRUE,
-    DEFAULT_QUALITY,
     DOWNLOAD_POLICY_ALWAYS,
-    DOWNLOAD_POLICY_DEFAULT,
     QUALITIES,
     UNTAGGED_POLICIES,
     Duration,
@@ -26,19 +24,17 @@ from validators import valid_duration, valid_int, valid_rating
 
 __all__ = ('DownloadScenario',)
 
-UTP_DEFAULT = DOWNLOAD_POLICY_DEFAULT
-"""'nofilters'"""
 UTP_ALWAYS = DOWNLOAD_POLICY_ALWAYS
 """'always'"""
 
 
 class SubQueryParams:
-    def __init__(self, subfolder: str, extra_tags: list[str], quality: Quality, duration: Duration,
+    def __init__(self, subfolder: str, extra_tags: list[str], quality: Quality | None, duration: Duration | None,
                  minscore: int | None, minrating: int, utp: str, id_sequence: list[int]) -> None:
         self.subfolder: str = subfolder or ''
         self.extra_tags: list[str] = extra_tags or []
-        self.quality: Quality = quality or Quality()
-        self.duration: Duration = duration
+        self.quality: Quality | None = quality
+        self.duration: Duration | None = duration
         self.minrating: int = minrating or 0
         self.minscore: int | None = minscore
         self.untagged_policy: str = utp or ''
@@ -70,14 +66,14 @@ class DownloadScenario:
 
         parser = ArgumentParser(add_help=False)
         parser.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE)
-        parser.add_argument('-quality', default=DEFAULT_QUALITY, choices=QUALITIES)
+        parser.add_argument('-quality', default=None, choices=QUALITIES)
         parser.add_argument('-duration', default=None, type=valid_duration)
         parser.add_argument('-minrating', '--minimum-rating', default=0, type=valid_rating)
         parser.add_argument('-minscore', '--minimum-score', default=None, type=valid_int)
-        parser.add_argument('-utp', '--untagged-policy', default=UTP_DEFAULT, choices=UNTAGGED_POLICIES)
+        parser.add_argument('-utp', '--untagged-policy', default='', choices=UNTAGGED_POLICIES)
         parser.add_argument(dest='extra_tags', nargs=ZERO_OR_MORE)
 
-        errors_to_print = []
+        errors_to_print: list[str] = []
         for query_raw in fmt_str.split('; '):
             try:
                 subfolder, args = query_raw.split(': ')
@@ -98,7 +94,7 @@ class DownloadScenario:
                                           f'No valid ID \'or\' group found in \'{parsed.extra_tags!s}\'!')
                         errors_to_print.append(error_to_print)
                 else:
-                    id_sequence = []
+                    id_sequence: list[int] = []
                 if parsed.untagged_policy == UTP_ALWAYS and self.has_subquery(utp=UTP_ALWAYS):
                     errors_to_print.append(f'Scenario can only have one subquery with untagged video policy \'{UTP_ALWAYS}\'!')
                 self._add_subquery(SubQueryParams(
@@ -121,7 +117,7 @@ class DownloadScenario:
         self.queries.append(subquery)
 
     def has_subquery(self, **kwargs) -> bool:
-        return any(all(getattr(sq, k, ...) == kwargs[k] for k in kwargs) for sq in self.queries)
+        return any(all(getattr(sq, k, ...) == v for k, v in kwargs.items()) for sq in self.queries)
 
     def get_matching_subquery(self, vi: VideoInfo, tags_raw: list[str], score: str, rating: str) -> SubQueryParams | None:
         for sq in self.queries:

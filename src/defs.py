@@ -10,7 +10,7 @@ import base64
 import datetime
 import os
 from enum import IntEnum
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 MIN_PYTHON_VERSION = (3, 10)
 MIN_PYTHON_VERSION_STR = f'{MIN_PYTHON_VERSION[0]:d}.{MIN_PYTHON_VERSION[1]:d}'
@@ -118,6 +118,8 @@ IDGAP_PREDICTION_DEFAULT = IDGAP_PREDICTION_OFF
 
 
 class Quality(str):
+    def __init__(self, _: Literal['2160p', '1080p', '720p', '480p', '360p', 'preview']) -> ...: ...
+
     def __lt__(self, other: str) -> bool:
         return QUALITIES.index(self) > QUALITIES.index(other)
 

@@ -180,10 +180,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if scenario:
         if matching_sq := scenario.get_matching_subquery(vi, tags_raw, score, rating):
             vi.subfolder = matching_sq.subfolder
-            vi.quality = matching_sq.quality
+            vi.quality = matching_sq.quality or vi.quality
         elif utpalways_sq := scenario.get_utp_always_subquery() if tdiv is None else None:
             vi.subfolder = utpalways_sq.subfolder
-            vi.quality = utpalways_sq.quality
+            vi.quality = utpalways_sq.quality or vi.quality
         else:
             Log.info(f'Info: unable to find matching or utp scenario subquery for {sname}, skipping...')
             return DownloadResult.FAIL_SKIPPED

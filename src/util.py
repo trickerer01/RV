@@ -102,10 +102,11 @@ def calculate_eta(container: Sequence) -> int:
 
 def at_startup() -> None:
     """Inits logger. Reports python version and run options"""
-    if '--disable-log-colors' in sys.argv or '-nocolors' in sys.argv:
+    argv_set = set(sys.argv)
+    if argv_set.intersection({'--disable-log-colors', '-nocolors'}):
         Config.nocolors = True
     Log.init()
-    if '--version' in sys.argv or '--help' in sys.argv:
+    if argv_set.intersection({'--version', '--help'}):
         return
     Log.debug(f'Python {sys.version}\n{APP_NAME} ver {APP_VERSION}\nCommand-line args: {" ".join(sys.argv)}')
 

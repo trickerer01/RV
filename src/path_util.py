@@ -142,7 +142,7 @@ def file_exists_in_folder(base_folder: str, idi: int, quality: Quality, check_fo
     return ''
 
 
-def file_already_exists(idi: int, quality: Quality, check_folder=True) -> str:
+def file_already_exists(idi: int, quality: Quality | None = None, check_folder=True) -> str:
     for fullpath in found_filenames_dict:
         fullpath = file_exists_in_folder(fullpath, idi, quality or Config.quality, check_folder)
         if len(fullpath) > 0:
@@ -180,8 +180,7 @@ def prefilter_existing_items(vi_list: MutableSequence[VideoInfo]) -> None:
 
     i: int
     for i in reversed(range(len(vi_list))):
-        fullpath = file_already_exists(vi_list[i].id, Quality(), False)
-        if len(fullpath) > 0:
+        if fullpath := file_already_exists(vi_list[i].id, None, False):
             Log.info(f'Info: {vi_list[i].sname} found in \'{os.path.split(fullpath)[0]}/\'. Skipped.')
             del vi_list[i]
 

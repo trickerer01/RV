@@ -9,6 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 import json
 import os
 from collections.abc import Callable, Collection, Iterable, MutableSequence
+from typing import TypeAlias
 
 from config import Config
 from defs import (
@@ -59,13 +60,15 @@ __all__ = (
     'valid_tags',
 )
 
+TagConflictsDict: TypeAlias = dict[str, tuple[list[str], list[str]]]
+
 TAG_NUMS: dict[str, str] = {}
 ART_NUMS: dict[str, str] = {}
 CAT_NUMS: dict[str, str] = {}
 PLA_NUMS: dict[str, str] = {}
 PLA_NUMS_REV: dict[str, str] = {}
 TAG_ALIASES: dict[str, str] = {}
-TAG_CONFLICTS: dict[str, tuple[list[str], list[str]]] = {}
+TAG_CONFLICTS: TagConflictsDict = {}
 
 
 def valid_playlist_name(plist: str) -> tuple[int, str]:
@@ -599,11 +602,10 @@ def filtered_tags(tags_list: Collection[str]) -> str:
     return trim_undersores(TAGS_CONCAT_CHAR.join(sorted(tags_list_final)))
 
 
-def load_actpac_json(src_file: str, dest_dict: dict[str, str] | dict[str, tuple[list[str], list[str]]], name: str, *,
-                     extract=True, reverse=False) -> None:
+def load_actpac_json(file_loc: str, dest_dict: dict[str, str] | TagConflictsDict, name: str, *, extract=True, reverse=False) -> None:
     try:
         Log.trace(f'Loading {name}...')
-        with open(src_file, 'r', encoding=UTF8) as json_file:
+        with open(file_loc, 'rt', encoding=UTF8) as json_file:
             if extract:
                 if reverse:
                     dest_dict.update({(v[:v.find(',')] if ',' in v else v): k for k, v in json.load(json_file).items()})
@@ -615,7 +617,7 @@ def load_actpac_json(src_file: str, dest_dict: dict[str, str] | dict[str, tuple[
                 else:
                     dest_dict.update(json.load(json_file))
     except Exception:
-        Log.error(f'Failed to load {name} from {normalize_path(os.path.abspath(src_file), False)}')
+        Log.error(f'Failed to load {name} from {normalize_path(os.path.abspath(file_loc), False)}')
         dest_dict.update({'': ''})
 
 
