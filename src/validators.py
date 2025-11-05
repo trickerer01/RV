@@ -43,6 +43,9 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
     if Config.model and (Config.search or Config.search_tags or Config.search_arts or Config.search_cats):
         Log.fatal('\nError: cannot use search within artist\'s videos! Please use one or the other, or filter using extra tags')
         raise ValueError
+    if Config.proxy and Config.download_without_proxy and Config.html_without_proxy:
+        Log.fatal('\nError: proxy exists but is disabled for both html and download requests!')
+        raise ValueError
     if all(_ in (False, None) for _ in (Config.use_id_sequence, Config.use_link_sequence)):
         if Config.start_id > Config.end_id or Config.start > Config.end:
             Log.fatal(f'\nError: invalid id bounds: start ({Config.start:d}|{Config.start_id}) > end ({Config.end:d}|{Config.end_id})')
