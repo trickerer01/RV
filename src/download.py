@@ -77,8 +77,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         return DownloadResult.FAIL_NOT_FOUND
 
     vi.set_state(VideoInfo.State.SCANNING)
-    hkwargs = {'noproxy': not Config.proxy or Config.html_without_proxy}
-    a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + vi.id % 10:d}', **hkwargs)
+    a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + vi.id % 10:d}')
     if a_html is None:
         Log.error(f'Error: unable to retreive html for {sname}! Aborted!')
         return DownloadResult.FAIL_SKIPPED if Config.aborted else DownloadResult.FAIL_RETRIES
@@ -132,8 +131,8 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     tdiv = a_html.find('div', string='Tags')
     if tdiv is None:
         Log.info(f'Warning: video {sname} has no tags!')
-    tags = [str(elem.string) for elem in tdiv.parent.find_all('a', class_='tag_item')] if tdiv else ['']
-    tags_raw = [tag.replace(' ', '_').lower() for tag in tags if tag]
+    tags: list[str] = [str(elem.string) for elem in tdiv.parent.find_all('a', class_='tag_item')] if tdiv else []
+    tags_raw = [tag.replace(' ', '_').lower() for tag in tags]
     for calist in (my_categories, my_authors):
         for add_tag in [ca.replace(' ', '_') for ca in calist if ca]:
             if add_tag not in tags_raw:
@@ -211,7 +210,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             return DownloadResult.FAIL_RETRIES
         tries += 1
         Log.debug(f'No download section for {sname}, retry #{tries:d}...')
-        a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + tries + vi.id % 10:d}', **hkwargs)
+        a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + tries + vi.id % 10:d}')
     links = ddiv.parent.find_all('a', class_='tag_item')
     qualities = tuple(lin.text.replace('MP4 ', '') for lin in links if lin.text)
     if vi.quality not in qualities:
@@ -383,13 +382,13 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 break
 
             hkwargs: dict[str, dict[str, str]] = {'headers': {'Range': f'bytes={file_size:d}-'} if file_size > 0 else {}}
-            ckwargs = {'allow_redirects': bool(not Config.proxy or not Config.download_without_proxy)}
-            ckwargs.update(noproxy=bool(Config.html_without_proxy and not ckwargs['allow_redirects']))
+            ckwargs = {'allow_redirects': not (Config.proxy and (Config.download_without_proxy or Config.html_without_proxy))}
+            ckwargs.update({'noproxy': bool(Config.proxy and Config.html_without_proxy)})
             # hkwargs['headers'].update({'Referer': SITE_AJAX_REQUEST_VIDEO % vi.id})
             r = await wrap_request('GET', vi.link, **ckwargs, **hkwargs)
             while r.status in (301, 302):
                 if urllib.parse.urlparse(r.headers['Location']).hostname != urllib.parse.urlparse(vi.link).hostname:
-                    ckwargs.update(noproxy=True, allow_redirects=True)
+                    ckwargs.update({'noproxy': Config.download_without_proxy, 'allow_redirects': True})
                 ensure_conn_closed(r)
                 r = await wrap_request('GET', r.headers['Location'], **ckwargs, **hkwargs)
             content_len: int = r.content_length or 0

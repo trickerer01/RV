@@ -167,6 +167,8 @@ async def wrap_request(method: str, url: str, **kwargs) -> ClientResponse:
 async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup | None:
     # very basic, minimum validation
     tries = tries or Config.retries
+    if 'noproxy' not in kwargs:
+        kwargs.update({'noproxy': bool(Config.proxy and Config.html_without_proxy)})
 
     retries = 0
     retries_403_local = 0
