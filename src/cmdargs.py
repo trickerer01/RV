@@ -123,7 +123,7 @@ FSDEPTH_DEFAULT = MAX_DEST_SCAN_SUB_DEPTH_DEFAULT
 FSUP_DEFAULT = MAX_DEST_SCAN_UPLEVELS_DEFAULT
 '''0'''
 
-PARSER_TYPE_PARAM = 'zzzparser_type'
+PARSER_ARG_TITLE = 'zzzparser_type'
 PARSER_TITLE_FILE = 'file'
 PARSER_TITLE_CMD = 'cmd'
 EXISTING_PARSERS = {PARSER_TITLE_CMD, PARSER_TITLE_FILE}
@@ -131,6 +131,12 @@ EXISTING_PARSERS = {PARSER_TITLE_CMD, PARSER_TITLE_FILE}
 
 IDGP_DEFAULT = IDGAP_PREDICTION_DEFAULT
 """'0'"""
+
+PARSED_ARGS_NO_CONSUME = {
+    PARSER_ARG_TITLE,
+    'pages',
+    'count',
+}
 
 
 class HelpPrintExitException(Exception):
@@ -149,7 +155,7 @@ def read_cmdfile(cmdfile_path: str) -> list[str]:
 
 
 def is_parsed_file(parsed_result: Namespace) -> bool:
-    return getattr(parsed_result, PARSER_TYPE_PARAM) == PARSER_TITLE_FILE
+    return getattr(parsed_result, PARSER_ARG_TITLE) == PARSER_TITLE_FILE
 
 
 def is_parsed_cmdfile(parsed_result: Namespace) -> bool:
@@ -210,7 +216,7 @@ def create_parsers() -> tuple[ArgumentParser, ArgumentParser, ArgumentParser]:
     par_cmd = subs.add_parser(PARSER_TITLE_CMD, description='Run using normal cmdline', add_help=False)
     [p.add_argument('--help', action='help', help='Print this message') for p in (par_file, par_cmd)]
     [p.add_argument('--version', action='version', help=HELP_ARG_VERSION, version=f'{APP_NAME} {APP_VERSION}') for p in (par_file, par_cmd)]
-    [p.set_defaults(**{PARSER_TYPE_PARAM: t}) for p, t in zip((par_file, par_cmd), (PARSER_TITLE_FILE, PARSER_TITLE_CMD), strict=True)]
+    [p.set_defaults(**{PARSER_ARG_TITLE: t}) for p, t in zip((par_file, par_cmd), (PARSER_TITLE_FILE, PARSER_TITLE_CMD), strict=True)]
     return parser, par_file, par_cmd
 
 
@@ -326,8 +332,8 @@ def prepare_arglist(args: Sequence[str], pages: bool) -> None:
         param = Config.NAMESPACE_VARS_REMAP.get(pp, pp)
         if param in vars(Config):
             setattr(Config, param, getattr(parsed, pp, getattr(Config, param)))
-        else:
-            Log.debug(f'Argument list param {param} was not consumed...')
+        elif param not in PARSED_ARGS_NO_CONSUME:
+            Log.error(f'Argument list param {param} was not consumed!')
 
 #
 #
