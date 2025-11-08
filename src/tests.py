@@ -196,7 +196,7 @@ class CmdTests(TestCase):
                          '-blacklist', 'a:6*9,c:*z,t:6g*,t:8*',
                          '-start', '3', '-pages', '2', '-quality', '720p'], True)
         self.assertEqual('164,3966,5157,5261,5570,5934', Config.search_tags)
-        self.assertEqual('22565,27156,34669,8822', Config.search_arts)
+        self.assertEqual('22565,27156,34669,41543,8822', Config.search_arts)
         self.assertEqual('1433,1970,345,57,73', Config.search_cats)
         self.assertEqual('model:25905,model:34361,cat:1277,cat:315,cat:3315,cat:557,tag:38580,tag:3966', Config.blacklist)
         self.assertEqual('any', Config.search_rule_tag)
