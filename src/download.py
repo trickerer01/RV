@@ -80,6 +80,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + vi.id % 10:d}')
     if a_html is None:
         Log.error(f'Error: unable to retreive html for {sname}! Aborted!')
+        gpred.count_nonexisting()
         return DownloadResult.FAIL_SKIPPED if Config.aborted else DownloadResult.FAIL_RETRIES
 
     if not len(a_html):
