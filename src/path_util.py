@@ -78,7 +78,7 @@ def scan_dest_folder() -> None:
         for _ in range(Config.folder_scan_levelup):
             longpath, dirname = os.path.split(os.path.abspath(dest_base))
             dest_base = normalize_path(longpath)
-            if dirname == '':
+            if not dirname:
                 break
 
         def scan_folder(base_folder: str, level: int) -> None:

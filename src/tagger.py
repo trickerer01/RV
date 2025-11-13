@@ -438,7 +438,7 @@ def convert_extra_tag_for_text_matching(ex_tag: str) -> str:
     return conv_tag
 
 
-def match_text(ex_tag: str, text: str, group_type='') -> None | str | list[str]:
+def match_text(ex_tag: str, text: str, group_type='') -> str | list[str] | None:
     converted_tag = convert_extra_tag_for_text_matching(ex_tag)
     text = text.replace('\n', ' ').strip().lower()
     if group_type == 'or':

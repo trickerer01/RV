@@ -122,7 +122,7 @@ class BaseConfig:
         self.nodelay: bool = False
         self.detect_id_gaps: bool = False
 
-    def make_continue_arguments(self) -> list[None | str | int]:
+    def make_continue_arguments(self) -> list[str | int | None]:
         arglist = [
             '-path', self.dest_base, '-continue', '--store-continue-cmdfile',
             '-log', next(x for x in LOGGING_FLAGS if int(LOGGING_FLAGS[x], 16) == self.logging_flags),
@@ -165,7 +165,7 @@ class BaseConfig:
         return arglist
 
     def _reset(self) -> None:
-        self.__init__()
+        self.__init__()  # noqa: PLC2801
 
     def on_scan_abort(self) -> None:
         self.aborted = True

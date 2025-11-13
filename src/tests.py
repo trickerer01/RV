@@ -9,6 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 import functools
 import os
 from asyncio import run as run_async
+from collections.abc import Callable
 from io import StringIO
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -48,8 +49,8 @@ from version import APP_NAME, APP_VERSION
 RUN_CONN_TESTS = 0
 
 
-def test_prepare(log=False):
-    def invoke1(test_func):
+def test_prepare(log=False) -> Callable[[], Callable[[], None]]:
+    def invoke1(test_func: Callable[[...], None]) -> Callable[[], None]:
         @functools.wraps(test_func)
         def invoke_test(*args, **kwargs) -> None:
             def set_up_test() -> None:
