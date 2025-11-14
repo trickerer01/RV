@@ -136,6 +136,14 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
     return delay_for_message
 
 
+def valid_kwarg(kwarg: str) -> tuple[str, str]:
+    try:
+        k, v = tuple(kwarg.split('=', 1))
+        return k, v
+    except Exception:
+        raise ArgumentError
+
+
 def valid_int(val: str, *, lb: int | None = None, ub: int | None = None, nonzero=False) -> int:
     try:
         val = int(val)

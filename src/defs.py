@@ -210,6 +210,7 @@ LOGGING_FLAGS_DEFAULT = LoggingFlags.INFO
 '''0x004'''
 
 ACTION_STORE_TRUE = 'store_true'
+ACTION_APPEND = 'append'
 
 SRC_PATH = os.path.abspath(os.path.dirname(__file__)).replace('\\', SLASH)
 FILE_LOC_TAGS = f'{SRC_PATH}/../2tags/rv_tags.json'
@@ -358,6 +359,8 @@ HELP_ARG_LOGGING = (
     f' All messages equal or above this level will be logged. Default is \'info\''
 )
 HELP_ARG_NOCOLORS = 'Disable logging level dependent colors in log'
+HELP_ARG_HEADER = 'Append additional header. Example: \'-header user_agent=googlebot/1.1\'. Can be used multiple times'
+HELP_ARG_COOKIE = 'Append additional cookie. Example: \'-cookie shm_user=user1\'. Can be used multiple times'
 HELP_ARG_DUMP_SCREENSHOTS = 'Save timeline screenshots (webp, very slow, ignores download mode)'
 HELP_ARG_DUMP_INFO = 'Save tags / descriptions / comments to text file (separately)'
 HELP_ARG_SKIP_EMPTY_LISTS = 'Do not store tags / descriptions / comments list if it contains no useful data'

@@ -115,6 +115,12 @@ class ClientSessionWrapper:
         s.cookie_jar.update_cookies({'kt_tcookie': '1', 'kt_is_visited': '1'})
         if Config.session_id:
             s.cookie_jar.update_cookies({'PHPSESSID': Config.session_id, 'kt_member': '1'})
+        if Config.extra_headers:
+            for hk, hv in Config.extra_headers:
+                s.headers.update({hk: hv})
+        if Config.extra_cookies:
+            for ck, cv in Config.extra_cookies:
+                s.cookie_jar.update_cookies({ck: cv})
         return s
 
 

@@ -103,6 +103,11 @@ class FileCheckTests(TestCase):
 
 class CmdTests(TestCase):
     @test_prepare()
+    def test_config_integrity(self):
+        assert all(hasattr(Config, _) for _ in Config.NAMESPACE_VARS_REMAP.values())
+        print(f'{self._testMethodName} passed')
+
+    @test_prepare()
     def test_output_version_pages(self):
         with patch('sys.stdout', new_callable=StringIO) as stdout:
             run_async(pages_main(['--version']))
@@ -262,6 +267,15 @@ class CmdTests(TestCase):
     def test_cmd_wtags02(self):
         prepare_arglist(['-start', '1', '-pages', '5', 'trigger`(s|ed|ing`)*'], True)
         self.assertIsNotNone(match_text(Config.extra_tags[0], 'a triggered bluff'))
+        print(f'{self._testMethodName} passed')
+
+    @test_prepare()
+    def test_cmd_extra_h_c01(self):
+        prepare_arglist(['-start', '10', '-pages', '11',
+                         '-header', 'shm_user=user812',
+                         '-cookie', 'cf_clearance=clear120825'], True)
+        self.assertListEqual([('shm_user', 'user812')], Config.extra_headers)
+        self.assertListEqual([('cf_clearance', 'clear120825')], Config.extra_cookies)
         print(f'{self._testMethodName} passed')
 
 

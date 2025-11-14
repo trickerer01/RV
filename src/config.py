@@ -47,6 +47,8 @@ class BaseConfig:
         'search_cat': 'search_cats',
         'stop_id': 'start_id',
         'begin_id': 'end_id',
+        'header': 'extra_headers',
+        'cookie': 'extra_cookies',
     }
 
     def __init__(self) -> None:
@@ -98,6 +100,8 @@ class BaseConfig:
         self.check_title_neg: bool | None = None
         self.check_description_pos: bool | None = None
         self.check_description_neg: bool | None = None
+        self.extra_headers: list[tuple[str, str]] | None = None
+        self.extra_cookies: list[tuple[str, str]] | None = None
         # module-specific params (pages only or ids only)
         self.scan_all_pages: bool | None = None
         self.use_id_sequence: bool | None = None
