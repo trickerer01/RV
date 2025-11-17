@@ -170,7 +170,7 @@ class VideoDownloadWorker:
                 self._write_queue_size_last = write_count
                 wc_threshold = MAX_VIDEOS_QUEUE_SIZE // (2 - int(force_check))
                 if force_check or (queue_size == 0 and download_count == write_count <= wc_threshold):
-                    item_states = []
+                    item_states: list[str] = []
                     for vi in self._downloads_active:
                         cursize = os.stat(vi.my_fullpath).st_size if os.path.isfile(vi.my_fullpath) else 0
                         remsize = vi.expected_size - cursize if cursize else 0

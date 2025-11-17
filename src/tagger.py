@@ -374,7 +374,7 @@ def get_or_group_matching_tag(orgr: str, mtags: Iterable[str]) -> str | None:
 
 
 def get_neg_and_group_matches(andgr: str, mtags: Iterable[str]) -> list[str]:
-    matched_tags = []
+    matched_tags: list[str] = []
     for wtag in andgr[2:-1].split(','):
         mtag = get_matching_tag(wtag, mtags, force_regex=True)
         if not mtag:
@@ -399,7 +399,7 @@ def extract_id_or_group(ex_tags: MutableSequence[str]) -> list[int]:
 
 def extract_ids_from_links(ex_tags: MutableSequence[str]) -> list[int]:
     """May alter the input container!"""
-    ids = []
+    ids: list[int] = []
     video_id_str = 'video/'
     for i in reversed(range(len(ex_tags))):
         link = ex_tags[i]
