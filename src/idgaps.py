@@ -11,7 +11,7 @@ from __future__ import annotations
 import itertools
 
 from config import Config
-from defs import IDGAP_PREDICTION_AUTO, IDGAP_PREDICTION_OFF, IntPair
+from defs import IDGAP_PREDICTION_AUTO, IDGAP_PREDICTION_OFF, PREDICTION_REENABLE_THRESHOLD, IntPair
 from dscanner import VideoScanWorker
 from iinfo import VideoInfo
 from logger import Log
@@ -80,7 +80,7 @@ class IdGapsPredictor:
                 if streak_valid is False:
                     Log.error(f'Error: id gap predictor encountered unexpected valid post offset != {skip_num:d}. Disabling prediction!')
                     self._enabled = False
-            elif self._streaks_count and Config.predict_id_gaps == IDGAP_PREDICTION_AUTO:
+            elif self._streaks_count >= PREDICTION_REENABLE_THRESHOLD and Config.predict_id_gaps == IDGAP_PREDICTION_AUTO:
                 Log.warn(f'Warning: id gap predictor encountered another gap with post offset == {skip_num:d} re-enabling prediction!')
                 self._enabled = True
 
