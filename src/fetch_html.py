@@ -109,7 +109,7 @@ class ClientSessionWrapper:
             connector = TCPConnector(limit=MAX_VIDEOS_QUEUE_SIZE + MAX_SCAN_QUEUE_SIZE)
         s = ClientSession(connector=connector, read_bufsize=Mem.MB)
         new_useragent = UAManager.select_useragent(Config.proxy if use_proxy else None)
-        Log.trace(f'[{"P" if Config.proxy and noproxy is False else "NP"}] Selected user-agent \'{new_useragent}\'...')
+        Log.trace(f'[{"P" if use_proxy else "NP"}] Selected user-agent \'{new_useragent}\'...')
         s.headers.update({'User-Agent': new_useragent})
         # s.cookie_jar.update_cookies({'kt_rt_popAccess': '1'})
         s.cookie_jar.update_cookies({'kt_tcookie': '1', 'kt_is_visited': '1'})
