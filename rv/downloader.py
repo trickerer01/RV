@@ -17,8 +17,8 @@ from collections import deque
 from collections.abc import Callable, Coroutine
 from typing import Any, TypeAlias
 
-from config import Config
-from defs import (
+from .config import Config
+from .defs import (
     DOWNLOAD_CONTINUE_FILE_CHECK_TIMER,
     DOWNLOAD_QUEUE_STALL_CHECK_TIMER,
     MAX_VIDEOS_QUEUE_SIZE,
@@ -28,10 +28,10 @@ from defs import (
     DownloadResult,
     Mem,
 )
-from dscanner import VideoScanWorker
-from iinfo import VideoInfo, get_min_max_ids
-from logger import Log
-from util import calc_sleep_time, format_time, get_elapsed_time_i, get_elapsed_time_s
+from .dscanner import VideoScanWorker
+from .iinfo import VideoInfo, get_min_max_ids
+from .logger import Log
+from .util import calc_sleep_time, format_time, get_elapsed_time_i, get_elapsed_time_s
 
 __all__ = ('VideoDownloadWorker',)
 

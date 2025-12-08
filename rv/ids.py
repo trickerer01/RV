@@ -6,32 +6,21 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-import sys
-from asyncio import run as run_async
 from asyncio import sleep
-from collections.abc import Sequence
 
-from cmdargs import HelpPrintExitException, prepare_arglist
-from config import Config
-from defs import MIN_PYTHON_VERSION, MIN_PYTHON_VERSION_STR
-from download import at_interrupt, download
-from fetch_html import create_session
-from iinfo import VideoInfo
-from logger import Log
-from path_util import prefilter_existing_items
-from tagger import extract_id_or_group, extract_ids_from_links
-from util import at_startup
-from validators import find_and_resolve_config_conflicts
+from .config import Config
+from .download import download
+from .fetch_html import create_session
+from .iinfo import VideoInfo
+from .logger import Log
+from .path_util import prefilter_existing_items
+from .tagger import extract_id_or_group, extract_ids_from_links
+from .validators import find_and_resolve_config_conflicts
 
-__all__ = ('main_sync',)
+__all__ = ('process_ids',)
 
 
-async def main(args: Sequence[str]) -> None:
-    try:
-        prepare_arglist(args, False)
-    except HelpPrintExitException:
-        return
-
+async def process_ids() -> int:
     if Config.use_id_sequence:
         Config.id_sequence = extract_id_or_group(Config.extra_tags)
         if not Config.id_sequence:
@@ -77,32 +66,12 @@ async def main(args: Sequence[str]) -> None:
             Log.fatal(f'\nAll {orig_count:d} videos already exist. Aborted.')
         else:
             Log.fatal('\nNo videos found. Aborted.')
-        return
+        return -1
 
     async with create_session():
         await download(v_entries, True, removed_count)
 
-
-async def run_main(args: Sequence[str]) -> None:
-    await main(args)
-    await sleep(0.5)
-
-
-def main_sync(args: Sequence[str]) -> None:
-    assert sys.version_info >= MIN_PYTHON_VERSION, f'Minimum python version required is {MIN_PYTHON_VERSION_STR}!'
-
-    try:
-        run_async(run_main(args))
-    except (KeyboardInterrupt, SystemExit):
-        Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
-    finally:
-        at_interrupt()
-
-
-if __name__ == '__main__':
-    at_startup()
-    main_sync(sys.argv[1:])
-    exit(0)
+    return 0
 
 #
 #

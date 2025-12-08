@@ -13,11 +13,11 @@ import re
 from collections.abc import Iterable
 from enum import IntEnum
 
-from config import Config
-from defs import DEFAULT_EXT, DEFAULT_QUALITY, PREFIX, UTF8, Quality
-from logger import Log
-from rex import re_infolist_filename
-from util import format_time, normalize_filename, normalize_path
+from .config import Config
+from .defs import DEFAULT_EXT, DEFAULT_QUALITY, PREFIX, UTF8, Quality
+from .logger import Log
+from .rex import re_infolist_filename
+from .util import format_time, normalize_filename, normalize_path
 
 __all__ = ('VideoInfo', 'export_video_info', 'get_min_max_ids')
 

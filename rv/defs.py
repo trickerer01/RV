@@ -212,6 +212,7 @@ LOGGING_FLAGS_DEFAULT = LoggingFlags.INFO
 
 ACTION_STORE_TRUE = 'store_true'
 ACTION_APPEND = 'append'
+ACTION_EXTEND = 'extend'
 
 SRC_PATH = os.path.abspath(os.path.dirname(__file__)).replace('\\', SLASH)
 FILE_LOC_TAGS = f'{SRC_PATH}/../2tags/rv_tags.json'

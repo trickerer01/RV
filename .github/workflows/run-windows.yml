@@ -6,8 +6,8 @@ on:
       - 'master'
     paths:
       - .github/workflows/**
-      - 'src/*.py'
-      - '!src/version.py'
+      - 'rv/*.py'
+      - '!rv/version.py'
   pull_request:
     types:
       - opened
@@ -15,8 +15,8 @@ on:
       - synchronize
     paths:
       - .github/workflows/**
-      - 'src/*.py'
-      - '!src/version.py'
+      - 'rv/*.py'
+      - '!rv/version.py'
 
 permissions:
   contents: read

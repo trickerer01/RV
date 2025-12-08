@@ -15,8 +15,8 @@ from asyncio import Task, as_completed, get_running_loop, sleep
 from aiofile import async_open
 from aiohttp import ClientPayloadError
 
-from config import Config
-from defs import (
+from .config import Config
+from .defs import (
     CONNECT_RETRY_DELAY,
     DOWNLOAD_MODE_SKIP,
     DOWNLOAD_MODE_TOUCH,
@@ -33,17 +33,17 @@ from defs import (
     NamingFlags,
     Quality,
 )
-from downloader import VideoDownloadWorker
-from dscanner import VideoScanWorker
-from dthrottler import ThrottleChecker
-from fetch_html import ensure_conn_closed, fetch_html, wrap_request
-from idgaps import IdGapsPredictor
-from iinfo import VideoInfo, export_video_info, get_min_max_ids
-from logger import Log
-from path_util import file_already_exists, is_file_being_used, register_new_file, try_rename, unregister_unfinished_file
-from rex import re_media_filename, re_time
-from tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
-from util import calculate_eta, extract_ext, format_time, get_elapsed_time_i, get_time_seconds, has_naming_flag, normalize_path
+from .downloader import VideoDownloadWorker
+from .dscanner import VideoScanWorker
+from .dthrottler import ThrottleChecker
+from .fetch_html import ensure_conn_closed, fetch_html, wrap_request
+from .idgaps import IdGapsPredictor
+from .iinfo import VideoInfo, export_video_info, get_min_max_ids
+from .logger import Log
+from .path_util import file_already_exists, is_file_being_used, register_new_file, try_rename, unregister_unfinished_file
+from .rex import re_media_filename, re_time
+from .tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
+from .util import calculate_eta, extract_ext, format_time, get_elapsed_time_i, get_time_seconds, has_naming_flag, normalize_path
 
 __all__ = ('at_interrupt', 'download')
 

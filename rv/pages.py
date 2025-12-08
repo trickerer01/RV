@@ -6,16 +6,10 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
-import sys
-from asyncio import run as run_async
 from asyncio import sleep
-from collections.abc import Sequence
 
-from cmdargs import HelpPrintExitException, prepare_arglist
-from config import Config
-from defs import (
-    MIN_PYTHON_VERSION,
-    MIN_PYTHON_VERSION_STR,
+from .config import Config
+from .defs import (
     PREFIX,
     QUALITIES,
     SITE_AJAX_REQUEST_FAVOURITES_PAGE,
@@ -25,25 +19,20 @@ from defs import (
     SITE_AJAX_REQUEST_UPLOADER_PAGE,
     NamingFlags,
 )
-from download import at_interrupt, download
-from fetch_html import create_session, fetch_html
-from iinfo import VideoInfo
-from logger import Log
-from path_util import prefilter_existing_items
-from rex import re_page_entry, re_paginator, re_preview_entry
-from util import at_startup, get_time_seconds, has_naming_flag
-from validators import find_and_resolve_config_conflicts
-from version import APP_NAME
+from .download import download
+from .fetch_html import create_session, fetch_html
+from .iinfo import VideoInfo
+from .logger import Log
+from .path_util import prefilter_existing_items
+from .rex import re_page_entry, re_paginator, re_preview_entry
+from .util import get_time_seconds, has_naming_flag
+from .validators import find_and_resolve_config_conflicts
+from .version import APP_NAME
 
-__all__ = ('main_sync',)
+__all__ = ('process_pages',)
 
 
-async def main(args: Sequence[str]) -> None:
-    try:
-        prepare_arglist(args, True)
-    except HelpPrintExitException:
-        return
-
+async def process_pages() -> int:
     full_download = Config.quality != QUALITIES[-1]
     video_ref_class = 'th' if Config.playlist_name else 'th js-open-popup'
 
@@ -104,7 +93,7 @@ async def main(args: Sequence[str]) -> None:
                 mirefs = a_html.find_all('a', class_=video_ref_class)
                 max_id = max(int(re_page_entry.search(_.get('href')).group(1)) for _ in mirefs)
                 Log.fatal(f'{APP_NAME}: {max_id:d}')
-                return
+                return 0
 
             Log.info(f'page {pi - 1:d}...{" (this is the last page!)" if (0 < maxpage == pi - 1) else ""}')
 
@@ -179,31 +168,11 @@ async def main(args: Sequence[str]) -> None:
                 Log.fatal(f'\nAll {orig_count:d} videos already exist. Aborted.')
             else:
                 Log.fatal('\nNo videos found. Aborted.')
-            return
+            return -1
 
         await download(v_entries, full_download, removed_count)
 
-
-async def run_main(args: Sequence[str]) -> None:
-    await main(args)
-    await sleep(0.5)
-
-
-def main_sync(args: Sequence[str]) -> None:
-    assert sys.version_info >= MIN_PYTHON_VERSION, f'Minimum python version required is {MIN_PYTHON_VERSION_STR}!'
-
-    try:
-        run_async(run_main(args))
-    except (KeyboardInterrupt, SystemExit):
-        Log.warn('Warning: catched KeyboardInterrupt/SystemExit...')
-    finally:
-        at_interrupt()
-
-
-if __name__ == '__main__':
-    at_startup()
-    main_sync(sys.argv[1:])
-    exit(0)
+    return 0
 
 #
 #

@@ -14,8 +14,8 @@ from collections import deque
 from collections.abc import Callable, Coroutine
 from typing import Any, TypeAlias
 
-from config import Config
-from defs import (
+from .config import Config
+from .defs import (
     LOOKAHEAD_WATCH_RESCAN_DELAY_MAX,
     LOOKAHEAD_WATCH_RESCAN_DELAY_MIN,
     QUALITIES,
@@ -24,11 +24,11 @@ from defs import (
     SCAN_CANCEL_KEYSTROKE,
     DownloadResult,
 )
-from iinfo import VideoInfo, get_min_max_ids
-from input import wait_for_key
-from logger import Log
-from path_util import file_already_exists_arr
-from util import get_local_time_s
+from .iinfo import VideoInfo, get_min_max_ids
+from .input import wait_for_key
+from .logger import Log
+from .path_util import file_already_exists_arr
+from .util import get_local_time_s
 
 __all__ = ('VideoScanWorker',)
 

@@ -7,15 +7,12 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import datetime
-import sys
 import time
 from collections.abc import Iterable, Sequence
 
-from config import Config
-from defs import CONNECT_REQUEST_DELAY, DEFAULT_EXT, DOWNLOAD_MODE_FULL, SLASH, START_TIME
-from logger import Log
-from rex import re_ext
-from version import APP_NAME, APP_VERSION
+from .config import Config
+from .defs import CONNECT_REQUEST_DELAY, DEFAULT_EXT, DOWNLOAD_MODE_FULL, SLASH, START_TIME
+from .rex import re_ext
 
 
 def assert_nonempty(container: Iterable, message='') -> Iterable:
@@ -98,17 +95,6 @@ def calc_sleep_time(base_time: float) -> float:
 
 def calculate_eta(container: Sequence) -> int:
     return int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(container))
-
-
-def at_startup() -> None:
-    """Inits logger. Reports python version and run options"""
-    argv_set = set(sys.argv)
-    if argv_set.intersection({'--disable-log-colors', '-nocolors'}):
-        Config.nocolors = True
-    Log.init()
-    if argv_set.intersection({'--version', '--help'}):
-        return
-    Log.debug(f'Python {sys.version}\n{APP_NAME} ver {APP_VERSION}\nCommand-line args: {" ".join(sys.argv)}')
 
 #
 #

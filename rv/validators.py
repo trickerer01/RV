@@ -12,8 +12,8 @@ from ipaddress import IPv4Address
 
 from aiohttp import ClientTimeout
 
-from config import Config
-from defs import (
+from .config import Config
+from .defs import (
     CONNECT_TIMEOUT_BASE,
     CONNECT_TIMEOUT_SOCKET_READ,
     DEFAULT_QUALITY,
@@ -28,9 +28,9 @@ from defs import (
     LoggingFlags,
     NamingFlags,
 )
-from logger import Log
-from rex import re_non_search_symbols, re_session_id
-from util import has_naming_flag, normalize_path
+from .logger import Log
+from .rex import re_non_search_symbols, re_session_id
+from .util import has_naming_flag, normalize_path
 
 
 def find_and_resolve_config_conflicts(full_download=True) -> bool:

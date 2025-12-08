@@ -11,8 +11,8 @@ from locale import getpreferredencoding
 from colorama import Fore
 from colorama import init as colorama_init
 
-from config import Config
-from defs import UTF8, LoggingFlags
+from .config import Config
+from .defs import UTF8, LoggingFlags
 
 
 class Log:

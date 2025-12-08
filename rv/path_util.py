@@ -11,12 +11,12 @@ from collections.abc import MutableSequence
 
 import psutil
 
-from config import Config
-from defs import DEFAULT_EXT, PREFIX, Quality
-from iinfo import VideoInfo
-from logger import Log
-from rex import re_media_filename
-from util import normalize_path
+from .config import Config
+from .defs import DEFAULT_EXT, PREFIX, Quality
+from .iinfo import VideoInfo
+from .logger import Log
+from .rex import re_media_filename
+from .util import normalize_path
 
 __all__ = (
     'file_already_exists',

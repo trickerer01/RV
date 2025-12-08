@@ -12,11 +12,11 @@ from collections import deque
 
 from aiohttp import ClientResponse
 
-from config import Config
-from defs import DOWNLOAD_STATUS_CHECK_TIMER, Mem
-from downloader import VideoDownloadWorker
-from iinfo import VideoInfo
-from logger import Log
+from .config import Config
+from .defs import DOWNLOAD_STATUS_CHECK_TIMER, Mem
+from .downloader import VideoDownloadWorker
+from .iinfo import VideoInfo
+from .logger import Log
 
 
 class ThrottleChecker:

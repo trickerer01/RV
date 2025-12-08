@@ -6,14 +6,24 @@ RV is a video downloader with a lot of features, most of which are filters for f
 ### How to use
 ##### Python 3.10 or greater required
 - RV is a cmdline tool, no GUI
-- It consists of 2 main download modules: `pages.py` for pages scanning, `ids.py` ‒ for video ids traversal
 - See `requirements.txt` for additional dependencies. Install with:
   - `python -m pip install -r requirements.txt`
-- Invoke `python pages.py --help` or `python ids.py --help` to list possible arguments for each module (the differences are minimal)
+##### Install as a module
+- `cd rv`
+- `python -m pip install .`
+- `python -m rv [options...]` OR simply
+- `rv [options...]`
+##### Without installing
+- `cd rv`
+- Run either:
+  - `python rv/__main__.py [options...]` OR
+  - `rv.cmd [options...]` (Windows)
+  - `rv.sh [options...]` (Linux)
+
 - For bug reports, questions and feature requests use our [issue tracker](https://github.com/trickerer01/RV/issues)
 
 #### Search
-- RV provides advanced searching functionality (`pages.py` module). Search is performed using extended website native API
+- RV provides advanced searching functionality (`rv pages`). Search is performed using extended website native API
 - There are 4 search arguments available each corresponding to different parts of search API. It's possible to utilize all four at once but usually a single one is enough
   - `-search <STRING>` - search using raw string, matching all words (see below). Concatenate using `-`:
     - `-search after-hours`
@@ -79,7 +89,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - Scenario (script) is used to separate videos matching different sets of tags into different folders in a single pass
   - *SCRIPT* is a semicolon-separated sequence of '*\<subfolder>*<NOTHING>**:** *\<args...>*' groups (subqueries)
   - *SCRIPT* always contains spaces hence has to be escaped by quotes:
-    - python ids.py \<args>... -script ***"***<NOTHING>sub1: tags1; sub2: tags2 ...***"***
+    - rv ids \<args>... -script ***"***<NOTHING>sub1: tags1; sub2: tags2 ...***"***
   - Typically each next subquery is better exclude all required tags from previous one and retain excluded tags, so you know exactly what file goes where. But excluding previous required tags is optional ‒ first matching subquery is used and if some item didn't match previous sub there is no point checking those tags again. **Subquery order matters**. Also, `-tags` contained in every subquery can be safely moved outside of script
     - ... -script "s1: *a b (c\~d)* **-e**; s2: **-a -b -c -d -e** *f g (h\~i)*; s3: **-a -b -c -d -e -f -g -h -i** *k*" `<< full script`
     - ... -script "s1: *a b (c\~d)* **-e**; s2: *f g (h\~i)* **-e**; s3: *k* **-e**" `<< no redundant excludes`
@@ -92,16 +102,16 @@ RV is a video downloader with a lot of features, most of which are filters for f
 3. Downloading a set of videos
   - There are two ways to download a set of ids instead of id range:
   - Using id sequence:
-    - Syntax: `--use-id-sequence` / `-seq`, `ids.py` module only (or download scenario subquery)
+    - Syntax: `--use-id-sequence` / `-seq`, `rv ids` only (or download scenario subquery)
     - The sequence itself is an `extra tag` in a form of `OR` group of ids:
       - `(id=<id1>~id=<id2>~...~id=<idN>)`
     - Id sequence is used **instead** of id range, you can't use both
-      - `python ids.py <args>... -seq (id=1337~id=9999~id=1001)`
+      - `rv ids <args>... -seq (id=1337~id=9999~id=1001)`
   - By passing video links directly:
-    - Syntax: `--use-link-sequence` / `-links`, `ids.py` module only
+    - Syntax: `--use-link-sequence` / `-links`, `rv ids` only
     - Links are extracted from `extra tags` turned into ids
     - Id sequence is used **instead** of id range/sequence, you can't use both
-      - `python ids.py <args>... -links https://... https://...`
+      - `rv ids <args>... -links https://... https://...`
 
 4. File naming
   - File names are generated based on video *title* and *tags*:
@@ -110,15 +120,15 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - If resulting file full path is too long to fit into 240 symbols, first the tags will be gradually dropped; if not enough title will be shrunk to fit; general advice is to not download to folders way too deep down the folder tree
 
 5. Using 'file' mode
-  - Although not required as cmdline argument, there is a default mode app runs in which is a `cmd` mode
-  - `File` mode becomes useful when your cmdline string becomes **really long**. For example: Windows string buffer for console input is about 32767 characters long but standard `cmd.exe` buffer can only fit about 8192 characters, powershell ‒ about 16384. File mode is avalible for both `pages.py` and `ids.py` modules, of course, and can be used with shorter cmdline string as well
-  - `File` mode is activated by providing 'file' as first argument and has a single option which is `-path` to a text file containing actual cmdline arguments for used module's `cmd` mode:
-    - `python pages.py file -path <FILEPATH>`
+  - `File` mode becomes useful when your cmdline string becomes **really long**. For example: Windows string buffer for console input is about 32767 characters long but standard `cmd.exe` buffer can only fit about 8192 characters, powershell ‒ about 16384. File mode can be used with shorter cmdline string as well
+  - `File` mode is activated by using 'file' subcommand and has a single option which is `-path` to a text file containing actual cmdline arguments:
+    - `rv file -path <FILEPATH>`
   - Target file has to be structured as follows:
     - all arguments and values must be separated: one argument *or* value per line
     - quotes you would normally use in console window to escape argument value must be removed
-    - only current module arguments needed, no python executable or module name needed, `cmd` mode can be omitted
+    - only actual arguments needed
       ```
+      pages
       -start
       1
       -end
@@ -144,7 +154,7 @@ RV is a video downloader with a lot of features, most of which are filters for f
   - Continue file contains cmdline arguments required to resume download, all provided parameters / options / download scenario / extra tags are preserved
   - It is strongly recommended to also include `--continue-mode` and `--keep-unfinished` options when using continue file
   - If download actually finishes without interruption stored continue file is automatically deleted
-  - Continue file has to be used with `ids` module, `file` mode (see `using 'file' mode` above)
+  - Continue file has to be used with `rv file` (see `using 'file' mode` above)
 
 8. Wildcards in search
   - Once familiar enough with existing tags/categories/artists lists one may want to go advanced and use wildcards in typed search (not search string)
@@ -155,55 +165,55 @@ RV is a video downloader with a lot of features, most of which are filters for f
 9. Scanning for unpublished posts
   - There is always a number of posts which haven't become public yet, many of them don't pass a review and never become available
   - Unpublished posts cannot be searched for so using direct link is the only option
-  - `ids` module can automatically scan past maximum available post ID until it reaches the actual maximum post ID available.
+  - `rv ids` can automatically scan past maximum available post ID until it reaches the actual maximum post ID available.
   - Syntax: `-lookahead <AMOUNT>`. `<AMOUNT>` here is the number of sequential empty post IDs to assume the end of existing posts. Example:
-    - `python ids.py -start 3500000 -count 500 ... -lookahead 100` - scan until 3,500,500 and continue **indefinetely** until 100 post requests in a row return 'not found' error
+    - `rv ids -start 3500000 -count 500 ... -lookahead 100` - scan until 3,500,500 and continue **indefinetely** until 100 post requests in a row return 'not found' error
 
 #### Examples
 1. Pages
   - All videos by a single tag:
-    - `python pages.py -pages 9999 -search_tag TAG1`
+    - `rv pages -pages 9999 -search_tag TAG1`
   - Up to 48 videos with both tags present from a single author in 1080p, save to a custom location:
-    - `python pages.py -pages 2 -path PATH -quality 1080p -search_art ARTIST -search_tag TAG1,TAG2`
+    - `rv pages -pages 2 -path PATH -quality 1080p -search_art ARTIST -search_tag TAG1,TAG2`
   - Up to 24 videos on page 3 with any of 3 tags from any of 2 authors under any of 2 categories, exclude any kind of `vore` or `fart`, in best quality, with minimum score of 100 and minimum rating of 90%, use proxy, save to a custom location, save tags, log everything, use shortest names for files:
-    - `python pages.py -log trace -start 3 -pages 1 -path PATH -proxy https://127.0.0.1:222 -tdump -quality 2160p -minscore 100 -minrating 90 -search_cat CATEGORY1,CAT_EGORY2 -search_art ART_IST1,ARTIST2 -search_tag TAG1,TAG2,TAG3 -search_rule_cat any -search_rule_art any -search_rule_tag any -naming 0 -*vore -fart*`
+    - `rv pages -log trace -start 3 -pages 1 -path PATH -proxy https://127.0.0.1:222 -tdump -quality 2160p -minscore 100 -minrating 90 -search_cat CATEGORY1,CAT_EGORY2 -search_art ART_IST1,ARTIST2 -search_tag TAG1,TAG2,TAG3 -search_rule_cat any -search_rule_art any -search_rule_tag any -naming 0 -*vore -fart*`
   - All videos uploaded by a user, if tagged with either of 2 desired tags, in best quality, sorted into subfolders by several desired (known) authors, putting remaining videos into a separate folder, setup for interrupt & continue:
-    - `python pages.py -pages 9999 -path PATH --store-continue-cmdfile -quality 2160p -uploader USER_ID (TAG1~TAG2) -script "name1: AUTHOR1; name2: AUTHOR2; name3: AUTHOR3; rest: * -utp always"`
+    - `rv pages -pages 9999 -path PATH --store-continue-cmdfile -quality 2160p -uploader USER_ID (TAG1~TAG2) -script "name1: AUTHOR1; name2: AUTHOR2; name3: AUTHOR3; rest: * -utp always"`
   - All videos from artist's page, if tagged with a desired tag, in best quality:
-    - `python pages.py -pages 999 -path PATH -quality 2160p -model ARTIST_NAME TAG1`
+    - `rv pages -pages 999 -path PATH -quality 2160p -model ARTIST_NAME TAG1`
 
 2. Ids
   - All existing videos in range:
-    - `python ids.py -start 3200000 -count 100`
-    - `python ids.py -start 3200000 -end 3200099`
-  - You can use the majority of arguments from `pages` examples. The only argument that is unique to `ids.py` module is `--use-id-sequence` (`-seq`), see above where it's explained in detail
+    - `rv ids -start 3200000 -count 100`
+    - `rv ids -start 3200000 -end 3200099`
+  - You can use the majority of arguments from `pages` examples. The only argument that is unique to `rv ids` is `--use-id-sequence` (`-seq`), see above where it's explained in detail
 
 #### Common mistakes
 There are several ways you can select videos to download and some of them, despite being seemingly logical, are terribly ineffective:
 
-1. Using `ids.py` module to process greater id range
-- `python ids.py <args...> -start 1 -end 3500000`
+1. Using `rv ids` to process greater id range
+- `rv ids <args...> -start 1 -end 3500000`
   - approximate time such query takes is 40+ days
   - videos `236` - `3,045,049` don't exist
 
 **Solution 1**: split your query into smaller ones:
-- `python ids.py <args...> -start 1 -end 235`
-- `python ids.py <args...> -start 3045050 -end 3100000`
+- `rv ids <args...> -start 1 -end 235`
+- `rv ids <args...> -start 3045050 -end 3100000`
 - `etc.`
 
-**Solution 2**: use `pages.py` module (listed videos):
-- `python pages.py <args...> -start 1 -pages 9999`
+**Solution 2**: use `rv pages` (listed videos):
+- `rv pages <args...> -start 1 -pages 9999`
 
 2. Using `extra tags` to download only certain tag / category / artist / uploader
-- `python pages.py <args...> -start 1 -pages 9999 ARTIST`
-- `python ids.py <args...> -start ... -end ... (TAG1~TAG2)`
+- `rv pages <args...> -start 1 -pages 9999 ARTIST`
+- `rv ids <args...> -start ... -end ... (TAG1~TAG2)`
 - `etc.`
   - you may end up having to check every video
 
 **Solution 1**: use native search functionality instead (search result pages):
-- `python pages.py <args...> -start 1 -pages 99 -search_art ARTIST`
-- `python pages.py <args...> -start 1 -pages 99 -search_tag TAG1,TAG2 -search_rule_tag any`
+- `rv pages <args...> -start 1 -pages 99 -search_art ARTIST`
+- `rv pages <args...> -start 1 -pages 99 -search_tag TAG1,TAG2 -search_rule_tag any`
 
 **Solution 2**: to search by uploader use `-uploader` argument (user video pages):
-- `python pages.py <args...> -start 1 -pages 99 -uploader USER_ID`
+- `rv pages <args...> -start 1 -pages 99 -uploader USER_ID`
   - `USER_ID` ‒ integer, can be found in member's profile page address

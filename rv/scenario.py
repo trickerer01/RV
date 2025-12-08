@@ -9,7 +9,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 from argparse import ZERO_OR_MORE, ArgumentParser
 from collections.abc import Sequence
 
-from defs import (
+from .defs import (
     ACTION_STORE_TRUE,
     DOWNLOAD_POLICY_ALWAYS,
     QUALITIES,
@@ -17,10 +17,10 @@ from defs import (
     Duration,
     Quality,
 )
-from iinfo import VideoInfo
-from logger import Log
-from tagger import extract_id_or_group, is_filtered_out_by_extra_tags, valid_extra_tag
-from validators import valid_duration, valid_int, valid_rating
+from .iinfo import VideoInfo
+from .logger import Log
+from .tagger import extract_id_or_group, is_filtered_out_by_extra_tags, valid_extra_tag
+from .validators import valid_duration, valid_int, valid_rating
 
 __all__ = ('DownloadScenario',)
 
