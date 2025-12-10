@@ -65,6 +65,9 @@ rv = 'rv:main'
 [tool.setuptools]
 py-modules = ['rv']
 
+[tool.setuptools.packages]
+find = {include = ['rv']}
+
 [tool.ruff]
 line-length = 140
 
