@@ -209,7 +209,6 @@ def execute_parser(parser: ArgumentParser, args: Sequence[str]) -> Namespace:
         raise HelpPrintExitException
 
     try:
-        assert args
         parsed = validate_parsed(parser, args)
         if not is_parsed_cmdfile(parsed):
             if getattr(parsed, PARSER_PARAM_PARSER_TITLE) == PARSER_TITLE_PAGES:
@@ -254,9 +253,9 @@ def create_parsers() -> dict[str, ArgumentParser]:
     parser_main = create_parser(None, PARSER_TITLE_NONE, '')
     subs_main = create_subparser(parser_main, 'subcommands', 'subcommand_1')
 
-    _parser_ids = create_parser(subs_main, PARSER_TITLE_IDS, 'Scan posts by id')
-    _parser_pages = create_parser(subs_main, PARSER_TITLE_PAGES, 'Scan post pages')
-    _parser_file = create_parser(subs_main, PARSER_TITLE_FILE, 'Read cmdline from file')
+    _ = create_parser(subs_main, PARSER_TITLE_IDS, 'Scan posts by id')
+    _ = create_parser(subs_main, PARSER_TITLE_PAGES, 'Scan post pages')
+    _ = create_parser(subs_main, PARSER_TITLE_FILE, 'Read cmdline from file')
     return parsers
 
 
