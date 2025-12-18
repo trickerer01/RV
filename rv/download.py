@@ -405,7 +405,6 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 retries = Config.retries
                 ret = DownloadResult.FAIL_NOT_FOUND
             if r.content_type and 'text' in r.content_type:
-                Log.error(f'File not found at {vi.link}!')
                 raise FileNotFoundError(vi.link)
 
             status_checker.prepare(r, file_size)
