@@ -6,7 +6,7 @@ on:
       - 'master'
     paths:
       - .github/workflows/**
-      - 'rv/*.py'
+      - 'rv/**.py'
       - '!rv/version.py'
   pull_request:
     types:
@@ -15,7 +15,7 @@ on:
       - synchronize
     paths:
       - .github/workflows/**
-      - 'rv/*.py'
+      - 'rv/**.py'
       - '!rv/version.py'
 
 permissions:
@@ -33,7 +33,7 @@ jobs:
       max-parallel: 6
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
