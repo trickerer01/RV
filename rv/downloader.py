@@ -65,16 +65,16 @@ class VideoDownloadWorker:
         self._seq: deque[VideoInfo] = deque()
         self._queue: AsyncQueue[VideoInfo] = AsyncQueue(MAX_VIDEOS_QUEUE_SIZE)
         self._orig_count: int = len(sequence)
-        self._downloaded_count: int = 0
         self._prefiltered_count: int = filtered_count
         self._already_exist_count: int = 0
         self._skipped_count: int = 0
         self._404_count: int = 0
         self._minmax_id: tuple[int, int] = get_min_max_ids(sequence)
 
+        self._completed_items: list[VideoInfo] = []
         self._downloads_active: list[VideoInfo] = []
         self._writes_active: list[VideoInfo] = []
-        self._failed_items: list[int] = []
+        self._failed_items: list[VideoInfo] = []
 
         self._total_queue_size_last: int = 0
         self._download_queue_size_last: int = 0
@@ -107,9 +107,9 @@ class VideoDownloadWorker:
         elif result in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_DELETED):
             self._404_count += 1
         elif result == DownloadResult.FAIL_RETRIES:
-            self._failed_items.append(vi.id)
+            self._failed_items.append(vi)
         elif result == DownloadResult.SUCCESS:
-            self._downloaded_count += 1
+            self._completed_items.append(vi)
 
     async def _prod(self) -> None:
         while True:
@@ -229,8 +229,9 @@ class VideoDownloadWorker:
             os.remove(continue_file_fullpath)
 
     async def _after_download(self) -> None:
-        newline = '\n'
-        Log.info(f'\nDone. {self._downloaded_count:d} / {self._orig_count:d}+{self._prefiltered_count:d}'
+        for smsg in ('', *(vi.sffilename for vi in self._completed_items)):
+            Log.info(smsg)
+        Log.info(f'\nDone. {len(self._completed_items):d} / {self._orig_count:d}+{self._prefiltered_count:d}'
                  f'{f"+{self._scn.get_extra_count():d}" if Config.lookahead else ""} file(s) downloaded, '
                  f'{self._already_exist_count:d}+{self._prefiltered_count:d} already existed, '
                  f'{self._skipped_count:d} skipped, {self._404_count:d} not found')
@@ -240,7 +241,8 @@ class VideoDownloadWorker:
         if len(self._writes_active) > 0:
             Log.fatal(f'active writes count is still at {len(self._writes_active):d} != 0!')
         if len(self._failed_items) > 0:
-            Log.fatal(f'Failed items:\n{newline.join(str(fi) for fi in sorted(self._failed_items))}')
+            for fmsg in ('\nFailed items:', *(vi.sffilename for vi in self._failed_items)):
+                Log.fatal(fmsg)
 
     async def run(self) -> None:
         for cv in as_completed([self._prod(), self._state_reporter(), self._continue_file_checker(),
