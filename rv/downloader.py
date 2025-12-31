@@ -229,7 +229,7 @@ class VideoDownloadWorker:
             os.remove(continue_file_fullpath)
 
     async def _after_download(self) -> None:
-        for smsg in ('', *(vi.sffilename for vi in self._completed_items)):
+        for smsg in ('', *(vi.sffilename for vi in sorted(self._completed_items, key=lambda v: v.sffilename))):
             Log.info(smsg)
         Log.info(f'\nDone. {len(self._completed_items):d} / {self._orig_count:d}+{self._prefiltered_count:d}'
                  f'{f"+{self._scn.get_extra_count():d}" if Config.lookahead else ""} file(s) downloaded, '
