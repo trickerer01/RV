@@ -309,12 +309,9 @@ async def download_sceenshots(vi: VideoInfo) -> DownloadResult:
 
 
 async def download_video(vi: VideoInfo) -> DownloadResult:
-    dwn = VideoDownloadWorker.get()
-    retries = 0
     exact_quality = False
     ret = DownloadResult.SUCCESS
     skip = Config.download_mode == DOWNLOAD_MODE_SKIP
-    status_checker = ThrottleChecker(vi)
 
     if skip is True:
         vi.set_state(VideoInfo.State.DONE)
@@ -362,11 +359,14 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 Log.fatal(f'ERROR: Unable to create subfolder \'{vi.my_folder}\'!')
                 raise
 
-    while (not skip) and retries <= Config.retries:
+    dwn = VideoDownloadWorker.get()
+    status_checker = ThrottleChecker(vi)
+    try_num = 0
+    while (not skip) and try_num <= Config.retries:
         r = None
         try:
             file_exists = os.path.isfile(vi.my_fullpath)
-            if file_exists and retries == 0:
+            if file_exists and try_num == 0:
                 vi.set_flag(VideoInfo.Flags.ALREADY_EXISTED_EXACT)
             file_size = os.stat(vi.my_fullpath).st_size if file_exists else 0
 
@@ -402,7 +402,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 break
             if r.status == 404:
                 Log.error(f'Got 404 for {vi.sfsname}...!')
-                retries = Config.retries
+                try_num = Config.retries
                 ret = DownloadResult.FAIL_NOT_FOUND
             r.raise_for_status()
             if r.content_type and 'text' in r.content_type:
@@ -428,9 +428,13 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                 register_new_file(vi)
                 vi.set_flag(VideoInfo.Flags.FILE_WAS_CREATED)
                 vi.dstart_time = vi.dstart_time or get_elapsed_time_i()
-                async for chunk in r.content.iter_chunked(512 * Mem.KB):
+                bytes_written_this_try = 0
+                async for chunk in r.content.iter_chunked(128 * Mem.KB):
                     await outf.write(chunk)
                     vi.bytes_written += len(chunk)
+                    bytes_written_this_try += len(chunk)
+                    if try_num > 0 and bytes_written_this_try >= 256 * Mem.KB:
+                        try_num = 0
             status_checker.reset()
             await dwn.remove_from_writes(vi)
 
@@ -448,14 +452,14 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
         except Exception as e:
             Log.error(f'{vi.sname}: {sys.exc_info()[0]}: {sys.exc_info()[1]}')
             if (r is None or r.status != 403) and isinstance(e, ClientPayloadError) is False:
-                retries += 1
-                Log.error(f'{vi.sffilename}: error #{retries:d}...')
+                try_num += 1
+                Log.error(f'{vi.sffilename}: error #{try_num:d}...')
             if r is not None and r.closed is False:
                 r.close()
             # Network error may be thrown before item is added to active downloads
             await dwn.remove_from_writes(vi, True)
             status_checker.reset()
-            if retries <= Config.retries:
+            if try_num <= Config.retries:
                 vi.set_state(VideoInfo.State.DOWNLOADING)
                 await sleep(random.uniform(*CONNECT_RETRY_DELAY))
             elif Config.keep_unfinished is False and os.path.isfile(vi.my_fullpath) and vi.has_flag(VideoInfo.Flags.FILE_WAS_CREATED):
@@ -466,7 +470,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             ensure_conn_closed(r)
 
     ret = (ret if ret in (DownloadResult.FAIL_NOT_FOUND, DownloadResult.FAIL_SKIPPED, DownloadResult.FAIL_ALREADY_EXISTS) else
-           DownloadResult.SUCCESS if retries <= Config.retries else
+           DownloadResult.SUCCESS if try_num <= Config.retries else
            DownloadResult.FAIL_RETRIES)
 
     if Config.save_screenshots:
