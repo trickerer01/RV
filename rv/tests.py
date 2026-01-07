@@ -7,7 +7,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import functools
-import os
+import pathlib
 from collections.abc import Callable
 from io import StringIO
 from tempfile import TemporaryDirectory
@@ -40,7 +40,6 @@ from .tagger import (
     match_text,
     normalize_wtag,
 )
-from .util import normalize_path
 from .version import APP_NAME, APP_VERSION
 
 RUN_CONN_TESTS = 0
@@ -279,82 +278,70 @@ class CmdTests(TestCase):
 
 
 class DownloadTests(TestCase):
-    @test_prepare()
+    @test_prepare(True)
     def test_ids_touch(self):
         if not RUN_CONN_TESTS:
             return
-        tdir = TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_')
-        tempdir = normalize_path(tdir.name)
-        tempfile_id = '3146165'
-        tempfile_ext = 'mp4'
-        tempfile_fullpath = f'{tempdir}{tempfile_id}.{tempfile_ext}'
-        arglist1 = [
-            'ids', '-path', tempdir, '-start', tempfile_id, '-dmode', 'touch', '-naming', 'none', '-quality', '360p', '-log', 'trace',
-        ]
-        main_sync(arglist1)
-        self.assertTrue(os.path.isfile(tempfile_fullpath))
-        st = os.stat(tempfile_fullpath)
-        self.assertEqual(0, st.st_size)
-        tdir.cleanup()
+        with TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_') as tempdir:
+            tempfile_id = '3146165'
+            tempfile_ext = '.mp4'
+            tempfile_fullpath = pathlib.Path(tempdir).joinpath(tempfile_id).with_suffix(tempfile_ext)
+            arglist1 = [
+                'ids', '-path', tempdir, '-start', tempfile_id, '-dmode', 'touch', '-naming', 'none', '-quality', '360p', '-log', 'trace',
+            ]
+            main_sync(arglist1)
+            self.assertTrue(tempfile_fullpath.is_file())
+            self.assertEqual(0, tempfile_fullpath.stat().st_size)
         print(f'{self._testMethodName} passed')
 
-    @test_prepare()
+    @test_prepare(True)
     def test_pages_touch(self):
         if not RUN_CONN_TESTS:
             return
-        tdir = TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_')
-        tempdir = normalize_path(tdir.name)
-        tempfile_id = '3119234'
-        tempfile_ext = 'mp4'
-        tempfile_fullpath = f'{tempdir}{tempfile_id}.{tempfile_ext}'
-        arglist1 = [
-            'pages', '-path', tempdir, '-pages', '999', '-dmode', 'touch', '-naming', 'none', '-quality', '360p', '-log', 'trace',
-            '-begin_id', tempfile_id, '-stop_id', tempfile_id, '-search_tag', 'fangs', '-search_art', 'ayasz',
-        ]
-        main_sync(arglist1)
-        self.assertTrue(os.path.isfile(tempfile_fullpath))
-        st = os.stat(tempfile_fullpath)
-        self.assertEqual(0, st.st_size)
-        tdir.cleanup()
+        with TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_') as tempdir:
+            tempfile_id = '3119234'
+            tempfile_ext = '.mp4'
+            tempfile_fullpath = pathlib.Path(tempdir).joinpath(tempfile_id).with_suffix(tempfile_ext)
+            arglist1 = [
+                'pages', '-path', tempdir, '-pages', '999', '-dmode', 'touch', '-naming', 'none', '-quality', '360p', '-log', 'trace',
+                '-begin_id', tempfile_id, '-stop_id', tempfile_id, '-search_tag', 'fangs', '-search_art', 'ayasz',
+            ]
+            main_sync(arglist1)
+            self.assertTrue(tempfile_fullpath.is_file())
+            self.assertEqual(0, tempfile_fullpath.stat().st_size)
         print(f'{self._testMethodName} passed')
 
-    @test_prepare()
+    @test_prepare(True)
     def test_ids_full(self):
         if not RUN_CONN_TESTS:
             return
-        tdir = TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_')
-        tempdir = normalize_path(tdir.name)
-        tempfile_id = '3055235'
-        tempfile_ext = 'mp4'
-        tempfile_fullpath = f'{tempdir}{tempfile_id}.{tempfile_ext}'
-        arglist1 = [
-            'ids', '-path', tempdir, '-start', tempfile_id, '-dmode', 'full', '-naming', 'none', '-quality', '360p', '-log', 'trace',
-        ]
-        main_sync(arglist1)
-        self.assertTrue(os.path.isfile(tempfile_fullpath))
-        st = os.stat(tempfile_fullpath)
-        self.assertGreater(st.st_size, 0)
-        tdir.cleanup()
+        with TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_') as tempdir:
+            tempfile_id = '3055235'
+            tempfile_ext = '.mp4'
+            tempfile_fullpath = pathlib.Path(tempdir).joinpath(tempfile_id).with_suffix(tempfile_ext)
+            arglist1 = [
+                'ids', '-path', tempdir, '-start', tempfile_id, '-dmode', 'full', '-naming', 'none', '-quality', '360p', '-log', 'trace',
+            ]
+            main_sync(arglist1)
+            self.assertTrue(tempfile_fullpath.is_file())
+            self.assertGreater(tempfile_fullpath.stat().st_size, 0)
         print(f'{self._testMethodName} passed')
 
-    @test_prepare()
+    @test_prepare(True)
     def test_pages_full(self):
         if not RUN_CONN_TESTS:
             return
-        tdir = TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_')
-        tempdir = normalize_path(tdir.name)
-        tempfile_id = '3144801'
-        tempfile_ext = 'mp4'
-        tempfile_fullpath = f'{tempdir}{tempfile_id}.{tempfile_ext}'
-        arglist1 = [
-            'pages', '-path', tempdir, '-pages', '999', '-dmode', 'full', '-naming', 'none', '-quality', '360p', '-log', 'trace',
-            '-begin_id', tempfile_id, '-stop_id', tempfile_id, '-search_tag', '4k', '-search_art', 'mikeymack',
-        ]
-        main_sync(arglist1)
-        self.assertTrue(os.path.isfile(tempfile_fullpath))
-        st = os.stat(tempfile_fullpath)
-        self.assertGreater(st.st_size, 0)
-        tdir.cleanup()
+        with TemporaryDirectory(prefix=f'{APP_NAME}_{self._testMethodName}_') as tempdir:
+            tempfile_id = '3144801'
+            tempfile_ext = '.mp4'
+            tempfile_fullpath = pathlib.Path(tempdir).joinpath(tempfile_id).with_suffix(tempfile_ext)
+            arglist1 = [
+                'pages', '-path', tempdir, '-pages', '999', '-dmode', 'full', '-naming', 'none', '-quality', '360p', '-log', 'trace',
+                '-begin_id', tempfile_id, '-stop_id', tempfile_id, '-search_tag', '4k', '-search_art', 'mikeymack',
+            ]
+            main_sync(arglist1)
+            self.assertTrue(tempfile_fullpath.is_file())
+            self.assertGreater(tempfile_fullpath.stat().st_size, 0)
         print(f'{self._testMethodName} passed')
 
 #
