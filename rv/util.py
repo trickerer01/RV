@@ -96,6 +96,23 @@ def calc_sleep_time(base_time: float) -> float:
 def calculate_eta(container: Sequence) -> int:
     return int(2.0 + (CONNECT_REQUEST_DELAY + 0.2 + 0.02) * len(container))
 
+
+def find_first_not_of(string: str, chars: str, *, start_idx=0, reverse=False) -> int:
+    assert start_idx is None or (0 <= start_idx < len(string))
+    if reverse:
+        idx = start_idx or len(string)
+        while idx >= 0:
+            if string[idx] not in chars:
+                return idx
+            idx -= 1
+    else:
+        idx = start_idx or 0
+        while 0 <= idx <= len(string) - 1:
+            if string[idx] not in chars:
+                return idx
+            idx += 1
+    return -1
+
 #
 #
 #########################################
