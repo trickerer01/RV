@@ -13,7 +13,7 @@ import urllib.parse
 from asyncio import Task, as_completed, get_running_loop, sleep
 
 from aiofile import async_open
-from aiohttp import ClientPayloadError
+from aiohttp import ClientConnectorError, ClientPayloadError
 
 from .config import Config
 from .defs import (
@@ -451,7 +451,7 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
             break
         except Exception as e:
             Log.error(f'{vi.sname}: {sys.exc_info()[0]}: {sys.exc_info()[1]}')
-            if (r is None or r.status != 403) and isinstance(e, ClientPayloadError) is False:
+            if (r is None or r.status != 403) and not isinstance(e, (ClientPayloadError, ClientConnectorError)):
                 try_num += 1
                 Log.error(f'{vi.sffilename}: error #{try_num:d}...')
             if r is not None and r.closed is False:

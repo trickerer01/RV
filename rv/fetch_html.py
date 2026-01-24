@@ -200,8 +200,8 @@ async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup | None:
                 Log.error('ERROR: 404')
                 assert False
             else:
-                Log.error(f'[{retries + 1}] fetch_html exception status {f"{r.status:d}" if r is not None else "???"}: '
-                          f'\'{e.message if isinstance(e, ClientResponseError) else str(e)}\'')
+                Log.error(f'[{retries + 1:d}] fetch_html exception status {f"{r.status:d}" if r is not None else "???"}: '
+                          f'\'{e.message if isinstance(e, ClientResponseError) else e!s}\'')
             if (r is None or r.status != 403) and not isinstance(e, ClientConnectorError):
                 retries += 1
             elif r is not None and r.status == 403:
