@@ -87,6 +87,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         Log.error(f'Got empty HTML page for {sname}! Rescanning...')
         return DownloadResult.FAIL_EMPTY_HTML
 
+    if a_html.find('title', string=lambda x: 'Maintenance' in x):
+        Log.error(f'Got maintenance page for {sname}! Rescanning...')
+        return DownloadResult.FAIL_EMPTY_HTML
+
     if a_html.find('title', string='404 Not Found'):
         Log.error(f'Got error 404 for {sname}, skipping...')
         gpred.count_nonexisting()
