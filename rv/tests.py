@@ -139,7 +139,7 @@ class CmdTests(TestCase):
     @test_prepare()
     def test_cmd_pages02(self):
         prepare_arglist(['pages', '-start', '2', '-pages', '1', '-uploader', '1234', '(2d~vr)', '--skip-empty-lists', '-script',
-                         'a: 2d; b: 3d; c: a2 -2d; d: * -utp always', '-naming', 'prefix|quality', '-log', 'warn'])
+                         'a: 2d; b: 3d; c: 4toes -2d; d: * -utp always', '-naming', 'prefix|quality', '-log', 'warn'])
         self.assertEqual(17, Config.naming_flags)
         self.assertEqual(8, Config.logging_flags)
         self.assertEqual(1, len(Config.extra_tags))
@@ -224,9 +224,9 @@ class CmdTests(TestCase):
 
     @test_prepare()
     def test_cmd_ids02(self):
-        prepare_arglist(['ids', '-start', '1000', '-end', '999', '(a2~4k)', '(2d~vr)', '-dmode', 'touch', '--store-continue-cmdfile',
+        prepare_arglist(['ids', '-start', '1000', '-end', '999', '(4toes~4k)', '(2d~vr)', '-dmode', 'touch', '--store-continue-cmdfile',
                          '-lookahead', '100', '-proxynodown', '-proxy', 'socks4://u1:p2@9.123.15.67:3128',
-                         '-script', 'a: 2d; b: 3d -duration 10-200; c: a2 -2d -duration 0-9; d: * -utp always',
+                         '-script', 'a: 2d; b: 3d -duration 10-200; c: 4toes -2d -duration 0-9; d: * -utp always',
                          '-naming', '0x8', '-log', 'trace'])
         self.assertEqual(8, Config.naming_flags)
         self.assertEqual(1, Config.logging_flags)
