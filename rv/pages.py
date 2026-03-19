@@ -98,6 +98,7 @@ async def process_pages() -> int:
             Log.info(f'page {pi - 1:d}...{" (this is the last page!)" if (0 < maxpage == pi - 1) else ""}')
 
             lower_count = 0
+            queued_ids = set()
             if full_download:
                 arefs = a_html.find_all('a', class_=video_ref_class)
                 orig_count = len(arefs)
@@ -110,9 +111,10 @@ async def process_pages() -> int:
                         if bound_res < 0:
                             lower_count += 1
                         continue
-                    elif v_entries and cur_id in range(next(reversed(v_entries)).id, next(iter(v_entries)).id):
+                    elif cur_id in queued_ids:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
+                    queued_ids.add(cur_id)
                     my_title = str(aref.find('div', class_='thumb_title').text)
                     my_utitle = str(aref['href'][:-1][aref['href'][:-1].rfind('/') + 1:])
                     my_duration = get_time_seconds(str(aref.find('div', class_='time').text))
@@ -139,9 +141,10 @@ async def process_pages() -> int:
                         if bound_res < 0:
                             lower_count += 1
                         continue
-                    elif cur_id in v_entries:
+                    elif cur_id in queued_ids:
                         Log.warn(f'Warning: id {cur_id:d} already queued, skipping')
                         continue
+                    queued_ids.add(cur_id)
                     use_prefix = has_naming_flag(NamingFlags.PREFIX)
                     use_title = has_naming_flag(NamingFlags.TITLE)
                     use_utitle = has_naming_flag(NamingFlags.USE_URL_TITLE)
