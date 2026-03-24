@@ -6,6 +6,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 #
 
+import itertools
 from asyncio import sleep
 
 from .config import Config
@@ -22,36 +23,31 @@ __all__ = ('process_ids',)
 
 async def process_ids() -> int:
     if Config.use_id_sequence:
-        Config.id_sequence = extract_id_or_group(Config.extra_tags)
-        if not Config.id_sequence:
+        base_id_sequence = extract_id_or_group(Config.extra_tags)
+        base_id_sequence_len = len(base_id_sequence)
+        if base_id_sequence_len == 0:
             Log.fatal('\nNo ID \'or\' group provided!' if not Config.extra_tags else
                       f'\nNo valid ID \'or\' group found in \'{Config.extra_tags!s}\'!')
             raise ValueError
-        Log.info(f'Parsed ids sequence of length {len(Config.id_sequence):d}')
     elif Config.use_link_sequence:
-        Config.id_sequence = extract_ids_from_links(Config.extra_tags)
-        if not Config.id_sequence:
+        base_id_sequence = extract_ids_from_links(Config.extra_tags)
+        base_id_sequence_len = len(base_id_sequence)
+        if base_id_sequence_len == 0:
             Log.fatal('\nNo links provided!' if not Config.extra_tags else
                       f'\nNo valid links found in \'{Config.extra_tags!s}\'!')
             raise ValueError
-        Log.info(f'Parsed {len(Config.id_sequence):d} links')
     else:
-        Config.id_sequence = list(range(Config.start, Config.end + 1))
+        base_id_sequence = range(Config.start, Config.end + 1)
+        base_id_sequence_len = 1 + (Config.end - Config.start)
+
+    Log.info(f'Parsed ids sequence of length {base_id_sequence_len:d}')
 
     if find_and_resolve_config_conflicts() is True:
         await sleep(3.0)
 
-    orig_sequence_len = len(Config.id_sequence)
-    removed_ids = set[int]()
-    ridx: int
-    for ridx in reversed(range(len(Config.id_sequence))):
-        if 236 <= Config.id_sequence[ridx] <= 3045049:
-            if not removed_ids:
-                Log.warn('Warning: found ids known to be non-existent. Erasing from sequence...')
-            removed_ids.add(Config.id_sequence[ridx])
-            del Config.id_sequence[ridx]
-    if removed_ids:
-        Log.warn(f'Removed {len(removed_ids):d} / {orig_sequence_len:d} known to be non-existent ids!')
+    Config.id_sequence = list(itertools.filterfalse(lambda x: 236 <= x <= 3045049 or x < 0 or x > 6000000, base_id_sequence))
+    if removed_count := base_id_sequence_len - len(Config.id_sequence):
+        Log.warn(f'Removed {removed_count:d} known to be non-existent ids!')
 
     v_entries = [VideoInfo(idi) for idi in Config.id_sequence]
     orig_count = len(v_entries)
