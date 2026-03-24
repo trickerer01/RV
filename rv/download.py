@@ -7,6 +7,7 @@ Author: trickerer (https://github.com/trickerer, https://github.com/trickerer01)
 #
 
 import os
+import pathlib
 import random
 import sys
 import urllib.parse
@@ -342,14 +343,16 @@ async def download_video(vi: VideoInfo) -> DownloadResult:
                     if Config.no_rename_move is False or same_loc:
                         Log.info(f'{vi.sffilename} {vi.quality} found{loc_str}. Enforcing new name (was \'{curfile}\').')
                         if not try_rename(curfile, vi.my_fullpath):
-                            Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
+                            Log.warn(f'Warning: unable to rename file to {vi.sffilename} (already exists?). Old name will be preserved!')
+                            vi.filename = pathlib.Path(curfile).name
                     else:
                         new_subfolder = normalize_path(os.path.relpath(curfile_folder, Config.dest_base))
                         Log.info(f'{vi.sffilename} {vi.quality} found{loc_str}. Enforcing old path + new name '
                                  f'\'{curfile_folder}/{vi.filename}\' due to \'--no-rename-move\' flag (was \'{curfile_name}\').')
                         vi.subfolder = new_subfolder
                         if not try_rename(curfile, normalize_path(os.path.abspath(vi.my_fullpath), False)):
-                            Log.warn(f'Warning: file {vi.sffilename} already exists! Old file will be preserved.')
+                            Log.warn(f'Warning: unable to rename file to {vi.sffilename} (already exists?). Old name will be preserved!')
+                            vi.filename = pathlib.Path(curfile).name
             else:
                 qstr = f'\'{curfile_oquality}\' {"==" if exact_quality else ">=" if curfile_oquality else "<?>"} \'{curfile_quality}\''
                 Log.info(f'{vi.sfsname} already exists ({qstr}). Skipped.\n Location: \'{curfile}\'')
