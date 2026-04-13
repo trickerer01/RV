@@ -12,7 +12,7 @@ import os
 __all__ = ()
 
 CWD = os.path.abspath(os.path.curdir).replace('\\', '/')
-APP_REV_FILE_PATH = f'{CWD}/src/version.py'
+APP_REV_FILE_PATH = f'{CWD}/rv/version.py'
 STR_APP_REVISION = 'APP_REVISION = \''
 PYPROJECT_TOML_FILE_PATH = f'{CWD}/pyproject.toml'
 STR_TOML_VERSION = 'version = \''
