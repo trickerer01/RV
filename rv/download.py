@@ -121,12 +121,12 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     except Exception:
         Log.warn(f'Warning: cannot extract score for {sname}.')
     try:
-        my_authors = [str(a.string).lower() for a in a_html.find('div', string='Artist').parent.find_all('span')]
+        my_authors = [str(a.string).lower() for a in a_html.find('div', string='Artist').parent.find_all('span', class_='name')]
     except Exception:
         Log.warn(f'Warning: cannot extract authors for {sname}.')
         my_authors: list[str] = []
     try:
-        my_categories = [str(c.string).lower() for c in a_html.find('div', string='Categories').parent.find_all('span')]
+        my_categories = [str(c.string).lower() for c in a_html.find('div', string='Categories').parent.find_all('span', class_=None)]
     except Exception:
         Log.warn(f'Warning: cannot extract categories for {sname}.')
         my_categories: list[str] = []
