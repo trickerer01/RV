@@ -126,7 +126,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         Log.warn(f'Warning: cannot extract authors for {sname}.')
         my_authors: list[str] = []
     try:
-        my_categories = [str(c.string).lower() for c in a_html.find('div', string='Categories').parent.find_all('span', class_=None)]
+        my_categories = [str(c.string).lower() for c in a_html.find('div', string='Categories').parent.find_all('span', class_=False)]
     except Exception:
         Log.warn(f'Warning: cannot extract categories for {sname}.')
         my_categories: list[str] = []
@@ -218,7 +218,7 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
         Log.debug(f'No download section for {sname}, retry #{tries:d}...')
         a_html = await fetch_html(f'{SITE_AJAX_REQUEST_VIDEO % vi.id}?popup_id={2 + tries + vi.id % 10:d}')
     links = ddiv.parent.find_all('a', class_='tag_item')
-    qualities = tuple(lin.text.replace('MP4 ', '') for lin in links if lin.text)
+    qualities = tuple(lin.text.replace('MP4 ', '').strip() for lin in links if lin.text)
     if vi.quality not in qualities:
         q_idx = 0
         Log.warn(f'Warning: cannot find quality \'{vi.quality}\' for {sname}, selecting \'{qualities[q_idx]}\'')
