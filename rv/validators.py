@@ -93,6 +93,11 @@ def find_and_resolve_config_conflicts(full_download=True) -> bool:
         Log.info('Info: \'--scan-all-pages\' flag was set but post id lower bound was not provided, ignored')
         delay_for_message = True
 
+    if Config.check_votes is True and not len(Config.extra_tags):
+        Log.info('Info: \'--check-votes\' flag was set but no extra tags were provided, ignored')
+        Config.check_votes = False
+        delay_for_message = True
+
     if Config.scenario is not None:
         if Config.utp != DOWNLOAD_POLICY_DEFAULT:
             Log.info('Info: running download script, outer untagged policy will be ignored')

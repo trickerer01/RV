@@ -79,6 +79,11 @@ SITE_AJAX_REQUEST_MODEL_PAGE = base64.b64decode(
     'ZpZGVvcyZzb3J0X2J5PSZmcm9tPSVk').decode()
 '''Params required: **artist_name**, **page** - **str**, **int**\n
 Ex. SITE_AJAX_REQUEST_MODEL_PAGE % ('gray', 1)'''
+SITE_AJAX_REQUEST_VIDEO_VOTING = (
+    'https://rule34video.com/tag_vote_state_public.php?video_id=%d&tag_ids=%s&category_ids=%s&model_ids=%s'
+)
+'''Params required: **video_id**, **tags**, **categories**, **artists** - **int**, **str**, **str**, **str**\n
+Ex. SITE_AJAX_REQUEST_VIDEO_VOTING % (1071113, '1,2', '3,4,5', '6')'''
 
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.7 Firefox/102.0 PaleMoon/33.3.1'
 DEFAULT_HEADERS = {'User-Agent': USER_AGENT}
@@ -381,6 +386,7 @@ HELP_ARG_MODEL = 'Artist name (scan artist\'s page(s) instead of using search, f
 #     'Disable search results deduplication (by name).'
 #     ' By default exact matches will be dropped except the latest one (highest album id)'
 # )
+HELP_ARG_CHECK_VOTES = 'Query website voting system for downvoted tags/categories/artists to ignore during filtering'
 
 
 class DownloadResult(IntEnum):

@@ -25,6 +25,7 @@ from .defs import (
     HELP_ARG_BLACKLIST,
     HELP_ARG_CHECK_TITLEDESC,
     HELP_ARG_CHECK_UPLOADER,
+    HELP_ARG_CHECK_VOTES,
     HELP_ARG_CMDFILE,
     HELP_ARG_CONTINUE,
     HELP_ARG_COOKIE,
@@ -346,6 +347,7 @@ def parse_arglist(args: Sequence[str]) -> Namespace:
     pcig1.add_argument('-gpred', '--predict-id-gaps', default=IDGP_DEFAULT, help=HELP_ARG_PREDICT_ID_GAPS, choices=IDGAP_PREDICTION_MODES)
     pcigm1.add_argument('-seq', '--use-id-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_IDSEQUENCE)
     pcigm1.add_argument('-links', '--use-link-sequence', action=ACTION_STORE_TRUE, help=HELP_ARG_LINKSEQUENCE)
+    pcig1.add_argument('-votecheck', '--check-votes', action=ACTION_STORE_TRUE, help=HELP_ARG_CHECK_VOTES)
 
     # Pages
     pcp = parsers[PARSER_TITLE_PAGES]
@@ -381,6 +383,7 @@ def parse_arglist(args: Sequence[str]) -> Namespace:
     # pcpg1.add_argument('-blacklist_tag', metavar='#tag[,tag...]', default='', help='', type=valid_tags)
     # pcpg1.add_argument('-blacklist_art', metavar='#artist[,artist...]', default='', help='', type=valid_tags)
     # pcpg1.add_argument('-blacklist_cat', metavar='#category[,category...]', default='', help=HELP_ARG_BLACKLIST, type=valid_tags)
+    pcpg1.add_argument('-votecheck', '--check-votes', action=ACTION_STORE_TRUE, help=HELP_ARG_CHECK_VOTES)
 
     # File
     pcf = parsers[PARSER_TITLE_FILE]

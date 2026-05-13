@@ -174,7 +174,7 @@ class CmdTests(TestCase):
     @test_prepare()
     def test_cmd_pages04(self):
         prepare_arglist(['pages', '-model', 'gret', '-start', '3', '-pages', '2', '-quality', '480p', '-duration', '15-360',
-                         '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump'])
+                         '-minscore', '12', '-continue', '-unfinish', '-tdump', '-ddump', '-cdump', '-sdump', '-votecheck'])
         self.assertEqual('gret', Config.model)
         self.assertEqual(3, Config.start)
         self.assertEqual(4, Config.end)
@@ -189,6 +189,7 @@ class CmdTests(TestCase):
         self.assertTrue(Config.save_descriptions)
         self.assertTrue(Config.save_comments)
         self.assertTrue(Config.save_screenshots)
+        self.assertTrue(Config.check_votes)
         print(f'{self._testMethodName} passed')
 
     @test_prepare()

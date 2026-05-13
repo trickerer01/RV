@@ -102,6 +102,7 @@ class BaseConfig:
         self.check_title_neg: bool | None = None
         self.check_description_pos: bool | None = None
         self.check_description_neg: bool | None = None
+        self.check_votes: bool | None = None
         self.extra_headers: list[tuple[str, str]] | None = None
         self.extra_cookies: list[tuple[str, str]] | None = None
         # module-specific params (pages only or ids only)
@@ -144,6 +145,7 @@ class BaseConfig:
             *(('--check-title-neg',) if self.check_title_neg else ()),
             *(('--check-description-pos',) if self.check_description_pos else ()),
             *(('--check-description-neg',) if self.check_description_neg else ()),
+            *(('--check-votes',) if self.check_votes else ()),
             *(('-utp', self.utp) if self.utp != DOWNLOAD_POLICY_DEFAULT and not self.scenario else ()),
             *(('-minrating', self.min_rating) if self.min_rating else ()),
             *(('-minscore', self.min_score) if self.min_score else ()),

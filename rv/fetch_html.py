@@ -24,7 +24,7 @@ from .config import Config
 from .defs import CONNECT_REQUEST_DELAY, CONNECT_RETRY_DELAY, MAX_SCAN_QUEUE_SIZE, MAX_VIDEOS_QUEUE_SIZE, UTF8, Mem
 from .logger import Log
 
-__all__ = ('create_session', 'ensure_conn_closed', 'fetch_html', 'wrap_request')
+__all__ = ('create_session', 'ensure_conn_closed', 'fetch_html', 'fetch_html_raw', 'wrap_request')
 
 USER_AGENT_DEFAULT = 'Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Goanna/6.7 Firefox/102.0 PaleMoon/33.3.1'
 ua_generator = FakeUserAgent(browsers=('Firefox',), platforms=('desktop',), fallback=USER_AGENT_DEFAULT)
@@ -175,7 +175,7 @@ async def wrap_request(method: str, url: str, **kwargs) -> ClientResponse:
     return r
 
 
-async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup | None:
+async def fetch_html_raw(url: str, *, tries=0, **kwargs) -> bytes | None:
     # very basic, minimum validation
     tries = tries or Config.retries
     if 'noproxy' not in kwargs:
@@ -194,7 +194,7 @@ async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup | None:
                 content = await r.read()
                 if retries_403_local > 0:
                     Log.trace(f'fetch_html success: took {retries_403_local:d} tries...')
-                return BeautifulSoup(content, 'html.parser', from_encoding=UTF8) if content else BeautifulSoup()
+                return content
         except Exception as e:
             if r is not None and '404.' in str(r.url):
                 Log.error('ERROR: 404')
@@ -219,6 +219,11 @@ async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup | None:
         Log.error('ERROR: Failed to receive any data')
 
     return None
+
+
+async def fetch_html(url: str, *, tries=0, **kwargs) -> BeautifulSoup:
+    raw = await fetch_html_raw(url, tries=tries, **kwargs)
+    return BeautifulSoup(raw, 'html.parser', from_encoding=UTF8) if raw else BeautifulSoup()
 
 #
 #

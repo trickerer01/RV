@@ -45,6 +45,7 @@ from .path_util import file_already_exists, is_file_being_used, register_new_fil
 from .rex import re_media_filename, re_time
 from .tagger import filtered_tags, is_filtered_out_by_extra_tags, solve_tag_conflicts
 from .util import calculate_eta, extract_ext, format_time, get_elapsed_time_i, get_time_seconds, has_naming_flag, normalize_path
+from .voting import filter_act_by_votes_count
 
 __all__ = ('at_interrupt', 'download')
 
@@ -121,15 +122,15 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     except Exception:
         Log.warn(f'Warning: cannot extract score for {sname}.')
     try:
-        my_authors = [str(a.string).lower() for a in a_html.find('div', string='Artist').parent.find_all('span', class_='name')]
+        arts = [str(a.string).lower() for a in a_html.find('div', string='Artist').parent.find_all('span', class_='name')]
     except Exception:
         Log.warn(f'Warning: cannot extract authors for {sname}.')
-        my_authors: list[str] = []
+        arts: list[str] = []
     try:
-        my_categories = [str(c.string).lower() for c in a_html.find('div', string='Categories').parent.find_all('span', class_=False)]
+        cats = [str(c.string).lower() for c in a_html.find('div', string='Categories').parent.find_all('span', class_=False)]
     except Exception:
         Log.warn(f'Warning: cannot extract categories for {sname}.')
-        my_categories: list[str] = []
+        cats: list[str] = []
     try:
         vi.uploader = str(a_html.find('div', string='Uploaded by').parent.find('a').get_text(strip=True)).lower()
     except Exception:
@@ -138,9 +139,11 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
     if tdiv is None:
         Log.info(f'Warning: video {sname} has no tags!')
     tags: list[str] = [str(elem.string) for elem in tdiv.parent.find_all('a', class_='tag_item')] if tdiv else []
-    tags_raw = [tag.replace(' ', '_').lower() for tag in tags]
-    for calist in (my_categories, my_authors):
-        for add_tag in [ca.replace(' ', '_') for ca in calist if ca]:
+    arts_raw, cats_raw, tags_raw = tuple([_.replace(' ', '_').lower() for _ in actlist] for actlist in (arts, cats, tags))
+    if Config.check_votes:
+        await filter_act_by_votes_count(vi, sname, arts_raw, cats_raw, tags_raw)
+    for calist in (cats_raw, arts_raw):
+        for add_tag in [ca for ca in calist if ca]:
             if add_tag not in tags_raw:
                 tags_raw.append(add_tag)
     if Config.save_tags:
@@ -163,10 +166,10 @@ async def scan_video(vi: VideoInfo) -> DownloadResult:
             vi.comments = ('\n' + '\n\n'.join(comments_list) + '\n') if comments_list else ''
     if Config.check_uploader and vi.uploader and vi.uploader not in tags_raw:
         tags_raw.append(vi.uploader)
-    va_list = [va for va in my_authors if any(_ in va for _ in ('audio', '(va)')) or va.endswith('va')]
-    aucat_count = max(len(my_authors) - len(va_list), len(my_categories))
+    va_list = [va for va in arts_raw if any(_ in va for _ in ('audio', '(va)')) or va.endswith('va')]
+    aucat_count = max(len(arts_raw) - len(va_list), len(cats_raw))
     if aucat_count >= 6 and not any(_ in tags_raw for _ in ('compilation', 'pmv')):
-        Log.warn(f'{sname} has {len(my_authors):d} arts ({len(va_list):d} VA) and {len(my_categories):d} cats! Assuming compilation')
+        Log.warn(f'{sname} has {len(arts_raw):d} arts ({len(va_list):d} VA) and {len(cats_raw):d} cats! Assuming compilation')
         tags_raw.append('compilation')
     if Config.solve_tag_conflicts:
         solve_tag_conflicts(vi, tags_raw)
