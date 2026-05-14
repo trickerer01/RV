@@ -11,7 +11,7 @@ from collections.abc import MutableSequence
 from contextlib import suppress
 from typing import Literal, TypedDict
 
-from rv.defs import SITE_AJAX_REQUEST_VIDEO_VOTING
+from rv.defs import SITE_AJAX_REQUEST_VIDEO_VOTING, VOTE_TO_REMOVAL_THRESHOLD
 from rv.fetch_html import fetch_html_raw
 from rv.logger import Log
 from rv.tagger import get_artist_num, get_category_num, get_tag_num
@@ -71,7 +71,7 @@ async def filter_act_by_votes_count(vi, sname, ars: MutableSequence[str], cas: M
         tid = str(tv['tag_id'])
         tstatus = tv['status']
         tscore = tv['up_score'] - tv['down_score']
-        if tstatus not in ('normal', 'hardened') or tscore < 0:
+        if tstatus not in ('normal', 'hardened') or tscore < VOTE_TO_REMOVAL_THRESHOLD:
             tname = nameids_tags.get(tid, 'Unknown')
             Log.warn(f'{sname}: tag \'{tname}\' ({tid}) vote score is \'{tscore}\' with status \'{tstatus}\'! Removing!')
             with suppress(KeyError):
@@ -80,7 +80,7 @@ async def filter_act_by_votes_count(vi, sname, ars: MutableSequence[str], cas: M
         acid = str(acv['item_id'])
         acstatus = acv['status']
         acscore = acv['up_score'] - acv['down_score']
-        if acstatus not in ('normal', 'hardened') or acscore < 0:
+        if acstatus not in ('normal', 'hardened') or acscore < VOTE_TO_REMOVAL_THRESHOLD:
             actype = acv['item_type']
             acname = {'category': nameids_cats, 'model': nameids_arts}.get(actype, {}).get(acid, 'Unknown')
             acs = {'category': cas, 'model': ars}.get(actype, [])
